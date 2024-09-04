@@ -45,6 +45,7 @@ export const Icons = {
   chevronRight: ChevronRight,
   trash: Trash,
   employee: UserX2Icon,
+  design: FileText,
   post: FileText,
   page: File,
   media: Image,
