@@ -12,38 +12,23 @@ import {
   CollapsibleTrigger
 } from '@/components/ui/collapsible';
 import { ChevronRight, ChevronDown } from 'lucide-react';
-
-export interface NodeData {
-  name: string;
-  type: string;
-  description: string;
-  block_type: string;
-  properties: Record<string, any>;
-  required: string[];
-  outputs_manifest: Array<{
-    name: string;
-    kind: Array<{
-      name: string;
-      description: string;
-    }>;
-  }>;
-}
+import { BlockDescription } from '@/constants/block';
 
 interface NodeSelectorProps {
-  nodes: NodeData[];
-  onNodeSelect: (node: NodeData) => void;
+  nodes: BlockDescription[];
+  onNodeSelect: (node: BlockDescription) => void;
 }
 
 const NodeSelector: React.FC<NodeSelectorProps> = ({ nodes, onNodeSelect }) => {
   const groupedNodes = nodes.reduce(
     (acc, node) => {
-      if (!acc[node.type]) {
-        acc[node.block_type] = [];
+      if (!acc[node.block_schema.block_type]) {
+        acc[node.block_schema.block_type] = [];
       }
-      acc[node.block_type].push(node);
+      acc[node.block_schema.block_type].push(node);
       return acc;
     },
-    {} as Record<string, NodeData[]>
+    {} as Record<string, BlockDescription[]>
   );
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(
@@ -77,14 +62,16 @@ const NodeSelector: React.FC<NodeSelectorProps> = ({ nodes, onNodeSelect }) => {
             <CollapsibleContent>
               {nodeList.map((node) => (
                 <Card
-                  key={node.name}
+                  key={node.human_friendly_block_name}
                   className="mb-2 cursor-pointer hover:bg-gray-100"
                   onClick={() => onNodeSelect(node)}
                 >
                   <CardHeader className="p-3">
-                    <CardTitle className="text-sm">{node.name}</CardTitle>
+                    <CardTitle className="text-sm">
+                      {node.human_friendly_block_name}
+                    </CardTitle>
                     <CardDescription className="truncate text-xs">
-                      {node.description}
+                      {node.block_schema.short_description}
                     </CardDescription>
                   </CardHeader>
                 </Card>
