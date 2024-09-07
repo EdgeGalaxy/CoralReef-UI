@@ -12,6 +12,8 @@ import 'semantic-ui-css/semantic.min.css';
 
 import { BlockDescription } from '@/constants/block';
 
+import KindField from './kind-field';
+
 export type NodeData = BlockDescription & {
   label: string;
   formData: Record<string, any>;
@@ -24,14 +26,39 @@ interface NodeDetailProps {
   onClose: () => void;
   nodeData: NodeData;
   onFormChange: (formData: any) => void;
+  availableKindValues: Record<string, string[]>;
 }
 
 const NodeDetail: React.FC<NodeDetailProps> = ({
   isOpen,
   onClose,
   nodeData,
-  onFormChange
+  onFormChange,
+  availableKindValues
 }) => {
+  const customFields = {
+    AnyOfField: (props: any) => (
+      <KindField {...props} availableKindValues={availableKindValues} />
+    )
+  };
+
+  const uiSchema = Object.keys(nodeData.block_schema.properties || {}).reduce(
+    (acc, key) => {
+      const property = nodeData.block_schema.properties?.[key];
+      if (
+        typeof property === 'object' &&
+        property !== null &&
+        'anyOf' in property
+      ) {
+        acc[key] = {
+          'ui:field': 'AnyOfField'
+        };
+      }
+      return acc;
+    },
+    {} as Record<string, any>
+  );
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent
@@ -44,9 +71,11 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
         <div className="flex-grow overflow-y-auto">
           <Form
             schema={nodeData.block_schema}
+            uiSchema={uiSchema}
             validator={validator}
             formData={nodeData.formData}
             onChange={(e) => onFormChange(e.formData)}
+            fields={customFields}
           />
         </div>
       </SheetContent>
