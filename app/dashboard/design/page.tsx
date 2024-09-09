@@ -13,90 +13,21 @@ import ReactFlow, {
   Connection,
   Edge
 } from 'reactflow';
+
 import 'reactflow/dist/style.css';
+
+import { RJSFSchema } from '@rjsf/utils';
 import { useSidebar } from '@/hooks/useSidebar';
 import NodeSelector from '@/components/workflow/nodes-selector';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import CustomNode from '@/components/workflow/custom-node';
-import { BlockDescription } from '@/constants/block';
-import NodeDetail, { NodeData } from '@/components/workflow/node-detail';
+import { BlockDescription, KindsConnections } from '@/constants/block';
+import NodeDetail from '@/components/workflow/node-detail';
+import { NodeData } from '@/constants/block';
 import BuiltInNode from '@/components/workflow/buildin-node';
-
-const initialNodes: Node[] = [
-  {
-    id: 'input-node',
-    type: 'builtInNode',
-    position: { x: 50, y: 50 },
-    data: {
-      human_friendly_block_name: 'Input',
-      manifest_type_identifier: 'input',
-      block_schema: {
-        type: 'object',
-        properties: {
-          images: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' }
-              },
-              required: ['name']
-            }
-          },
-          params: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                value: { type: 'string' }
-              },
-              required: ['name']
-            }
-          }
-        }
-      },
-      formData: {
-        images: [],
-        params: []
-      },
-      label: 'Input Node'
-    }
-  },
-  {
-    id: 'output-node',
-    type: 'builtInNode',
-    position: { x: 300, y: 50 },
-    data: {
-      human_friendly_block_name: 'Output',
-      manifest_type_identifier: 'output',
-      block_schema: {
-        type: 'object',
-        properties: {
-          params: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                type: { type: 'string', enum: ['image', 'string'] },
-                value: { type: 'string' }
-              },
-              required: ['name', 'type']
-            }
-          }
-        }
-      },
-      formData: {
-        params: []
-      },
-      label: 'Output Node'
-    }
-  }
-];
-
-const initialEdges: Edge[] = [];
+import { initialNodes, initialEdges } from '@/constants/init-data';
+import { OutputDefinition, Kind, PropertyDefinition } from '@/constants/block';
 
 const nodeTypes = {
   customNode: CustomNode,
@@ -109,9 +40,12 @@ const DesignPage = () => {
   const { isMinimized } = useSidebar();
   const [flowWidth, setFlowWidth] = useState('calc(100vw - 72px)');
   const [availableNodes, setAvailableNodes] = useState<BlockDescription[]>([]);
+  const [kindsConnections, setKindsConnections] = useState<KindsConnections>(
+    {}
+  );
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [availableKindValues, setAvailableKindValues] = useState<
-    Record<string, string[]>
+    Record<string, PropertyDefinition[]>
   >({});
 
   useEffect(() => {
@@ -119,6 +53,7 @@ const DesignPage = () => {
       .then((response) => response.json())
       .then((data) => {
         setAvailableNodes(data.blocks);
+        setKindsConnections(data.kinds_connections);
       })
       .catch((error) => console.error('Error loading blocks:', error));
   }, []);
@@ -156,10 +91,22 @@ const DesignPage = () => {
     [nodes, setNodes]
   );
 
-  const generateFormData = (blockSchema: any) => {
+  const generateFormData = (data: BlockDescription) => {
+    const blockSchema = data.block_schema;
+    const nodeType = data.manifest_type_identifier.split('/')[1].split('@')[0];
+    const nodeCount = nodes.filter(
+      (n) => n.data.formData?.type === data.manifest_type_identifier
+    ).length;
+
     return Object.entries(blockSchema.properties || {}).reduce(
       (acc: any, [key, value]: [string, any]) => {
-        acc[key] = blockSchema.required?.includes(key) ? null : value.default;
+        if (key === 'name') {
+          acc[key] = nodeCount > 0 ? `${nodeType}_${nodeCount}` : nodeType;
+        } else if (key === 'type') {
+          acc[key] = data.manifest_type_identifier;
+        } else {
+          acc[key] = blockSchema.required?.includes(key) ? null : value.default;
+        }
         return acc;
       },
       {}
@@ -175,7 +122,7 @@ const DesignPage = () => {
         data: {
           ...nodeData,
           label: nodeData.human_friendly_block_name,
-          formData: generateFormData(nodeData.block_schema)
+          formData: generateFormData(nodeData)
         } as NodeData,
         // Add these properties to make the node more compact
         style: {
@@ -193,61 +140,71 @@ const DesignPage = () => {
   }, []);
 
   const updateAvailableKindValues = useCallback(() => {
-    const kindValues: Record<string, string[]> = {};
-    nodes.forEach((node) => {
+    const kindValues: Record<string, PropertyDefinition[]> = {};
+    nodes.forEach((node: Node) => {
       if (
         node.type === 'builtInNode' &&
         node.data.manifest_type_identifier === 'input'
       ) {
         // Handle input node
         node.data.formData.images.forEach((image: any) => {
-          const kind = 'Batch[image]';
-          if (!kindValues[kind]) {
-            kindValues[kind] = [];
+          // TODO: kindName 后续需要更改为动态值，不能写死
+          const kindName = 'Batch[image]';
+          if (!kindValues[kindName]) {
+            kindValues[kindName] = [];
           }
-          kindValues[kind].push(`$input.${image.name}`);
+          if (image.name) {
+            kindValues[kindName].push({
+              manifest_type_identifier: node.data.manifest_type_identifier,
+              property_name: `$input.${image.name}`,
+              property_description: 'Image',
+              compatible_element: 'workflow_image',
+              is_list_element: false,
+              is_dict_element: false
+            });
+          }
         });
         node.data.formData.params.forEach((param: any) => {
-          const kind = 'input';
-          if (!kindValues[kind]) {
-            kindValues[kind] = [];
+          // TODO: kindName 后续需要更改为动态值，不能写死, 此处默认给string
+          const kindName = 'string';
+          if (!kindValues[kindName]) {
+            kindValues[kindName] = [];
           }
-          kindValues[kind].push(`$input.${param.name}`);
+          if (param.name) {
+            kindValues[kindName].push({
+              manifest_type_identifier: node.data.manifest_type_identifier,
+              property_name: `$input.${param.name}`,
+              property_description: 'Parameter',
+              compatible_element: 'workflow_parameter',
+              is_list_element: false,
+              is_dict_element: false
+            });
+          }
         });
-      } else if (
-        node.data &&
-        node.data.block_schema &&
-        node.data.block_schema.properties
-      ) {
-        // Handle other nodes
-        Object.entries(node.data.block_schema.properties).forEach(
-          ([key, value]: [string, any]) => {
-            if (value.anyOf) {
-              value.anyOf.forEach((option: any) => {
-                if (option.kind && Array.isArray(option.kind)) {
-                  option.kind.forEach((kindObj: any) => {
-                    const kindName = kindObj.name;
-                    if (!kindValues[kindName]) {
-                      kindValues[kindName] = [];
-                    }
-                    if (node.data.formData && node.data.formData[key]) {
-                      // Add pattern matching check
-                      if (option.pattern) {
-                        const regex = new RegExp(option.pattern);
-                        if (regex.test(node.data.formData[key])) {
-                          kindValues[kindName].push(node.data.formData[key]);
-                        }
-                      }
-                    }
-                  });
-                }
+      } else if (node.data.outputs_manifest) {
+        // Handle output nodes kinds
+        node.data.outputs_manifest.forEach((output: OutputDefinition) => {
+          // 遍历 OutputDefinition 中kind的name作为kindName，填充kindValues
+          output.kind.forEach((kind: Kind) => {
+            const kindName = kind.name;
+            if (!kindValues[kindName]) {
+              kindValues[kindName] = [];
+            }
+            if (node.data.formData.name) {
+              kindValues[kindName].push({
+                manifest_type_identifier: node.data.manifest_type_identifier,
+                property_name: `$steps.${node.data.formData.name}.${output.name}`,
+                property_description: 'Output',
+                compatible_element: 'step_output',
+                is_list_element: false,
+                is_dict_element: false
               });
             }
-          }
-        );
+          });
+        });
       }
+      setAvailableKindValues(kindValues);
     });
-    setAvailableKindValues(kindValues);
   }, [nodes]);
 
   useEffect(() => {
@@ -377,6 +334,7 @@ const DesignPage = () => {
           nodeData={selectedNode.data}
           onFormChange={onFormChange}
           availableKindValues={availableKindValues}
+          kindsConnections={kindsConnections}
         />
       )}
     </div>

@@ -10,14 +10,14 @@ import validator from '@rjsf/validator-ajv8';
 import { Theme as SemanticUITheme } from '@rjsf/semantic-ui';
 import 'semantic-ui-css/semantic.min.css';
 
-import { BlockDescription } from '@/constants/block';
+import {
+  NodeData,
+  PropertyDefinition,
+  KindsConnections,
+  skipFormFields
+} from '@/constants/block';
 
 import KindField from './kind-field';
-
-export type NodeData = BlockDescription & {
-  label: string;
-  formData: Record<string, any>;
-};
 
 const Form = withTheme(SemanticUITheme);
 
@@ -26,7 +26,8 @@ interface NodeDetailProps {
   onClose: () => void;
   nodeData: NodeData;
   onFormChange: (formData: any) => void;
-  availableKindValues: Record<string, string[]>;
+  availableKindValues: Record<string, PropertyDefinition[]>;
+  kindsConnections: KindsConnections;
 }
 
 const NodeDetail: React.FC<NodeDetailProps> = ({
@@ -34,11 +35,50 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
   onClose,
   nodeData,
   onFormChange,
-  availableKindValues
+  availableKindValues,
+  kindsConnections
 }) => {
   const customFields = {
     AnyOfField: (props: any) => (
-      <KindField {...props} availableKindValues={availableKindValues} />
+      <KindField
+        {...props}
+        availableKindValues={availableKindValues}
+        nodeData={nodeData}
+        kindsConnections={kindsConnections}
+      />
+    )
+  };
+
+  // 创建一个新的 schema，移除重复的 anyOf 字段
+  const newSchema = {
+    ...nodeData.block_schema,
+    properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
+      (acc, [key, value]) => {
+        // TODO: 指定字段特殊赋值
+        if (skipFormFields.includes(key)) {
+          return acc; // Skip fields in skipFormFields
+        }
+        if (typeof value === 'object' && value !== null && 'anyOf' in value) {
+          acc[key] = {
+            type: 'string',
+            title: value.title || key
+          };
+        } else if (
+          typeof value === 'object' &&
+          value !== null &&
+          key === 'name'
+        ) {
+          acc[key] = {
+            type: 'string',
+            title: value.title || key,
+            readOnly: true
+          };
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as Record<string, any>
     )
   };
 
@@ -51,12 +91,21 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
         'anyOf' in property
       ) {
         acc[key] = {
-          'ui:field': 'AnyOfField'
+          'ui:field': 'AnyOfField',
+          'ui:options': {
+            originalSchema: property
+          }
         };
       }
       return acc;
     },
     {} as Record<string, any>
+  );
+
+  const filteredFormData = Object.fromEntries(
+    Object.entries(nodeData.formData).filter(
+      ([key]) => !skipFormFields.includes(key)
+    )
   );
 
   return (
@@ -70,12 +119,13 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
         </SheetHeader>
         <div className="flex-grow overflow-y-auto">
           <Form
-            schema={nodeData.block_schema}
+            schema={newSchema}
             uiSchema={uiSchema}
             validator={validator}
-            formData={nodeData.formData}
+            formData={filteredFormData}
             onChange={(e) => onFormChange(e.formData)}
             fields={customFields}
+            className="rjsf-field-spacing" // Add a custom class for additional styling if needed
           />
         </div>
       </SheetContent>

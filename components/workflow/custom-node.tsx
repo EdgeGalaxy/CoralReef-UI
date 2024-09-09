@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { BlockDescription } from '@/constants/block';
-import NodeDetail from './node-detail';
+import { BlockDescription, skipFormFields } from '@/constants/block';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Edit } from 'lucide-react';
@@ -38,30 +37,32 @@ const CustomNode = ({ data }: { data: BlockDescription }) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-2 py-2">
-        {data.block_schema.required?.map((field) => (
-          <div
-            key={field}
-            className="flex items-center justify-between text-xs"
-          >
-            <div className="flex items-center space-x-2">
-              <span className="field-icon">
-                {/* Add field-specific icon */}
-              </span>
-              <span>{field}</span>
+        {data.block_schema.required
+          ?.filter((field) => !skipFormFields.includes(field))
+          .map((field) => (
+            <div
+              key={field}
+              className="flex items-center justify-between text-xs"
+            >
+              <div className="flex items-center space-x-2">
+                <span className="field-icon">
+                  {/* Add field-specific icon */}
+                </span>
+                <span>{field}</span>
+              </div>
+              {typeof data.block_schema.properties?.[field] === 'object' &&
+              'default' in data.block_schema.properties[field] ? (
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                  <PlusCircle className="mr-1 h-3 w-3" />
+                  No {field} Selected
+                </Button>
+              ) : (
+                <Button variant="ghost" size="sm" className="h-6 px-2">
+                  <Edit className="h-3 w-3" />
+                </Button>
+              )}
             </div>
-            {typeof data.block_schema.properties?.[field] === 'object' &&
-            'default' in data.block_schema.properties[field] ? (
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                <PlusCircle className="mr-1 h-3 w-3" />
-                No {field} Selected
-              </Button>
-            ) : (
-              <Button variant="ghost" size="sm" className="h-6 px-2">
-                <Edit className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        ))}
+          ))}
       </CardContent>
       <Handle type="source" position={Position.Right} />
     </Card>

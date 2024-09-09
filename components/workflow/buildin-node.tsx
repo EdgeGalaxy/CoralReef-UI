@@ -1,6 +1,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { NodeData } from './node-detail';
+
+import { NodeData } from '@/constants/block';
 
 type BuiltInNodeProps = {
   data: NodeData;
