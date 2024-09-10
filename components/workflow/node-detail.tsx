@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -30,107 +30,120 @@ interface NodeDetailProps {
   kindsConnections: KindsConnections;
 }
 
-const NodeDetail: React.FC<NodeDetailProps> = ({
-  isOpen,
-  onClose,
-  nodeData,
-  onFormChange,
-  availableKindValues,
-  kindsConnections
-}) => {
-  const customFields = {
-    AnyOfField: (props: any) => (
-      <KindField
-        {...props}
-        availableKindValues={availableKindValues}
-        nodeData={nodeData}
-        kindsConnections={kindsConnections}
-      />
-    )
-  };
+const NodeDetail: React.FC<NodeDetailProps> = React.memo(
+  ({
+    isOpen,
+    onClose,
+    nodeData,
+    onFormChange,
+    availableKindValues,
+    kindsConnections
+  }) => {
+    const customFields = {
+      AnyOfField: React.useCallback(
+        (props: any) => (
+          <KindField
+            {...props}
+            availableKindValues={availableKindValues}
+            nodeData={nodeData}
+            kindsConnections={kindsConnections}
+          />
+        ),
+        [availableKindValues, nodeData, kindsConnections]
+      )
+    };
 
-  // 创建一个新的 schema，移除重复的 anyOf 字段
-  const newSchema = {
-    ...nodeData.block_schema,
-    properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
-      (acc, [key, value]) => {
-        // TODO: 指定字段特殊赋值
-        if (skipFormFields.includes(key)) {
-          return acc; // Skip fields in skipFormFields
-        }
-        if (typeof value === 'object' && value !== null && 'anyOf' in value) {
-          acc[key] = {
-            type: 'string',
-            title: value.title || key
-          };
-        } else if (
-          typeof value === 'object' &&
-          value !== null &&
-          key === 'name'
+    // 创建一个新的 schema，移除重复的 anyOf 字段
+    const newSchema = {
+      ...nodeData.block_schema,
+      properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
+        (acc, [key, value]) => {
+          // TODO: 指定字段特殊赋值
+          if (skipFormFields.includes(key)) {
+            return acc; // Skip fields in skipFormFields
+          }
+          if (typeof value === 'object' && value !== null && 'anyOf' in value) {
+            acc[key] = {
+              type: 'string',
+              title: value.title || key
+            };
+          } else if (
+            typeof value === 'object' &&
+            value !== null &&
+            key === 'name'
+          ) {
+            acc[key] = {
+              type: 'string',
+              title: value.title || key,
+              readOnly: true
+            };
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>
+      )
+    };
+
+    const uiSchema = Object.keys(nodeData.block_schema.properties || {}).reduce(
+      (acc, key) => {
+        const property = nodeData.block_schema.properties?.[key];
+        if (
+          typeof property === 'object' &&
+          property !== null &&
+          'anyOf' in property
         ) {
           acc[key] = {
-            type: 'string',
-            title: value.title || key,
-            readOnly: true
+            'ui:field': 'AnyOfField',
+            'ui:options': {
+              originalSchema: property
+            }
           };
-        } else {
-          acc[key] = value;
         }
         return acc;
       },
       {} as Record<string, any>
-    )
-  };
+    );
 
-  const uiSchema = Object.keys(nodeData.block_schema.properties || {}).reduce(
-    (acc, key) => {
-      const property = nodeData.block_schema.properties?.[key];
-      if (
-        typeof property === 'object' &&
-        property !== null &&
-        'anyOf' in property
-      ) {
-        acc[key] = {
-          'ui:field': 'AnyOfField',
-          'ui:options': {
-            originalSchema: property
-          }
-        };
-      }
-      return acc;
-    },
-    {} as Record<string, any>
-  );
+    const filteredFormData = Object.fromEntries(
+      Object.entries(nodeData.formData).filter(
+        ([key]) => !skipFormFields.includes(key)
+      )
+    );
 
-  const filteredFormData = Object.fromEntries(
-    Object.entries(nodeData.formData).filter(
-      ([key]) => !skipFormFields.includes(key)
-    )
-  );
+    const handleFormChange = useCallback(
+      (e: any) => {
+        onFormChange(e.formData);
+      },
+      [onFormChange]
+    );
 
-  return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent
-        side="right"
-        className="flex w-[600px] flex-col sm:w-[800px]"
-      >
-        <SheetHeader>
-          <SheetTitle>{nodeData.human_friendly_block_name} 详细信息</SheetTitle>
-        </SheetHeader>
-        <div className="flex-grow overflow-y-auto">
-          <Form
-            schema={newSchema}
-            uiSchema={uiSchema}
-            validator={validator}
-            formData={filteredFormData}
-            onChange={(e) => onFormChange(e.formData)}
-            fields={customFields}
-            className="rjsf-field-spacing" // Add a custom class for additional styling if needed
-          />
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-};
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent
+          side="right"
+          className="flex w-[600px] flex-col sm:w-[800px]"
+        >
+          <SheetHeader>
+            <SheetTitle>
+              {nodeData.human_friendly_block_name} 详细信息
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex-grow overflow-y-auto">
+            <Form
+              schema={newSchema}
+              uiSchema={uiSchema}
+              validator={validator}
+              formData={filteredFormData}
+              onChange={handleFormChange}
+              fields={customFields}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+);
 
 export default NodeDetail;

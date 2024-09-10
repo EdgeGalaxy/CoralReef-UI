@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Link1Icon } from '@radix-ui/react-icons';
 import { Label } from '@/components/ui/label';
 
-import { buildInNodes } from '@/constants/init-data';
+import { buildInNodes, outputNode } from '@/constants/init-data';
 import {
   NodeData,
   PropertyDefinition,
@@ -35,68 +35,24 @@ const KindField: React.FC<KindFieldProps> = (props) => {
     formData,
     availableKindValues,
     kindsConnections,
-    uiSchema = {}
+    uiSchema = {},
+    schema
   } = props;
   const originalSchema = uiSchema['ui:options']?.originalSchema as RJSFSchema;
 
-  const [isKindMode, setIsKindMode] = useState(false);
+  const allKindOptions = (originalSchema || schema)?.anyOf?.every(
+    (item: any) => item.kind
+  );
+  const [isKindMode, setIsKindMode] = useState(allKindOptions);
   const [inputValue, setInputValue] = useState(formData || '');
-
-  const hasKindOption = originalSchema.anyOf?.some((item: any) => item.kind);
-
-  const kindOptions = originalSchema.anyOf?.flatMap((item: any) => {
-    if (item.kind && Array.isArray(item.kind)) {
-      const currentNodeName = nodeData.formData.name;
-
-      const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
-        const relevantConnections = kindsConnections[kindItem.name] || [];
-        // FIXME: 特殊处理, 当 selected_element 为 workflow_param 时, 使用 string 作为 kindName
-        const kindName =
-          item.selected_element === 'workflow_parameter'
-            ? 'string'
-            : kindItem.name;
-        const availableKinds = availableKindValues[kindName] || [];
-
-        const sameElementKinds = availableKinds.filter(
-          (prop: PropertyDefinition) =>
-            prop.compatible_element === item.selected_element &&
-            !prop.property_name.startsWith(`$output.${currentNodeName}.`)
-        );
-        const sameKindsConnections = relevantConnections.filter(
-          (prop: PropertyDefinition) =>
-            prop.compatible_element === item.selected_element
-        );
-        // 取 sameKindsConnections 和 sameElementKinds 的交集, 当prop.manifest_type_identifier 与 buildInNodes 的 manifest_type_identifier 相同时 或者 与 sameElementKinds 的 manifest_type_identifier 相同
-        const intersection = sameElementKinds.filter(
-          (prop: PropertyDefinition) =>
-            buildInNodes.some(
-              (node: Node) =>
-                node.data.manifest_type_identifier ===
-                prop.manifest_type_identifier
-            ) ||
-            sameKindsConnections.some(
-              (kind: PropertyDefinition) =>
-                kind.manifest_type_identifier === prop.manifest_type_identifier
-            )
-        );
-        // const intersection = sameElementKinds.filter((prop: PropertyDefinition) => (buildInNodes.some((node: Node) => node.data.manifest_type_identifier === prop.manifest_type_identifier) || sameKindsConnections.some((kind: PropertyDefinition) => kind.manifest_type_identifier === prop.manifest_type_identifier)))
-        return intersection.map(
-          (prop: PropertyDefinition) => prop.property_name
-        );
-      });
-      return _kindOptions;
-    }
-    return [];
-  });
 
   useEffect(() => {
     setInputValue(formData || '');
   }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInputValue(newValue);
-    onChange(newValue);
+    setInputValue(e.target.value);
+    onChange(e.target.value);
   };
 
   const handleSelectChange = (selectedValue: string) => {
@@ -106,9 +62,66 @@ const KindField: React.FC<KindFieldProps> = (props) => {
 
   const toggleKindMode = () => {
     setIsKindMode(!isKindMode);
-    setInputValue('');
-    onChange('');
   };
+
+  const hasKindOption = (originalSchema || schema)?.anyOf?.some(
+    (item: any) => item.kind
+  );
+
+  const kindOptions = useMemo(() => {
+    // TODO: 特殊处理，当节点为output时，直接取所有的availableKindValues的值中的property_name
+    if (
+      nodeData.manifest_type_identifier ===
+      outputNode.data.manifest_type_identifier
+    ) {
+      return Object.values(availableKindValues)
+        .flat()
+        .map((item: PropertyDefinition) => item.property_name);
+    }
+    return (originalSchema || schema)?.anyOf?.flatMap((item: any) => {
+      if (item.kind && Array.isArray(item.kind)) {
+        const currentNodeName = nodeData.formData.name;
+
+        const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
+          const relevantConnections = kindsConnections[kindItem.name] || [];
+          // TODO: 特殊处理, 当 selected_element 为 workflow_param 时, 使用 string 作为 kindName
+          const kindName =
+            item.selected_element === 'workflow_parameter'
+              ? 'string'
+              : kindItem.name;
+          const availableKinds = availableKindValues[kindName] || [];
+
+          const sameElementKinds = availableKinds.filter(
+            (prop: PropertyDefinition) =>
+              prop.compatible_element === item.selected_element &&
+              !prop.property_name.startsWith(`$output.${currentNodeName}.`)
+          );
+          const sameKindsConnections = relevantConnections.filter(
+            (prop: PropertyDefinition) =>
+              prop.compatible_element === item.selected_element
+          );
+          const intersection = sameElementKinds.filter(
+            (prop: PropertyDefinition) =>
+              buildInNodes.some(
+                (node: Node) =>
+                  node.data.manifest_type_identifier ===
+                  prop.manifest_type_identifier
+              ) ||
+              sameKindsConnections.some(
+                (kind: PropertyDefinition) =>
+                  kind.manifest_type_identifier ===
+                  prop.manifest_type_identifier
+              )
+          );
+          return intersection.map(
+            (prop: PropertyDefinition) => prop.property_name
+          );
+        });
+        return _kindOptions;
+      }
+      return [];
+    });
+  }, [schema, nodeData, kindsConnections, availableKindValues]);
 
   const isRequired = useMemo(() => {
     return Array.isArray(nodeData.block_schema.required)
@@ -121,7 +134,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
       <div className="flex items-center justify-between">
         <Label htmlFor={props.id} className="text-sm font-medium">
           <span className="font-bold">
-            {originalSchema.title || props.name}
+            {originalSchema?.title || props.name}
           </span>
           {isRequired && <span className="ml-1 text-red-500">*</span>}
         </Label>
@@ -150,8 +163,14 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             required={isRequired}
           />
         )}
-        {hasKindOption && (
-          <Button variant="ghost" size="icon" onClick={toggleKindMode}>
+        {hasKindOption && !allKindOptions && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleKindMode}
+            className={isKindMode ? 'text-green-500' : 'text-gray-500'}
+            disabled={kindOptions?.length === 0}
+          >
             <Link1Icon className="h-4 w-4" />
           </Button>
         )}

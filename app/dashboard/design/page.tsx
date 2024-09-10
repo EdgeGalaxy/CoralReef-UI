@@ -149,7 +149,7 @@ const DesignPage = () => {
         // Handle input node
         node.data.formData.images.forEach((image: any) => {
           // TODO: kindName 后续需要更改为动态值，不能写死
-          const kindName = 'Batch[image]';
+          const kindName = 'image';
           if (!kindValues[kindName]) {
             kindValues[kindName] = [];
           }

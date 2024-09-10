@@ -57,10 +57,52 @@ export const outputNode: Node = {
             type: 'object',
             properties: {
               name: { type: 'string' },
-              type: { type: 'string', enum: ['image', 'string'] },
-              value: { type: 'string' }
+              value: {
+                anyOf: [
+                  {
+                    kind: [
+                      {
+                        description: 'String value',
+                        docs: '\nExamples:\n```\n"my string value"\n```\n',
+                        name: 'string'
+                      }
+                    ],
+                    pattern: '^\\$inputs.[A-Za-z_0-9\\-]+$',
+                    reference: true,
+                    selected_element: 'workflow_parameter',
+                    type: 'string'
+                  },
+                  {
+                    kind: [
+                      {
+                        description: 'Image in workflows',
+                        docs: '\nThis is the representation of image in `workflows`. The value behind this kind \nis Python list of dictionaries. Each of this dictionary is native `inference` image with\nthe following keys defined:\n```python\n{\n    "type": "url",   # there are different types supported, including np arrays and PIL images\n    "value": "..."   # value depends on `type`\n}\n```\nThis format makes it possible to use [inference image utils](https://inference.roboflow.com/docs/reference/inference/core/utils/image_utils/)\nto operate on the images. \n\nSome blocks that output images may add additional fields - like "parent_id", which should\nnot be modified but may be used is specific contexts - for instance when\none needs to tag predictions with identifier of parent image.\n',
+                        name: 'image'
+                      }
+                    ],
+                    pattern: '^\\$inputs.[A-Za-z_0-9\\-]+$',
+                    reference: true,
+                    selected_element: 'workflow_image',
+                    type: 'string'
+                  },
+                  {
+                    kind: [
+                      {
+                        description: 'Image in workflows',
+                        docs: '\nThis is the representation of image in `workflows`. The value behind this kind \nis Python list of dictionaries. Each of this dictionary is native `inference` image with\nthe following keys defined:\n```python\n{\n    "type": "url",   # there are different types supported, including np arrays and PIL images\n    "value": "..."   # value depends on `type`\n}\n```\nThis format makes it possible to use [inference image utils](https://inference.roboflow.com/docs/reference/inference/core/utils/image_utils/)\nto operate on the images. \n\nSome blocks that output images may add additional fields - like "parent_id", which should\nnot be modified but may be used is specific contexts - for instance when\none needs to tag predictions with identifier of parent image.\n',
+                        name: 'image'
+                      }
+                    ],
+                    pattern:
+                      '^\\$steps\\.[A-Za-z_\\-0-9]+\\.[A-Za-z_*0-9\\-]+$',
+                    reference: true,
+                    selected_element: 'step_output',
+                    type: 'string'
+                  }
+                ]
+              }
             },
-            required: ['name', 'type']
+            required: ['name', 'value']
           }
         }
       }
