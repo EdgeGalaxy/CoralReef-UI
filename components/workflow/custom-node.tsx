@@ -1,13 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-import { ReaderIcon } from '@radix-ui/react-icons';
+import { ReaderIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { Handle, Position } from 'reactflow';
 import { NodeData } from '@/constants/block';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit } from 'lucide-react';
+import { skipFormFields } from '@/constants/block';
 
 const CustomNode = ({ data }: { data: NodeData }) => {
+  const [missRequiredFields, setMissRequiredFields] = useState(false);
+
+  useEffect(() => {
+    const checkRequiredFields = () => {
+      const missingFields = data.block_schema.required
+        ?.filter((field: string) => !skipFormFields.includes(field))
+        .some((field: string) => !data.formData[field]);
+
+      setMissRequiredFields(missingFields ?? false);
+    };
+
+    checkRequiredFields();
+  }, [data.formData, data.block_schema.required]);
+
   const getNodeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'model':
@@ -77,18 +91,16 @@ const CustomNode = ({ data }: { data: NodeData }) => {
           <div className="flex flex-col items-stretch space-y-2 text-xs">
             <Button
               variant="ghost"
-              className="h-6 truncate bg-slate-200 px-2 text-xs"
+              className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
             >
               {data.formData.name}
             </Button>
-            {data.block_schema.required?.some(
-              (field) => !data.formData[field]
-            ) ? (
+            {missRequiredFields ? (
               <Button
                 variant="ghost"
-                className="flex h-6 items-center justify-center truncate bg-yellow-100 px-2 text-xs"
+                className="flex h-6 justify-start truncate bg-yellow-100 px-2 text-xs"
               >
-                <PlusCircle className="mr-1 h-3 w-3 flex-shrink-0" />
+                <ExclamationTriangleIcon className="mr-1 h-3 w-3 flex-shrink-0" />
                 <span className="truncate">Configuration Required</span>
               </Button>
             ) : null}

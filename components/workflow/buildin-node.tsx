@@ -16,13 +16,13 @@ const InputSpecificComponent: React.FC = () => {
     <div className="flex flex-col items-stretch space-y-2">
       <Button
         variant="ghost"
-        className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
+        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs"
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Image
       </Button>
       <Button
         variant="ghost"
-        className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
+        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs"
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Params
       </Button>
@@ -35,7 +35,7 @@ const OutputSpecificComponent: React.FC = () => {
     <div>
       <Button
         variant="ghost"
-        className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
+        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs"
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Response
       </Button>
