@@ -25,7 +25,12 @@ import { BlockDescription, KindsConnections } from '@/constants/block';
 import NodeDetail from '@/components/workflow/node-detail';
 import { NodeData } from '@/constants/block';
 import BuiltInNode from '@/components/workflow/buildin-node';
-import { initialNodes, initialEdges } from '@/constants/init-data';
+import {
+  initialNodes,
+  initialEdges,
+  inputNode,
+  outputNode
+} from '@/constants/init-data';
 import { OutputDefinition, Kind, PropertyDefinition } from '@/constants/block';
 
 const nodeTypes = {
@@ -62,8 +67,94 @@ const DesignPage = () => {
   }, [isMinimized]);
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds: Edge[]) => addEdge(params, eds)),
-    [setEdges]
+    (params: Connection) => {
+      const sourceNode = nodes.find((node) => node.id === params.source);
+      const targetNode = nodes.find((node) => node.id === params.target);
+
+      if (sourceNode && targetNode) {
+        const sourceManifest = sourceNode.data.manifest_type_identifier;
+        const sourceNodeName = sourceNode.data.formData.name;
+        const targetManifest = targetNode.data.manifest_type_identifier;
+
+        const imageConnections = kindsConnections['image'] || [];
+        const avaliableImageNodes = availableKindValues['image'] || [];
+        let connectNode: PropertyDefinition | undefined = undefined;
+        let propertyName: string | undefined = undefined;
+
+        // 判断两个节点是否可连接，且连接时应该更新那个图片字段
+        if (sourceManifest === inputNode.data.manifest_type_identifier) {
+          connectNode = imageConnections.find(
+            (conn) =>
+              conn.manifest_type_identifier === targetManifest &&
+              conn.compatible_element === 'workflow_image'
+          );
+          propertyName = avaliableImageNodes.find(
+            (node) =>
+              node.manifest_type_identifier === sourceManifest &&
+              node.compatible_element === 'workflow_image'
+          )?.property_name;
+        } else if (
+          targetManifest === outputNode.data.manifest_type_identifier
+        ) {
+          connectNode =
+            sourceManifest !== inputNode.data.manifest_type_identifier
+              ? targetManifest
+              : undefined;
+        } else {
+          const canConnect =
+            imageConnections.some(
+              (conn) =>
+                conn.manifest_type_identifier === sourceManifest &&
+                conn.compatible_element === 'step_output'
+            ) &&
+            imageConnections.some(
+              (conn) =>
+                conn.manifest_type_identifier === targetManifest &&
+                conn.compatible_element === 'step_output'
+            );
+          connectNode = canConnect
+            ? imageConnections.find(
+                (conn) =>
+                  conn.manifest_type_identifier === sourceManifest &&
+                  conn.compatible_element === 'step_output'
+              )
+            : undefined;
+          propertyName = avaliableImageNodes.find(
+            (node) =>
+              node.manifest_type_identifier === sourceManifest &&
+              node.compatible_element === 'step_output' &&
+              node.property_name.includes(`$steps.${sourceNodeName}.`)
+          )?.property_name;
+        }
+
+        // Check if both nodes are in the 'image' key of kindsConnections
+        if (connectNode) {
+          setEdges((eds: Edge[]) => addEdge(params, eds));
+          if (propertyName) {
+            setNodes((nds: Node[]) =>
+              nds.map((node) =>
+                node.id === targetNode.id
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        formData: {
+                          ...node.data.formData,
+                          [connectNode.property_name]: propertyName
+                        }
+                      }
+                    }
+                  : node
+              )
+            );
+          }
+        } else {
+          console.log('Connection not allowed: Incompatible node types');
+          // Optionally, you can show a notification to the user here
+        }
+      }
+    },
+    [setEdges, nodes, kindsConnections]
   );
 
   const onDeleteNode = useCallback(() => {
@@ -104,7 +195,11 @@ const DesignPage = () => {
 
   const generateFormData = (data: BlockDescription) => {
     const blockSchema = data.block_schema;
-    const nodeName = data.manifest_type_identifier.split('/')[1].split('@')[0];
+    let nodeName = data.manifest_type_identifier.split('/')[1].split('@')[0];
+    // nodeName 过长时则split('_') 取后面的1到2个元素拼接
+    if (nodeName.split('_').length > 1) {
+      nodeName = nodeName.split('_').slice(-2).join('_');
+    }
     const nodeCount = nodes.filter(
       (n) => n.data.formData?.type === data.manifest_type_identifier
     ).length;
@@ -146,9 +241,12 @@ const DesignPage = () => {
     [nodes, setNodes]
   );
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-    setSelectedNode(node);
-  }, []);
+  const onNodeClick = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      setSelectedNode(node);
+    },
+    [setNodes]
+  );
 
   // Add this new function to handle key presses
   const onKeyDown = useCallback(
@@ -349,7 +447,6 @@ const DesignPage = () => {
           onNodeClick={onNodeClick}
           onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes}
-          deleteKeyCode={null} // Disable default delete behavior
           multiSelectionKeyCode={null} // Disable multi-selection
           selectionKeyCode={null} // Disable selection
           fitView
@@ -375,13 +472,15 @@ const DesignPage = () => {
       {selectedNode && (
         <NodeDetail
           isOpen={!!selectedNode}
-          onClose={() => setSelectedNode(null)}
+          onClose={() => {
+            setSelectedNode(null);
+          }}
           nodeData={selectedNode.data}
           onFormChange={onFormChange}
           availableKindValues={availableKindValues}
           kindsConnections={kindsConnections}
           onDeleteNode={
-            selectedNode.type !== 'builtInNode' ? onDeleteNode : undefined
+            selectedNode.type !== 'builtInNode' ? onDeleteNode : () => {}
           }
         />
       )}
