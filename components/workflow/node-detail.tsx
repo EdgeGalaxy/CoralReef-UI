@@ -18,6 +18,7 @@ import {
 } from '@/constants/block';
 
 import KindField from './kind-field';
+import { Button } from '@/components/ui/button'; // Add this import
 
 const Form = withTheme(SemanticUITheme);
 
@@ -28,6 +29,7 @@ interface NodeDetailProps {
   onFormChange: (formData: any) => void;
   availableKindValues: Record<string, PropertyDefinition[]>;
   kindsConnections: KindsConnections;
+  onDeleteNode: () => void; // Add this new prop
 }
 
 const NodeDetail: React.FC<NodeDetailProps> = React.memo(
@@ -37,7 +39,8 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
     nodeData,
     onFormChange,
     availableKindValues,
-    kindsConnections
+    kindsConnections,
+    onDeleteNode // Add this new prop
   }) => {
     const customFields = {
       AnyOfField: React.useCallback(
@@ -103,7 +106,12 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
         }
         return acc;
       },
-      {} as Record<string, any>
+      {
+        // Add this configuration to hide the submit button
+        'ui:submitButtonOptions': {
+          norender: true
+        }
+      } as Record<string, any>
     );
 
     const filteredFormData = Object.fromEntries(
@@ -139,6 +147,15 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
               onChange={handleFormChange}
               fields={customFields}
             />
+            {nodeData.block_schema.block_type !== 'buildin' && (
+              <Button
+                variant="destructive"
+                onClick={onDeleteNode}
+                className="mt-4 w-full"
+              >
+                删除节点
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>

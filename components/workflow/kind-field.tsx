@@ -52,7 +52,10 @@ const KindField: React.FC<KindFieldProps> = (props) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
-    onChange(e.target.value);
+  };
+
+  const handleInputBlur = () => {
+    onChange(inputValue);
   };
 
   const handleSelectChange = (selectedValue: string) => {
@@ -158,6 +161,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             id={props.id}
             value={inputValue}
             onChange={handleInputChange}
+            onBlur={handleInputBlur}
             className="w-full"
             placeholder="Enter a value"
             required={isRequired}

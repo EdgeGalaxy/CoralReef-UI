@@ -16,7 +16,6 @@ import ReactFlow, {
 
 import 'reactflow/dist/style.css';
 
-import { RJSFSchema } from '@rjsf/utils';
 import { useSidebar } from '@/hooks/useSidebar';
 import NodeSelector from '@/components/workflow/nodes-selector';
 import { Button } from '@/components/ui/button';
@@ -67,6 +66,18 @@ const DesignPage = () => {
     [setEdges]
   );
 
+  const onDeleteNode = useCallback(() => {
+    if (selectedNode && selectedNode.type !== 'builtInNode') {
+      setSelectedNode(null);
+      setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
+      setEdges((eds) =>
+        eds.filter(
+          (e) => e.source !== selectedNode.id && e.target !== selectedNode.id
+        )
+      );
+    }
+  }, [selectedNode]);
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -93,7 +104,7 @@ const DesignPage = () => {
 
   const generateFormData = (data: BlockDescription) => {
     const blockSchema = data.block_schema;
-    const nodeType = data.manifest_type_identifier.split('/')[1].split('@')[0];
+    const nodeName = data.manifest_type_identifier.split('/')[1].split('@')[0];
     const nodeCount = nodes.filter(
       (n) => n.data.formData?.type === data.manifest_type_identifier
     ).length;
@@ -101,7 +112,7 @@ const DesignPage = () => {
     return Object.entries(blockSchema.properties || {}).reduce(
       (acc: any, [key, value]: [string, any]) => {
         if (key === 'name') {
-          acc[key] = nodeCount > 0 ? `${nodeType}_${nodeCount}` : nodeType;
+          acc[key] = nodeCount > 0 ? `${nodeName}_${nodeCount}` : nodeName;
         } else if (key === 'type') {
           acc[key] = data.manifest_type_identifier;
         } else {
@@ -138,6 +149,37 @@ const DesignPage = () => {
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
   }, []);
+
+  // Add this new function to handle key presses
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (
+        event.key === 'Delete' &&
+        selectedNode &&
+        selectedNode.type !== 'builtInNode'
+      ) {
+        onDeleteNode();
+      }
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === 'c' &&
+        selectedNode &&
+        selectedNode.type !== 'builtInNode'
+      ) {
+        // Handle copy operation here if needed
+        console.log('Copy operation prevented for non-built-in node');
+      }
+    },
+    [selectedNode, onDeleteNode]
+  );
+
+  // Add useEffect to handle key events
+  useEffect(() => {
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onKeyDown]);
 
   const updateAvailableKindValues = useCallback(() => {
     const kindValues: Record<string, PropertyDefinition[]> = {};
@@ -307,6 +349,9 @@ const DesignPage = () => {
           onNodeClick={onNodeClick}
           onNodeDragStop={onNodeDragStop}
           nodeTypes={nodeTypes}
+          deleteKeyCode={null} // Disable default delete behavior
+          multiSelectionKeyCode={null} // Disable multi-selection
+          selectionKeyCode={null} // Disable selection
           fitView
         >
           <Controls />
@@ -335,6 +380,9 @@ const DesignPage = () => {
           onFormChange={onFormChange}
           availableKindValues={availableKindValues}
           kindsConnections={kindsConnections}
+          onDeleteNode={
+            selectedNode.type !== 'builtInNode' ? onDeleteNode : undefined
+          }
         />
       )}
     </div>

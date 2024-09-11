@@ -8,6 +8,7 @@ export const inputNode: Node = {
     human_friendly_block_name: 'Input',
     manifest_type_identifier: 'input',
     block_schema: {
+      block_type: 'buildin',
       type: 'object',
       properties: {
         images: {
@@ -49,6 +50,7 @@ export const outputNode: Node = {
     human_friendly_block_name: 'Output',
     manifest_type_identifier: 'output',
     block_schema: {
+      block_type: 'buildin',
       type: 'object',
       properties: {
         params: {
