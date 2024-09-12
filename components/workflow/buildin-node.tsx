@@ -1,11 +1,11 @@
 import React from 'react';
 import {
-  EnterIcon,
-  ExitIcon,
+  LogInIcon,
+  LogOutIcon,
   ImageIcon,
-  MixerVerticalIcon,
+  SlidersHorizontalIcon,
   PlusIcon
-} from '@radix-ui/react-icons';
+} from 'lucide-react';
 import { Handle, Position } from 'reactflow';
 import { NodeData } from '@/constants/block';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -76,7 +76,11 @@ const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
         <CardHeader className={`py-3 ${nodeColor.split(' ')[1]} rounded-t-lg`}>
           <div className="flex items-center space-x-2 text-sm font-medium">
             <span className="node-icon">
-              {isInput ? <EnterIcon /> : <ExitIcon />}
+              {isInput ? (
+                <LogInIcon className="h-4 w-4" />
+              ) : (
+                <LogOutIcon className="h-4 w-4" />
+              )}
             </span>
             <span>{data.human_friendly_block_name}</span>
           </div>
@@ -98,7 +102,7 @@ const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
                 variant="ghost"
                 className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
               >
-                <MixerVerticalIcon className="mr-2 h-4 w-4" /> {param.name}
+                <SlidersHorizontalIcon className="mr-2 h-4 w-4" /> {param.name}
               </Button>
             ))}
             {isInput && <InputSpecificComponent />}

@@ -110,7 +110,8 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
         // Add this configuration to hide the submit button
         'ui:submitButtonOptions': {
           norender: true
-        }
+        },
+        'ui:title': ''
       } as Record<string, any>
     );
 
@@ -134,9 +135,7 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           className="flex w-[600px] flex-col sm:w-[800px]"
         >
           <SheetHeader>
-            <SheetTitle>
-              {nodeData.human_friendly_block_name} 详细信息
-            </SheetTitle>
+            <SheetTitle>{nodeData.human_friendly_block_name}</SheetTitle>
           </SheetHeader>
           <div className="flex-grow overflow-y-auto">
             <Form

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-
-import { ReaderIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { ShieldAlertIcon } from 'lucide-react';
 import { Handle, Position } from 'reactflow';
 import { NodeData } from '@/constants/block';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { skipFormFields } from '@/constants/block';
+import { getNodeColor } from '@/lib/node-utils';
 
 const CustomNode = ({ data }: { data: NodeData }) => {
   const [missRequiredFields, setMissRequiredFields] = useState(false);
@@ -21,59 +21,6 @@ const CustomNode = ({ data }: { data: NodeData }) => {
 
     checkRequiredFields();
   }, [data.formData, data.block_schema.required]);
-
-  const getNodeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'model':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-purple-200',
-          bg: 'bg-purple-100'
-        };
-      case 'formatter':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-green-200',
-          bg: 'bg-green-100'
-        };
-      case 'fusion':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-orange-200',
-          bg: 'bg-orange-100'
-        };
-      case 'flow_control':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-blue-200',
-          bg: 'bg-blue-100'
-        };
-      case 'sink':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-red-200',
-          bg: 'bg-red-100'
-        };
-      case 'transformation':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-yellow-200',
-          bg: 'bg-yellow-100'
-        };
-      case 'visualization':
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-green-200',
-          bg: 'bg-green-100'
-        };
-      default:
-        return {
-          icon: <ReaderIcon className="h-4 w-4" />,
-          border: 'border-gray-200',
-          bg: 'bg-gray-100'
-        };
-    }
-  };
 
   const nodeColor = getNodeColor(data.block_schema.block_type);
 
@@ -100,7 +47,7 @@ const CustomNode = ({ data }: { data: NodeData }) => {
                 variant="ghost"
                 className="flex h-6 justify-start truncate bg-yellow-100 px-2 text-xs"
               >
-                <ExclamationTriangleIcon className="mr-1 h-3 w-3 flex-shrink-0" />
+                <ShieldAlertIcon className="mr-1 h-3 w-3 flex-shrink-0" />
                 <span className="truncate">Configuration Required</span>
               </Button>
             ) : null}

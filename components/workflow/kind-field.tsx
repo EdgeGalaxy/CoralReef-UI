@@ -86,7 +86,6 @@ const KindField: React.FC<KindFieldProps> = (props) => {
         const currentNodeName = nodeData.formData.name;
 
         const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
-          const relevantConnections = kindsConnections[kindItem.name] || [];
           // TODO: 特殊处理, 当 selected_element 为 workflow_param 时, 使用 string 作为 kindName
           const kindName =
             item.selected_element === 'workflow_parameter'
@@ -94,27 +93,10 @@ const KindField: React.FC<KindFieldProps> = (props) => {
               : kindItem.name;
           const availableKinds = availableKindValues[kindName] || [];
 
-          const sameElementKinds = availableKinds.filter(
+          const intersection = availableKinds.filter(
             (prop: PropertyDefinition) =>
               prop.compatible_element === item.selected_element &&
               !prop.property_name.startsWith(`$output.${currentNodeName}.`)
-          );
-          const sameKindsConnections = relevantConnections.filter(
-            (prop: PropertyDefinition) =>
-              prop.compatible_element === item.selected_element
-          );
-          const intersection = sameElementKinds.filter(
-            (prop: PropertyDefinition) =>
-              buildInNodes.some(
-                (node: Node) =>
-                  node.data.manifest_type_identifier ===
-                  prop.manifest_type_identifier
-              ) ||
-              sameKindsConnections.some(
-                (kind: PropertyDefinition) =>
-                  kind.manifest_type_identifier ===
-                  prop.manifest_type_identifier
-              )
           );
           return intersection.map(
             (prop: PropertyDefinition) => prop.property_name
