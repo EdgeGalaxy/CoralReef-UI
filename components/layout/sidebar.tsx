@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import Link from 'next/link';
+import { NavItem } from '@/types';
 
 type SidebarProps = {
   className?: string;
@@ -13,9 +14,20 @@ type SidebarProps = {
 
 export default function Sidebar({ className }: SidebarProps) {
   const { isMinimized, toggle } = useSidebar();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const handleToggle = () => {
     toggle();
+  };
+
+  const handleItemClick = (item: NavItem) => {
+    if (item.children) {
+      setExpandedItems((prev) =>
+        prev.includes(item.title)
+          ? prev.filter((title) => title !== item.title)
+          : [...prev, item.title]
+      );
+    }
   };
 
   return (
@@ -55,7 +67,12 @@ export default function Sidebar({ className }: SidebarProps) {
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="mt-3 space-y-1">
-            <DashboardNav items={navItems} />
+            <DashboardNav
+              items={navItems}
+              isMinimized={isMinimized}
+              expandedItems={expandedItems}
+              onItemClick={handleItemClick}
+            />
           </div>
         </div>
       </div>

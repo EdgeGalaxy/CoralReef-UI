@@ -28,7 +28,12 @@ import {
   User,
   User2Icon,
   UserX2Icon,
-  X
+  X,
+  Network,
+  Camera,
+  ShipWheel,
+  Router,
+  Boxes
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -45,7 +50,11 @@ export const Icons = {
   chevronRight: ChevronRight,
   trash: Trash,
   employee: UserX2Icon,
-  design: FileText,
+  workflow: Network,
+  deploy: ShipWheel,
+  source: Camera,
+  gateway: Router,
+  deployment: Boxes,
   post: FileText,
   page: File,
   media: Image,

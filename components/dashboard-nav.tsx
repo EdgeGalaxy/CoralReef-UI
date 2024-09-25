@@ -1,82 +1,86 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-import { Icons } from '@/components/icons';
-import { cn } from '@/lib/utils';
 import { NavItem } from '@/types';
-import { Dispatch, SetStateAction } from 'react';
-import { useSidebar } from '@/hooks/useSidebar';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from './ui/tooltip';
+import { cn } from '@/lib/utils';
+import { Icons } from '@/components/icons';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 
 interface DashboardNavProps {
   items: NavItem[];
-  setOpen?: Dispatch<SetStateAction<boolean>>;
-  isMobileNav?: boolean;
+  isMinimized: boolean;
+  expandedItems: string[];
+  onItemClick: (item: NavItem) => void;
 }
 
 export function DashboardNav({
   items,
-  setOpen,
-  isMobileNav = false
+  isMinimized,
+  expandedItems,
+  onItemClick
 }: DashboardNavProps) {
   const path = usePathname();
-  const { isMinimized } = useSidebar();
-
-  if (!items?.length) {
-    return null;
-  }
-
-  console.log('isActive', isMobileNav, isMinimized);
 
   return (
     <nav className="grid items-start gap-2">
-      <TooltipProvider>
-        {items.map((item, index) => {
-          const Icon = Icons[item.icon || 'arrowRight'];
-          return (
-            item.href && (
-              <Tooltip key={index}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.disabled ? '/' : item.href}
-                    className={cn(
-                      'flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground',
-                      path === item.href ? 'bg-accent' : 'transparent',
-                      item.disabled && 'cursor-not-allowed opacity-80'
-                    )}
-                    onClick={() => {
-                      if (setOpen) setOpen(false);
-                    }}
-                  >
-                    <Icon className={`ml-3 size-5 flex-none`} />
+      {items.map((item, index) => {
+        const Icon = Icons[item.icon || 'arrowRight'];
+        const isActive = path === item.href;
+        const isExpanded = expandedItems.includes(item.title);
 
-                    {isMobileNav || (!isMinimized && !isMobileNav) ? (
-                      <span className="mr-2 truncate">{item.title}</span>
-                    ) : (
-                      ''
-                    )}
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent
-                  align="center"
-                  side="right"
-                  sideOffset={8}
-                  className={!isMinimized ? 'hidden' : 'inline-block'}
-                >
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
-            )
-          );
-        })}
-      </TooltipProvider>
+        return (
+          <div key={index}>
+            <Button
+              asChild={!item.children}
+              variant={isActive ? 'secondary' : 'ghost'}
+              className={cn(
+                'w-full justify-start',
+                isMinimized && 'justify-center px-2'
+              )}
+              onClick={() => onItemClick(item)}
+            >
+              {item.children ? (
+                <div className="flex w-full items-center justify-between">
+                  <div className="flex items-center">
+                    <Icon className="mr-2 h-4 w-4" />
+                    {!isMinimized && <span>{item.title}</span>}
+                  </div>
+                  {!isMinimized && (
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 transition-transform',
+                        isExpanded && 'rotate-180'
+                      )}
+                    />
+                  )}
+                </div>
+              ) : (
+                <Link href={item.href}>
+                  <Icon className="mr-2 h-4 w-4" />
+                  {!isMinimized && <span>{item.title}</span>}
+                </Link>
+              )}
+            </Button>
+            {item.children && isExpanded && !isMinimized && (
+              <div className="ml-4 mt-2 space-y-1">
+                {item.children.map((child, childIndex) => (
+                  <Button
+                    key={childIndex}
+                    asChild
+                    variant={path === child.href ? 'secondary' : 'ghost'}
+                    className="w-full justify-start"
+                  >
+                    <Link href={child.href}>{child.title}</Link>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </nav>
   );
 }
