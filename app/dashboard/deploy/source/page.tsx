@@ -12,8 +12,8 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import CreateSourceDialog from '@/components/modal/create-source';
 
 const breadcrumbItems = [
-  { title: 'Deploy', link: '/dashboard/deploy/gateway' },
-  { title: 'Deploy', link: '/dashboard/deploy/source' }
+  { title: '部署', link: '/dashboard/deploy/gateway' },
+  { title: '数据源', link: '/dashboard/deploy/source' }
 ];
 
 // Mock data
@@ -50,8 +50,8 @@ export default function GatewayPage() {
         <div className="container mx-auto p-4">
           <div className="flex items-center justify-between">
             <Heading
-              title={`Source (${mockSources.length})`}
-              description="Manage source devices"
+              title={`数据源 (${mockSources.length})`}
+              description="管理数据源"
             />
             <CreateSourceDialog />
           </div>

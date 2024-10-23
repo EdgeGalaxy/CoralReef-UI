@@ -1,6 +1,6 @@
 'use client';
 
-import { Gateway } from '@/constants/depoy';
+import { Gateway } from '@/constants/deploy';
 
 interface Column {
   accessorKey: keyof Gateway;
@@ -13,15 +13,15 @@ export const columns = (
 ): Column[] => [
   {
     accessorKey: 'name',
-    header: 'NAME'
+    header: '网关名'
   },
   {
     accessorKey: 'deviceType',
-    header: 'DEVICE TYPE'
+    header: '设备类型'
   },
   {
     accessorKey: 'status',
-    header: 'STATUS',
+    header: '状态',
     cell: ({ row }) => (
       <span
         className={`${
@@ -34,14 +34,14 @@ export const columns = (
   },
   {
     accessorKey: 'gatewayVersion',
-    header: 'GATEWAY VERSION'
+    header: '网关版本'
   },
   {
     accessorKey: 'deploymentCount',
-    header: 'DEPLOYMENT COUNT'
+    header: '部署服务数'
   },
   {
     accessorKey: 'createdAt',
-    header: 'CREATED TIME'
+    header: '创建时间'
   }
 ];

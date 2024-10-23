@@ -2,37 +2,37 @@ import { NavItem } from '@/types';
 
 export const navItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: '首页',
     href: '/dashboard',
     icon: 'dashboard',
     label: 'Dashboard'
   },
   {
-    title: 'Workflow',
+    title: '工作流',
     href: '/dashboard/workflow',
     icon: 'workflow',
     label: 'workflow'
   },
   {
-    title: 'Deploy',
+    title: '部署',
     href: '/dashboard/deploy/gateway',
     icon: 'deploy',
     label: 'deploy',
     children: [
       {
-        title: 'Gateway',
+        title: '网关',
         href: '/dashboard/deploy/gateway',
         icon: 'gateway',
         label: 'gateway'
       },
       {
-        title: 'Source',
+        title: '数据源',
         href: '/dashboard/deploy/source',
         icon: 'source',
         label: 'source'
       },
       {
-        title: 'Deployment',
+        title: '服务',
         href: '/dashboard/deploy/deployment',
         icon: 'deployment',
         label: 'deployment'
@@ -40,19 +40,19 @@ export const navItems: NavItem[] = [
     ]
   },
   {
-    title: 'Monitor',
+    title: '监控',
     href: '/dashboard/monitor',
     icon: 'kanban',
     label: 'monitor'
   },
   {
-    title: 'Settings',
+    title: '设置',
     href: '/dashboard/settings',
     icon: 'settings',
     label: 'settings'
   },
   {
-    title: 'Login',
+    title: '登录',
     href: '/',
     icon: 'login',
     label: 'login'

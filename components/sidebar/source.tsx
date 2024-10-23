@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { SourceDataModel, DeploymentDataModel } from '@/constants/depoy';
+import { SourceDataModel, DeploymentDataModel } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Trash2, Edit } from 'lucide-react';
+import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
 import { DeploymentTable } from '@/components/tables/deployment/client';
 
@@ -14,32 +14,34 @@ interface Props {
 function SourceDetail({ source }: { source: SourceDataModel }) {
   return (
     <div>
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-4 gap-4">
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">Source name</span>
+          <span className="text-sm text-muted-foreground">数据源名</span>
           <span className="font-medium">{source.name}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">Source type</span>
+          <span className="text-sm text-muted-foreground">数据源类型</span>
           <span className="font-medium">{source.sourceType}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">Device</span>
+          <span className="text-sm text-muted-foreground">设备名</span>
           <span className="font-medium">{source.deviceId}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm text-muted-foreground">创建时间</span>
+          <span className="font-medium">
+            {new Date(source.createdAt).toLocaleString()}
+          </span>
         </div>
       </div>
       <div className="mb-6 flex space-x-4">
         <Button variant="outline" size="sm" className="text-xs">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
+          <Icons.refreshCw className="mr-2 h-4 w-4" />
+          刷新
         </Button>
         <Button variant="outline" size="sm" className="text-xs">
-          <Edit className="mr-2 h-4 w-4" />
-          Edit
-        </Button>
-        <Button variant="outline" size="sm" className="text-xs">
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
+          <Icons.trash2 className="mr-2 h-4 w-4" />
+          删除
         </Button>
       </div>
     </div>
@@ -79,13 +81,13 @@ export function SourceSidebar({ source, onClose }: Props) {
 
   const tabConfig = [
     {
-      value: 'snapshots',
-      label: 'Snapshots',
-      content: <div>Snapshots content for this source</div>
+      value: 'preview',
+      label: '预览',
+      content: <div>预览内容</div>
     },
     {
       value: 'deployments',
-      label: 'Deployments',
+      label: '关联服务',
       content: (
         <DeploymentTable
           deployments={deployments}
@@ -94,14 +96,9 @@ export function SourceSidebar({ source, onClose }: Props) {
       )
     },
     {
-      value: 'events',
-      label: 'Events',
-      content: <div>Events content for this source</div>
-    },
-    {
       value: 'settings',
-      label: 'Settings',
-      content: <div>Settings content for this source</div>
+      label: '设置',
+      content: <div>设置内容</div>
     }
   ];
 
@@ -111,7 +108,7 @@ export function SourceSidebar({ source, onClose }: Props) {
       onClose={onClose}
       detailContent={<SourceDetail source={source} />}
       tabs={tabConfig}
-      defaultTab="snapshots"
+      defaultTab="preview"
     />
   );
 }

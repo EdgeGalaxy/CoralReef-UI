@@ -11,8 +11,8 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { CreateGatewayModal } from '@/components/modal/create-gateway';
 
 const breadcrumbItems = [
-  { title: 'Deploy', link: '/dashboard/deploy/gateway' },
-  { title: 'Gateway', link: '/dashboard/deploy/gateway' }
+  { title: '部署', link: '/dashboard/deploy/gateway' },
+  { title: '网关', link: '/dashboard/deploy/gateway' }
 ];
 
 // Mock data
@@ -26,7 +26,7 @@ const mockGateways: Gateway[] = [
     internalIP: '10.0.0.1',
     gatewayVersion: 'v1.0',
     organizationId: 'org1',
-    status: 0,
+    status: 1,
     deploymentCount: 3,
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z'
@@ -63,8 +63,8 @@ export default function GatewayPage() {
         <div className="container mx-auto p-4">
           <div className="flex items-start justify-between">
             <Heading
-              title={`Gateway (${mockGateways.length})`}
-              description="Manage gateway devices"
+              title={`网关 (${mockGateways.length})`}
+              description="管理网关设备"
             />
             <CreateGatewayModal {...createGatewayMock} />
           </div>

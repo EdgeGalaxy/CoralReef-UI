@@ -19,10 +19,12 @@ interface Props {
 export function DeploymentTable({ deployments, onSelectDeployment }: Props) {
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="bg-gray-100 shadow-sm">
         <TableRow>
           {columns(onSelectDeployment).map((column) => (
-            <TableHead key={column.accessorKey}>{column.header}</TableHead>
+            <TableHead key={column.accessorKey} className="font-semibold">
+              {column.header}
+            </TableHead>
           ))}
         </TableRow>
       </TableHeader>

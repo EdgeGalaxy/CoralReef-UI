@@ -42,8 +42,8 @@ const nodeTypes = {
 };
 
 const breadcrumbItems = [
-  { title: 'Workflow', link: '/dashboard/workflow' },
-  { title: 'edit', link: `/dashboard/workflow/edit` }
+  { title: '工作流', link: '/dashboard/workflow' },
+  { title: '编辑', link: `/dashboard/workflow/edit` }
 ];
 
 const DesignPage = () => {
@@ -501,7 +501,7 @@ const DesignPage = () => {
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="absolute right-4 top-4 z-10">
-                Open Node Selector
+                节点选择器
               </Button>
             </SheetTrigger>
             <SheetContent side="right">

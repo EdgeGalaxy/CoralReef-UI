@@ -17,31 +17,39 @@ export const columns = (
 ): Column[] => [
   {
     accessorKey: 'name',
-    header: 'NAME'
+    header: '服务名'
   },
   {
     accessorKey: 'deviceId',
-    header: 'DEVICE ID'
+    header: '设备名'
   },
   {
     accessorKey: 'pipelineId',
-    header: 'PIPELINE ID'
+    header: '工作流'
   },
   {
     accessorKey: 'state',
-    header: 'STATE',
+    header: '状态',
     cell: ({ row }) => (
       <span
         className={`${
-          row.original.state === 1 ? 'text-green-500' : 'text-red-500'
+          row.original.state === 0
+            ? 'text-gray-500'
+            : row.original.state === 1
+            ? 'text-green-500'
+            : 'text-red-500'
         }`}
       >
-        {row.original.state === 1 ? 'Running' : 'Stopped'}
+        {row.original.state === 0
+          ? 'Stopped'
+          : row.original.state === 1
+          ? 'Running'
+          : 'Error'}
       </span>
     )
   },
   {
     accessorKey: 'createdAt',
-    header: 'CREATED TIME'
+    header: '创建时间'
   }
 ];

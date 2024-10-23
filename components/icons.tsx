@@ -33,7 +33,14 @@ import {
   Camera,
   ShipWheel,
   Router,
-  Boxes
+  Boxes,
+  Pencil,
+  XCircle,
+  CheckCircle2,
+  RefreshCw,
+  Trash2,
+  MinusCircle,
+  Power
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -70,6 +77,7 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   laptop: Laptop,
+  editable: Pencil,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
@@ -88,5 +96,11 @@ export const Icons = {
     </svg>
   ),
   twitter: Twitter,
-  check: Check
+  check: Check,
+  online: CheckCircle2,
+  offline: XCircle,
+  refreshCw: RefreshCw,
+  trash2: Trash2,
+  stopped: MinusCircle,
+  power: Power
 };

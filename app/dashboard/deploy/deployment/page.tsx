@@ -11,8 +11,8 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { DeploymentSidebar } from '@/components/sidebar/deployment';
 
 const breadcrumbItems = [
-  { title: 'Deploy', link: '/dashboard/deploy/deployment' },
-  { title: 'Deployment', link: '/dashboard/deploy/deployment' }
+  { title: '部署', link: '/dashboard/deploy/gateway' },
+  { title: '服务', link: '/dashboard/deploy/deployment' }
 ];
 
 // Mock data
@@ -38,6 +38,17 @@ const mockDeployments: DeploymentDataModel[] = [
     state: 0,
     createdAt: '2023-01-02T00:00:00Z',
     updatedAt: '2023-01-02T00:00:00Z'
+  },
+  {
+    id: '3',
+    name: 'Deployment 3',
+    description: 'Description 3',
+    deviceId: 'device3',
+    pipelineId: 'pipeline3',
+    organizationId: 'org3',
+    state: 2,
+    createdAt: '2023-01-03T00:00:00Z',
+    updatedAt: '2023-01-03T00:00:00Z'
   }
 ];
 
@@ -52,8 +63,8 @@ export default function DeploymentPage() {
         <div className="container mx-auto p-4">
           <div className="flex items-start justify-between">
             <Heading
-              title={`Deployments (${mockDeployments.length})`}
-              description="Manage deployments"
+              title={`服务 (${mockDeployments.length})`}
+              description="管理部署服务"
             />
           </div>
           <Separator className="my-4" />

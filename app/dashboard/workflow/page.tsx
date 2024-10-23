@@ -16,8 +16,8 @@ interface WorkflowTemplate {
 }
 
 const breadcrumbItems = [
-  { title: 'Dashboard', link: '/dashboard' },
-  { title: 'Workflow', link: '/dashboard/workflow' }
+  { title: '首页', link: '/dashboard' },
+  { title: '工作流', link: '/dashboard/workflow' }
 ];
 
 const WorkflowListPage = () => {
@@ -78,8 +78,8 @@ const WorkflowListPage = () => {
         <div className="container mx-auto p-4">
           <div className="flex items-start justify-between">
             <Heading
-              title={`Workflows (${workflows.length})`}
-              description="Manage your workflows"
+              title={`工作流 (${workflows.length})`}
+              description="管理工作流"
             />
             <WorkflowTemplateCreateModal
               templates={templates}

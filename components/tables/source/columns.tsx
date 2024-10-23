@@ -13,18 +13,18 @@ export const columns = (
 ): Column[] => [
   {
     accessorKey: 'name',
-    header: 'NAME'
+    header: '数据源名'
   },
   {
     accessorKey: 'sourceType',
-    header: 'SOURCE TYPE'
+    header: '数据源类型'
   },
   {
     accessorKey: 'deviceId',
-    header: 'DEVICE ID'
+    header: '设备名'
   },
   {
     accessorKey: 'createdAt',
-    header: 'CREATED TIME'
+    header: '创建时间'
   }
 ];

@@ -11,7 +11,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 
-import { SourceDataModel } from '@/constants/depoy';
+import { SourceDataModel } from '@/constants/deploy';
 
 interface Props {
   sources: SourceDataModel[];
@@ -22,7 +22,7 @@ export function SourceTable({ sources, onSelectSource }: Props) {
   return (
     <>
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-gray-100 shadow-sm">
           <TableRow>
             {columns(onSelectSource).map((column) => (
               <TableHead key={column.accessorKey as string}>

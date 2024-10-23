@@ -8,10 +8,8 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { Heading } from '@/components/ui/heading';
-import { Separator } from '@/components/ui/separator';
 import { columns } from './columns';
-import { Gateway } from '@/constants/depoy';
+import { Gateway } from '@/constants/deploy';
 
 interface Props {
   gateways: Gateway[];
@@ -22,7 +20,7 @@ export function GatewayTable({ gateways, onSelectGateway }: Props) {
   return (
     <>
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-gray-100 shadow-sm">
           <TableRow>
             {columns(onSelectGateway).map((column) => (
               <TableHead key={column.accessorKey as string}>

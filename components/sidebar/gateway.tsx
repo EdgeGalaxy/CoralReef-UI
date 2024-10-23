@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { Gateway, SourceDataModel } from '@/constants/deploy';
 import { DeploymentDataModel } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
-import { XCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { Icons } from '@/components/icons';
+
 import { Sidebar } from './_sidebar';
 import { DeploymentTable } from '../tables/deployment/client';
 import { SourceTable } from '../tables/source/client';
+import { EditableField } from './components/editable-field';
 
 interface Props {
   gateway: Gateway;
@@ -15,36 +17,60 @@ interface Props {
 }
 
 function GatewayDetail({ gateway }: { gateway: Gateway }) {
+  const handleUpdate = async (field: keyof Gateway, newValue: string) => {
+    // Implement the API call to update the gateway
+    console.log(`Updating ${field} to ${newValue}`);
+    // Example: await updateGateway(gateway.id, { [field]: newValue });
+  };
+
   return (
     <div>
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-4 gap-4">
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">IP address</span>
+          <span className="text-sm text-muted-foreground">网关地址</span>
           <span className="font-medium">
-            {gateway.publicIP || gateway.internalIP || 'NO IP ADDRESS'}
+            {gateway.publicIP || gateway.internalIP || '未设置'}
           </span>
         </div>
+        <EditableField
+          value={gateway.name}
+          label="网关名"
+          onUpdate={(newValue) => handleUpdate('name', newValue)}
+        />
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">Gateway name</span>
-          <span className="font-medium">{gateway.name}</span>
+          <span className="text-sm text-muted-foreground">网关版本</span>
+          <span className="font-medium">{gateway.gatewayVersion}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">Gateway version</span>
-          <span className="font-medium">{gateway.gatewayVersion}</span>
+          <span className="text-sm text-muted-foreground">最后更新时间</span>
+          <span className="font-medium">
+            {new Date(gateway.updatedAt).toLocaleString()}
+          </span>
         </div>
       </div>
       <div className="mb-6 flex space-x-4">
-        <Button variant="destructive" size="sm" className="text-xs">
-          <XCircle className="mr-2 h-4 w-4" />
-          {gateway.status === 0 ? 'Offline' : 'Online'}
+        <Button
+          size="sm"
+          className={`text-xs ${
+            gateway.status === 0
+              ? 'bg-red-500 hover:bg-red-500'
+              : 'bg-green-500 hover:bg-green-500'
+          }`}
+        >
+          {gateway.status === 0 ? (
+            <Icons.offline className="mr-2 h-4 w-4" />
+          ) : (
+            <Icons.online className="mr-2 h-4 w-4" />
+          )}
+          {gateway.status === 0 ? '离线' : '在线'}
         </Button>
         <Button variant="outline" size="sm" className="text-xs">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Restart
+          <Icons.refreshCw className="mr-2 h-4 w-4" />
+          刷新
         </Button>
         <Button variant="outline" size="sm" className="text-xs">
-          <Trash2 className="mr-2 h-4 w-4" />
-          Delete
+          <Icons.trash2 className="mr-2 h-4 w-4" />
+          删除
         </Button>
       </div>
     </div>
@@ -104,7 +130,7 @@ export function GatewaySidebar({ gateway, onClose }: Props) {
   const tabConfig = [
     {
       value: 'sources',
-      label: 'Sources',
+      label: '关联数据源',
       content: (
         <SourceTable
           sources={sources}
@@ -114,7 +140,7 @@ export function GatewaySidebar({ gateway, onClose }: Props) {
     },
     {
       value: 'deployments',
-      label: 'Deployments',
+      label: '关联服务',
       content: (
         <DeploymentTable
           deployments={deployments}
@@ -124,18 +150,18 @@ export function GatewaySidebar({ gateway, onClose }: Props) {
     },
     {
       value: 'events',
-      label: 'Events',
-      content: <div>Events content</div>
+      label: '操作日志',
+      content: <div>操作日志内容</div>
     },
     {
       value: 'hardware',
-      label: 'Hardware',
-      content: <div>Hardware content</div>
+      label: '硬件信息',
+      content: <div>硬件信息内容</div>
     },
     {
       value: 'settings',
-      label: 'Settings',
-      content: <div>Settings content</div>
+      label: '设置',
+      content: <div>设置内容</div>
     }
   ];
 

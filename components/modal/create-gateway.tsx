@@ -36,7 +36,7 @@ export function CreateGatewayModal({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create Gateway</Button>
+        <Button>创建网关</Button>
       </DialogTrigger>
       <DialogContent className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]">
         <DialogHeader>
@@ -44,11 +44,11 @@ export function CreateGatewayModal({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Description</Label>
+            <Label>描述</Label>
             <p className="mt-1 text-sm text-gray-600">{description}</p>
           </div>
           <div>
-            <Label>Code Snippet</Label>
+            <Label>运行脚本</Label>
             <div className="relative mt-1">
               <SyntaxHighlighter
                 language="shell"

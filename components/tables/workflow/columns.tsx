@@ -11,18 +11,18 @@ interface Column {
 export const columns: Column[] = [
   {
     accessorKey: 'name',
-    header: 'NAME'
+    header: '工作流名'
   },
   {
     accessorKey: 'description',
-    header: 'DESCRIPTION'
+    header: '描述'
   },
   {
     accessorKey: 'createdAt',
-    header: 'CREATED TIME'
+    header: '创建时间'
   },
   {
     accessorKey: 'updatedAt',
-    header: 'UPDATED TIME'
+    header: '更新时间'
   }
 ];

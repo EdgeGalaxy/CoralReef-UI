@@ -31,11 +31,11 @@ export function WorkflowTemplateCreateModal({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>Create Workflow</Button>
+        <Button>创建工作流</Button>
       </DialogTrigger>
       <DialogContent className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]">
         <DialogHeader>
-          <DialogTitle>Select a Workflow Template</DialogTitle>
+          <DialogTitle>选择工作流模板</DialogTitle>
         </DialogHeader>
         <div className="flex-grow overflow-y-auto">
           <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
@@ -56,7 +56,7 @@ export function WorkflowTemplateCreateModal({
           </div>
         </div>
         <div className="mt-4 flex justify-center">
-          <Button onClick={onCreateNewWorkflow}>Create New Workflow</Button>
+          <Button onClick={onCreateNewWorkflow}>创建新工作流</Button>
         </div>
       </DialogContent>
     </Dialog>

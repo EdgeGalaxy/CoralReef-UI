@@ -20,7 +20,7 @@ export function WorkflowTable({ workflows }: Props) {
   const router = useRouter();
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="bg-gray-100 shadow-sm">
         <TableRow>
           {columns.map((column) => (
             <TableHead key={column.accessorKey}>{column.header}</TableHead>

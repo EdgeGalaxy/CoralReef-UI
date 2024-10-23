@@ -68,14 +68,11 @@ export default function CreateSourceDialog() {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
-        <PlusCircle className="mr-2 h-4 w-4" />
-        Create Source
-      </Button>
+      <Button onClick={() => setIsOpen(true)}>创建数据源</Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Create New Source</DialogTitle>
+            <DialogTitle>创建数据源</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -84,7 +81,7 @@ export default function CreateSourceDialog() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>数据源名</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter source name" {...field} />
                     </FormControl>
@@ -97,7 +94,7 @@ export default function CreateSourceDialog() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>描述</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter description" {...field} />
                     </FormControl>
@@ -110,7 +107,7 @@ export default function CreateSourceDialog() {
                 name="source_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Source Type</FormLabel>
+                    <FormLabel>数据源类型</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       defaultValue={field.value.toString()}
@@ -121,9 +118,9 @@ export default function CreateSourceDialog() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="0">Device</SelectItem>
-                        <SelectItem value="1">File</SelectItem>
-                        <SelectItem value="2">Stream</SelectItem>
+                        <SelectItem value="0">设备</SelectItem>
+                        <SelectItem value="1">文件</SelectItem>
+                        <SelectItem value="2">流</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -135,7 +132,7 @@ export default function CreateSourceDialog() {
                 name="device_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Device ID</FormLabel>
+                    <FormLabel>设备名</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter device ID" {...field} />
                     </FormControl>
@@ -148,7 +145,7 @@ export default function CreateSourceDialog() {
                 name="link"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Link</FormLabel>
+                    <FormLabel>链接</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter source link" {...field} />
                     </FormControl>
@@ -161,7 +158,7 @@ export default function CreateSourceDialog() {
                 name="organization_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organization ID</FormLabel>
+                    <FormLabel>组织ID</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter organization ID" {...field} />
                     </FormControl>
@@ -170,7 +167,7 @@ export default function CreateSourceDialog() {
                 )}
               />
               <DialogFooter>
-                <Button type="submit">Create Source</Button>
+                <Button type="submit">创建数据源</Button>
               </DialogFooter>
             </form>
           </Form>
