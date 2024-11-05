@@ -44,7 +44,7 @@ export function CreateGatewayModal({
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>描述</Label>
+            {/* <Label>描述</Label> */}
             <p className="mt-1 text-sm text-gray-600">{description}</p>
           </div>
           <div>

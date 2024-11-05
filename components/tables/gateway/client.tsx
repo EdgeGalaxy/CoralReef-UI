@@ -22,7 +22,7 @@ export function GatewayTable({ gateways, onSelectGateway }: Props) {
       <Table>
         <TableHeader className="bg-gray-100 shadow-sm">
           <TableRow>
-            {columns(onSelectGateway).map((column) => (
+            {columns().map((column) => (
               <TableHead key={column.accessorKey as string}>
                 {column.header as string}
               </TableHead>
@@ -35,7 +35,7 @@ export function GatewayTable({ gateways, onSelectGateway }: Props) {
               key={gateway.name}
               onClick={() => onSelectGateway(gateway)}
             >
-              {columns(onSelectGateway).map((column) => (
+              {columns().map((column) => (
                 <TableCell key={column.accessorKey as string}>
                   {column.cell
                     ? column.cell({ row: { original: gateway } })

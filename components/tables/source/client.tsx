@@ -24,7 +24,7 @@ export function SourceTable({ sources, onSelectSource }: Props) {
       <Table>
         <TableHeader className="bg-gray-100 shadow-sm">
           <TableRow>
-            {columns(onSelectSource).map((column) => (
+            {columns().map((column) => (
               <TableHead key={column.accessorKey as string}>
                 {column.header as string}
               </TableHead>
@@ -34,7 +34,7 @@ export function SourceTable({ sources, onSelectSource }: Props) {
         <TableBody>
           {sources.map((source) => (
             <TableRow key={source.name} onClick={() => onSelectSource(source)}>
-              {columns(onSelectSource).map((column) => (
+              {columns().map((column) => (
                 <TableCell key={column.accessorKey as string}>
                   {column.cell
                     ? column.cell({ row: { original: source } })

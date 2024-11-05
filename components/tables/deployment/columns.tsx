@@ -12,9 +12,7 @@ interface Column {
   }) => React.ReactNode;
 }
 
-export const columns = (
-  onSelectDeployment: (deployment: DeploymentDataModel) => void
-): Column[] => [
+export const columns = (): Column[] => [
   {
     accessorKey: 'name',
     header: '服务名'

@@ -48,8 +48,8 @@ const mockGateways: Gateway[] = [
 ];
 
 const createGatewayMock = {
-  name: 'Gateway 1',
-  description: 'Description 1',
+  name: '网关设置',
+  description: '网关设置描述',
   codeSnippet: 'curl -X GET http://localhost:8080/api/v1/gateway'
 };
 

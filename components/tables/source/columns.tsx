@@ -8,9 +8,7 @@ interface Column {
   cell?: ({ row }: { row: { original: SourceDataModel } }) => React.ReactNode;
 }
 
-export const columns = (
-  onSelectSource: (gateway: SourceDataModel) => void
-): Column[] => [
+export const columns = (): Column[] => [
   {
     accessorKey: 'name',
     header: '数据源名'

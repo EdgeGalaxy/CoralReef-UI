@@ -8,9 +8,7 @@ interface Column {
   cell?: ({ row }: { row: { original: Gateway } }) => React.ReactNode;
 }
 
-export const columns = (
-  onSelectGateway: (gateway: Gateway) => void
-): Column[] => [
+export const columns = (): Column[] => [
   {
     accessorKey: 'name',
     header: '网关名'

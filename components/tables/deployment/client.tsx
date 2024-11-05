@@ -21,7 +21,7 @@ export function DeploymentTable({ deployments, onSelectDeployment }: Props) {
     <Table>
       <TableHeader className="bg-gray-100 shadow-sm">
         <TableRow>
-          {columns(onSelectDeployment).map((column) => (
+          {columns().map((column) => (
             <TableHead key={column.accessorKey} className="font-semibold">
               {column.header}
             </TableHead>
@@ -34,7 +34,7 @@ export function DeploymentTable({ deployments, onSelectDeployment }: Props) {
             key={deployment.id}
             onClick={() => onSelectDeployment(deployment)}
           >
-            {columns(onSelectDeployment).map((column) => (
+            {columns().map((column) => (
               <TableCell key={column.accessorKey}>
                 {column.cell
                   ? column.cell({ row: { original: deployment } })
