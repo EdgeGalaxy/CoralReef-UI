@@ -1,10 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Gateway, SourceDataModel } from '@/constants/deploy';
+import {
+  Gateway,
+  SourceDataModel,
+  GatewayStatus,
+  CameraType,
+  OperationStatus
+} from '@/constants/deploy';
 import { DeploymentDataModel } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/utils';
 
 import { Sidebar } from './_sidebar';
 import { DeploymentTable } from '../tables/deployment/client';
@@ -18,19 +26,15 @@ interface Props {
 
 function GatewayDetail({ gateway }: { gateway: Gateway }) {
   const handleUpdate = async (field: keyof Gateway, newValue: string) => {
-    // Implement the API call to update the gateway
     console.log(`Updating ${field} to ${newValue}`);
-    // Example: await updateGateway(gateway.id, { [field]: newValue });
   };
 
   return (
     <div>
       <div className="mb-6 grid grid-cols-4 gap-4">
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">网关地址</span>
-          <span className="font-medium">
-            {gateway.publicIP || gateway.internalIP || '未设置'}
-          </span>
+          <span className="text-sm text-muted-foreground">IP地址</span>
+          <span className="font-medium">{gateway.ip_address || '未设置'}</span>
         </div>
         <EditableField
           value={gateway.name}
@@ -38,13 +42,13 @@ function GatewayDetail({ gateway }: { gateway: Gateway }) {
           onUpdate={(newValue) => handleUpdate('name', newValue)}
         />
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">网关版本</span>
-          <span className="font-medium">{gateway.gatewayVersion}</span>
+          <span className="text-sm text-muted-foreground">版本</span>
+          <span className="font-medium">{gateway.version}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">最后更新时间</span>
           <span className="font-medium">
-            {new Date(gateway.updatedAt).toLocaleString()}
+            {new Date(gateway.updated_at).toLocaleString()}
           </span>
         </div>
       </div>
@@ -52,17 +56,23 @@ function GatewayDetail({ gateway }: { gateway: Gateway }) {
         <Button
           size="sm"
           className={`text-xs ${
-            gateway.status === 0
+            gateway.status === GatewayStatus.OFFLINE
               ? 'bg-red-500 hover:bg-red-500'
-              : 'bg-green-500 hover:bg-green-500'
+              : gateway.status === GatewayStatus.ONLINE
+              ? 'bg-green-500 hover:bg-green-500'
+              : 'bg-yellow-500 hover:bg-yellow-500'
           }`}
         >
-          {gateway.status === 0 ? (
+          {gateway.status === GatewayStatus.OFFLINE ? (
             <Icons.offline className="mr-2 h-4 w-4" />
           ) : (
             <Icons.online className="mr-2 h-4 w-4" />
           )}
-          {gateway.status === 0 ? '离线' : '在线'}
+          {gateway.status === GatewayStatus.OFFLINE
+            ? '离线'
+            : gateway.status === GatewayStatus.ONLINE
+            ? '在线'
+            : '错误'}
         </Button>
         <Button variant="outline" size="sm" className="text-xs">
           <Icons.refreshCw className="mr-2 h-4 w-4" />
@@ -78,60 +88,27 @@ function GatewayDetail({ gateway }: { gateway: Gateway }) {
 }
 
 export function GatewaySidebar({ gateway, onClose }: Props) {
-  const [sources, setSources] = useState<SourceDataModel[]>([]);
-  const [deployments, setDeployments] = useState<DeploymentDataModel[]>([]);
+  const { data: sources, error: sourcesError } = useSWR<SourceDataModel[]>(
+    `/api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}/cameras`,
+    fetcher
+  );
 
-  useEffect(() => {
-    setSources([
-      {
-        name: 'Source 1',
-        sourceType: 1,
-        link: 'http://192.168.1.1',
-        organizationId: '1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      {
-        name: 'Source 2',
-        sourceType: 1,
-        link: 'http://192.168.1.2',
-        organizationId: '1',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    ]);
-
-    setDeployments([
-      {
-        id: '1',
-        name: 'Deployment 1',
-        deviceId: 'device1',
-        pipelineId: 'pipeline1',
-        state: 1,
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-        description: 'Description 1',
-        organizationId: 'organization1'
-      },
-      {
-        id: '2',
-        name: 'Deployment 2',
-        deviceId: 'device2',
-        pipelineId: 'pipeline2',
-        state: 0,
-        createdAt: '2024-01-02',
-        updatedAt: '2024-01-02',
-        description: 'Description 2',
-        organizationId: 'organization2'
-      }
-    ]);
-  }, []);
+  const { data: deployments, error: deploymentsError } = useSWR<
+    DeploymentDataModel[]
+  >(
+    `/api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}/deployments`,
+    fetcher
+  );
 
   const tabConfig = [
     {
       value: 'sources',
       label: '关联数据源',
-      content: (
+      content: sourcesError ? (
+        <div>Error loading sources</div>
+      ) : !sources ? (
+        <div>Loading...</div>
+      ) : (
         <SourceTable
           sources={sources}
           onSelectSource={(source: SourceDataModel) => {}}
@@ -141,7 +118,11 @@ export function GatewaySidebar({ gateway, onClose }: Props) {
     {
       value: 'deployments',
       label: '关联服务',
-      content: (
+      content: deploymentsError ? (
+        <div>Error loading deployments</div>
+      ) : !deployments ? (
+        <div>Loading...</div>
+      ) : (
         <DeploymentTable
           deployments={deployments}
           onSelectDeployment={(deployment: DeploymentDataModel) => {}}

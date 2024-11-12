@@ -28,8 +28,9 @@ export function MobileSidebar({ className }: SidebarProps) {
               <div className="space-y-1">
                 <DashboardNav
                   items={navItems}
-                  isMobileNav={true}
-                  setOpen={setOpen}
+                  isMinimized={false}
+                  expandedItems={[]}
+                  onItemClick={() => setOpen(false)}
                 />
               </div>
             </div>

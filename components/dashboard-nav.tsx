@@ -58,7 +58,7 @@ export function DashboardNav({
                   )}
                 </div>
               ) : (
-                <Link href={item.href}>
+                <Link href={item.href ?? '/'}>
                   <Icon className="mr-2 h-4 w-4" />
                   {!isMinimized && <span>{item.title}</span>}
                 </Link>
@@ -73,7 +73,7 @@ export function DashboardNav({
                     variant={path === child.href ? 'secondary' : 'ghost'}
                     className="w-full justify-start"
                   >
-                    <Link href={child.href}>{child.title}</Link>
+                    <Link href={child.href ?? '/'}>{child.title}</Link>
                   </Button>
                 ))}
               </div>

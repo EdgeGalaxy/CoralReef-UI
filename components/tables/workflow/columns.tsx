@@ -18,11 +18,11 @@ export const columns: Column[] = [
     header: '描述'
   },
   {
-    accessorKey: 'createdAt',
+    accessorKey: 'created_at',
     header: '创建时间'
   },
   {
-    accessorKey: 'updatedAt',
+    accessorKey: 'updated_at',
     header: '更新时间'
   }
 ];

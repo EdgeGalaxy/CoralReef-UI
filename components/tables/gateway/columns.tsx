@@ -1,6 +1,6 @@
 'use client';
 
-import { Gateway } from '@/constants/deploy';
+import { Gateway, GatewayStatus } from '@/constants/deploy';
 
 interface Column {
   accessorKey: keyof Gateway;
@@ -14,8 +14,8 @@ export const columns = (): Column[] => [
     header: '网关名'
   },
   {
-    accessorKey: 'deviceType',
-    header: '设备类型'
+    accessorKey: 'platform',
+    header: '平台'
   },
   {
     accessorKey: 'status',
@@ -23,23 +23,32 @@ export const columns = (): Column[] => [
     cell: ({ row }) => (
       <span
         className={`${
-          row.original.status === 0 ? 'text-red-500' : 'text-green-500'
+          row.original.status === GatewayStatus.OFFLINE
+            ? 'text-red-500'
+            : row.original.status === GatewayStatus.ONLINE
+            ? 'text-green-500'
+            : 'text-yellow-500'
         }`}
       >
-        {row.original.status === 0 ? 'Offline' : 'Online'}
+        {row.original.status === GatewayStatus.OFFLINE
+          ? 'Offline'
+          : row.original.status === GatewayStatus.ONLINE
+          ? 'Online'
+          : 'Error'}
       </span>
     )
   },
   {
-    accessorKey: 'gatewayVersion',
-    header: '网关版本'
+    accessorKey: 'version',
+    header: '版本'
   },
   {
-    accessorKey: 'deploymentCount',
-    header: '部署服务数'
+    accessorKey: 'workspace_name',
+    header: '工作空间'
   },
   {
-    accessorKey: 'createdAt',
-    header: '创建时间'
+    accessorKey: 'created_at',
+    header: '创建时间',
+    cell: ({ row }) => new Date(row.original.created_at).toLocaleString()
   }
 ];

@@ -38,7 +38,7 @@ export function DeploymentTable({ deployments, onSelectDeployment }: Props) {
               <TableCell key={column.accessorKey}>
                 {column.cell
                   ? column.cell({ row: { original: deployment } })
-                  : deployment[column.accessorKey]}
+                  : String(deployment[column.accessorKey] ?? '')}
               </TableCell>
             ))}
           </TableRow>

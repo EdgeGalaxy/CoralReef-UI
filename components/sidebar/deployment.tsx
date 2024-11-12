@@ -1,6 +1,6 @@
 'use client';
 
-import { DeploymentDataModel } from '@/constants/deploy';
+import { DeploymentDataModel, OperationStatus } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
@@ -30,17 +30,17 @@ function DeploymentDetail({ deployment }: { deployment: DeploymentDataModel }) {
           onUpdate={(newValue) => handleUpdate('name', newValue)}
         />
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">设备名</span>
-          <span className="font-medium">{deployment.deviceId}</span>
+          <span className="text-sm text-muted-foreground">网关</span>
+          <span className="font-medium">{deployment.gateway_name}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">工作流名</span>
-          <span className="font-medium">{deployment.pipelineId}</span>
+          <span className="text-sm text-muted-foreground">工作流</span>
+          <span className="font-medium">{deployment.workflow_name}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">创建时间</span>
           <span className="font-medium">
-            {new Date(deployment.createdAt).toLocaleString()}
+            {new Date(deployment.created_at).toLocaleString()}
           </span>
         </div>
       </div>
@@ -48,23 +48,23 @@ function DeploymentDetail({ deployment }: { deployment: DeploymentDataModel }) {
         <Button
           size="sm"
           className={`text-xs ${
-            deployment.state === 0
+            deployment.running_status === OperationStatus.STOPPED
               ? 'bg-gray-500 hover:bg-gray-600'
-              : deployment.state === 1
+              : deployment.running_status === OperationStatus.RUNNING
               ? 'bg-green-500 hover:bg-green-600'
               : 'bg-red-500 hover:bg-red-600'
           }`}
         >
-          {deployment.state === 0 ? (
+          {deployment.running_status === OperationStatus.STOPPED ? (
             <Icons.stopped className="mr-2 h-4 w-4" />
-          ) : deployment.state === 1 ? (
+          ) : deployment.running_status === OperationStatus.RUNNING ? (
             <Icons.online className="mr-2 h-4 w-4" />
           ) : (
             <Icons.offline className="mr-2 h-4 w-4" />
           )}
-          {deployment.state === 0
+          {deployment.running_status === OperationStatus.STOPPED
             ? '停止'
-            : deployment.state === 1
+            : deployment.running_status === OperationStatus.RUNNING
             ? '运行中'
             : '错误'}
         </Button>

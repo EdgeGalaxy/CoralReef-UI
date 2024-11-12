@@ -1,10 +1,15 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { SourceDataModel, DeploymentDataModel } from '@/constants/deploy';
+import {
+  SourceDataModel,
+  DeploymentDataModel,
+  OperationStatus
+} from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
 import { DeploymentTable } from '@/components/tables/deployment/client';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/utils';
 
 interface Props {
   source: SourceDataModel;
@@ -21,16 +26,16 @@ function SourceDetail({ source }: { source: SourceDataModel }) {
         </div>
         <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">数据源类型</span>
-          <span className="font-medium">{source.sourceType}</span>
+          <span className="font-medium">{source.type}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">设备名</span>
-          <span className="font-medium">{source.deviceId}</span>
+          <span className="font-medium">{source.workspace_name}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">创建时间</span>
           <span className="font-medium">
-            {new Date(source.createdAt).toLocaleString()}
+            {new Date(source.created_at).toLocaleString()}
           </span>
         </div>
       </div>
@@ -49,35 +54,12 @@ function SourceDetail({ source }: { source: SourceDataModel }) {
 }
 
 export function SourceSidebar({ source, onClose }: Props) {
-  const [deployments, setDeployments] = useState<DeploymentDataModel[]>([]);
-
-  useEffect(() => {
-    // Fetch deployments for this source
-    setDeployments([
-      {
-        id: '1',
-        name: 'Deployment 1',
-        deviceId: 'device1',
-        pipelineId: 'pipeline1',
-        state: 1,
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-01',
-        description: 'Description 1',
-        organizationId: 'organization1'
-      },
-      {
-        id: '2',
-        name: 'Deployment 2',
-        deviceId: 'device2',
-        pipelineId: 'pipeline2',
-        state: 0,
-        createdAt: '2024-01-02',
-        updatedAt: '2024-01-02',
-        description: 'Description 2',
-        organizationId: 'organization2'
-      }
-    ]);
-  }, []);
+  const { data: deployments, error: deploymentsError } = useSWR<
+    DeploymentDataModel[]
+  >(
+    `/api/reef/workspaces/${source.workspace_id}/cameras/${source.id}/deployments`,
+    fetcher
+  );
 
   const tabConfig = [
     {
@@ -88,7 +70,11 @@ export function SourceSidebar({ source, onClose }: Props) {
     {
       value: 'deployments',
       label: '关联服务',
-      content: (
+      content: deploymentsError ? (
+        <div>Error loading deployments</div>
+      ) : !deployments ? (
+        <div>Loading...</div>
+      ) : (
         <DeploymentTable
           deployments={deployments}
           onSelectDeployment={(deployment: DeploymentDataModel) => {}}

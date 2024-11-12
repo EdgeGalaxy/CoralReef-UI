@@ -1,5 +1,14 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import useSWR from 'swr';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { fetcher } from '@/lib/utils';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { navItems } from '@/constants/data';
 import { cn } from '@/lib/utils';
@@ -7,14 +16,43 @@ import { ChevronLeft } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import Link from 'next/link';
 import { NavItem } from '@/types';
+import { setSelectWorkspaceId, getSelectWorkspaceId } from '@/lib/utils';
 
 type SidebarProps = {
   className?: string;
 };
 
+interface Workspace {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export default function Sidebar({ className }: SidebarProps) {
   const { isMinimized, toggle } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
+
+  const { data: workspaces, error } = useSWR<Workspace[]>(
+    '/api/reef/workspaces/me',
+    fetcher
+  );
+
+  useEffect(() => {
+    setSelectedWorkspace(getSelectWorkspaceId());
+  }, []);
+
+  useEffect(() => {
+    if (workspaces?.length && !selectedWorkspace) {
+      const workspaceId = workspaces[0].id;
+      setSelectWorkspaceId(workspaceId);
+      setSelectedWorkspace(workspaceId);
+    }
+  }, [workspaces, selectedWorkspace]);
+
+  const handleWorkspaceSelect = (workspaceId: string) => {
+    setSelectWorkspaceId(workspaceId);
+  };
 
   const handleToggle = () => {
     toggle();
@@ -40,8 +78,9 @@ export default function Sidebar({ className }: SidebarProps) {
     >
       <div className="hidden p-5 pt-10 lg:block">
         <Link
-          href={'https://github.com/Kiranism/next-shadcn-dashboard-starter'}
+          href={'./dashboard'}
           target="_blank"
+          className="mt-4 inline-block"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -56,6 +95,22 @@ export default function Sidebar({ className }: SidebarProps) {
             <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
           </svg>
         </Link>
+
+        <Select
+          onValueChange={handleWorkspaceSelect}
+          value={selectedWorkspace || undefined}
+        >
+          <SelectTrigger className={cn('w-full', isMinimized && 'hidden')}>
+            <SelectValue placeholder={error ? '加载失败' : ''} />
+          </SelectTrigger>
+          <SelectContent>
+            {workspaces?.map((workspace) => (
+              <SelectItem key={workspace.id} value={workspace.id}>
+                {workspace.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <ChevronLeft
         className={cn(

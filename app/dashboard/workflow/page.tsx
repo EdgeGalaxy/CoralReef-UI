@@ -8,12 +8,9 @@ import { Workflow } from '@/constants/deploy';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { WorkflowTemplateCreateModal } from '@/components/modal/create-workflow';
-
-interface WorkflowTemplate {
-  id: string;
-  name: string;
-  description: string;
-}
+import useSWR from 'swr';
+import { fetcher, getSelectWorkspaceId } from '@/lib/utils';
+import { useParams } from 'next/navigation';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
@@ -21,44 +18,19 @@ const breadcrumbItems = [
 ];
 
 const WorkflowListPage = () => {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  const [templates, setTemplates] = useState<WorkflowTemplate[]>([]);
+  const [templates, setTemplates] = useState<Workflow[]>([]);
+  const params = useParams();
+  const workspaceId = params?.workspaceId || getSelectWorkspaceId();
 
-  useEffect(() => {
-    // Mock data for workflows
-    const mockWorkflows: Workflow[] = [
-      {
-        id: '1',
-        name: 'Workflow 1',
-        description: 'Description for Workflow 1',
-        createdAt: '2023-05-01T00:00:00Z',
-        updatedAt: '2023-05-02T00:00:00Z'
-      },
-      {
-        id: '2',
-        name: 'Workflow 2',
-        description: 'Description for Workflow 2',
-        createdAt: '2023-05-03T00:00:00Z',
-        updatedAt: '2023-05-04T00:00:00Z'
-      }
-    ];
-    setWorkflows(mockWorkflows);
+  const { data: workflows, error } = useSWR<Workflow[]>(
+    `/api/reef/workspaces/${workspaceId}/workflows`,
+    fetcher
+  );
 
-    // Mock data for workflow templates
-    const mockTemplates = [
-      {
-        id: 'template1',
-        name: 'Template 1',
-        description: 'Description for Template 1'
-      },
-      {
-        id: 'template2',
-        name: 'Template 2',
-        description: 'Description for Template 2'
-      }
-    ];
-    setTemplates(mockTemplates);
-  }, []);
+  // 处理加载状态
+  if (!workflows) return <div>Loading...</div>;
+  // 处理错误状态
+  if (error) return <div>Error loading workflows</div>;
 
   const handleCreateTemplateWorkflow = (templateId: string) => {
     console.log(`Creating workflow from template ${templateId}`);

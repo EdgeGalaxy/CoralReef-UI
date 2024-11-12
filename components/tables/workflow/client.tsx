@@ -37,7 +37,7 @@ export function WorkflowTable({ workflows }: Props) {
               <TableCell key={column.accessorKey}>
                 {column.cell
                   ? column.cell({ row: { original: workflow } })
-                  : workflow[column.accessorKey]}
+                  : String(workflow[column.accessorKey as keyof Workflow])}
               </TableCell>
             ))}
           </TableRow>

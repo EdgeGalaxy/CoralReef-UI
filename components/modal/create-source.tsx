@@ -28,51 +28,78 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { api } from '@/lib/utils';
+import { CameraType } from '@/constants/deploy';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
-  source_type: z.number().min(0).max(2),
-  device_id: z.string().optional(),
-  link: z.string().min(1, 'Link is required'),
-  organization_id: z.string().min(1, 'Organization ID is required')
+  description: z.string(),
+  type: z.nativeEnum(CameraType),
+  path: z.union([z.string(), z.number()]),
+  gateway_id: z.string().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface CreateSourceDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-export default function CreateSourceDialog() {
+export default function CreateSourceDialog({
+  workspaceId
+}: {
+  workspaceId: string;
+}) {
   const [isOpen, setIsOpen] = useState(false);
+  const { toast } = useToast();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       description: '',
-      source_type: 0,
-      device_id: '',
-      link: '',
-      organization_id: ''
+      type: CameraType.RTSP,
+      path: '',
+      gateway_id: ''
     }
   });
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
-    // TODO: Implement API call to create source
-    setIsOpen(false);
+  async function onSubmit(values: FormValues) {
+    try {
+      const submitData = {
+        ...values,
+        path:
+          values.type === CameraType.USB
+            ? parseInt(values.path as string)
+            : values.path
+      };
+
+      await api
+        .post(`api/reef/workspaces/${workspaceId}/cameras/`, {
+          json: submitData
+        })
+        .json();
+
+      toast({
+        title: '创建成功',
+        description: '相机已成功创建'
+      });
+      setIsOpen(false);
+      // reload current page
+      window.location.reload();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: '创建失败',
+        description: error instanceof Error ? error.message : '请稍后重试'
+      });
+      console.error('Failed to create camera:', error);
+    }
   }
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>创建数据源</Button>
+      <Button onClick={() => setIsOpen(true)}>创建相机</Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>创建数据源</DialogTitle>
+            <DialogTitle>创建相机</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -81,9 +108,9 @@ export default function CreateSourceDialog() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>数据源名</FormLabel>
+                    <FormLabel>相机名称</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter source name" {...field} />
+                      <Input placeholder="输入相机名称" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -96,7 +123,7 @@ export default function CreateSourceDialog() {
                   <FormItem>
                     <FormLabel>描述</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter description" {...field} />
+                      <Input placeholder="输入描述信息" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -104,23 +131,27 @@ export default function CreateSourceDialog() {
               />
               <FormField
                 control={form.control}
-                name="source_type"
+                name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>数据源类型</FormLabel>
+                    <FormLabel>相机类型</FormLabel>
                     <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value.toString()}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select source type" />
+                          <SelectValue placeholder="选择相机类型" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="0">设备</SelectItem>
-                        <SelectItem value="1">文件</SelectItem>
-                        <SelectItem value="2">流</SelectItem>
+                        <SelectItem value={CameraType.RTSP}>
+                          RTSP相机
+                        </SelectItem>
+                        <SelectItem value={CameraType.USB}>USB相机</SelectItem>
+                        <SelectItem value={CameraType.FILE}>
+                          视频文件
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -129,12 +160,25 @@ export default function CreateSourceDialog() {
               />
               <FormField
                 control={form.control}
-                name="device_id"
+                name="path"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>设备名</FormLabel>
+                    <FormLabel>
+                      {form.watch('type') === CameraType.USB
+                        ? '设备编号'
+                        : '相机路径'}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter device ID" {...field} />
+                      <Input
+                        placeholder={
+                          form.watch('type') === CameraType.USB
+                            ? '输入USB设备编号（如：0）'
+                            : form.watch('type') === CameraType.RTSP
+                            ? '输入RTSP地址'
+                            : '输入视频文件路径'
+                        }
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,32 +186,19 @@ export default function CreateSourceDialog() {
               />
               <FormField
                 control={form.control}
-                name="link"
+                name="gateway_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>链接</FormLabel>
+                    <FormLabel>网关ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter source link" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="organization_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>组织ID</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter organization ID" {...field} />
+                      <Input placeholder="输入网关ID（可选）" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <DialogFooter>
-                <Button type="submit">创建数据源</Button>
+                <Button type="submit">创建相机</Button>
               </DialogFooter>
             </form>
           </Form>

@@ -11,14 +11,10 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog';
 
-interface WorkflowTemplate {
-  id: string;
-  name: string;
-  description: string;
-}
+import { Workflow } from '@/constants/deploy';
 
 interface TemplateModalProps {
-  templates: WorkflowTemplate[];
+  templates: Workflow[];
   onCreateWorkflow: (templateId: string) => void;
   onCreateNewWorkflow: () => void;
 }
