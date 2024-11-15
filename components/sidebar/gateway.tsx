@@ -1,19 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  Gateway,
-  SourceDataModel,
-  GatewayStatus,
-  CameraType,
-  OperationStatus
-} from '@/constants/deploy';
+import { Gateway, SourceDataModel, GatewayStatus } from '@/constants/deploy';
 import { DeploymentDataModel } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
-import useSWR from 'swr';
-import { fetcher } from '@/lib/utils';
-
+import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
+import { useToast } from '@/components/ui/use-toast';
 import { Sidebar } from './_sidebar';
 import { DeploymentTable } from '../tables/deployment/client';
 import { SourceTable } from '../tables/source/client';
@@ -22,11 +14,90 @@ import { EditableField } from './components/editable-field';
 interface Props {
   gateway: Gateway;
   onClose: () => void;
+  onRefresh: () => void;
 }
 
-function GatewayDetail({ gateway }: { gateway: Gateway }) {
+function GatewayDetail({ gateway, onRefresh, onClose }: Props) {
+  const api = useAuthApi();
+  const { toast } = useToast();
+
   const handleUpdate = async (field: keyof Gateway, newValue: string) => {
-    console.log(`Updating ${field} to ${newValue}`);
+    try {
+      const res = await api.put(
+        `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`,
+        {
+          json: {
+            [field]: newValue
+          }
+        }
+      );
+      if (res.ok) {
+        toast({
+          title: '网关更新成功'
+        });
+        onRefresh();
+      } else {
+        toast({
+          variant: 'destructive',
+          title: '网关更新失败',
+          description: `错误码: ${res.status}`
+        });
+      }
+    } catch (error: any) {
+      if (error.name === 'HTTPError') {
+        const res = await error.response.json();
+        toast({
+          variant: 'destructive',
+          title: '网关更新失败',
+          description: `${res.message}`
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: '网关更新失败',
+          description:
+            error instanceof Error ? `${error.message}` : '请稍后重试'
+        });
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const res = await api.delete(
+        `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`
+      );
+      if (res.ok) {
+        toast({
+          title: '网关删除成功'
+        });
+        onRefresh();
+        onClose();
+      } else {
+        toast({
+          variant: 'destructive',
+          title: '网关删除失败',
+          description: '请稍后重试'
+        });
+      }
+    } catch (error: any) {
+      if (error.name === 'HTTPError') {
+        const res = await error.response.json();
+        console.log(res);
+        toast({
+          variant: 'destructive',
+          title: '网关删除失败',
+          description: `${res.message}`
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: '网关删除失败',
+          description:
+            error instanceof Error ? `${error.message}` : '请稍后重试'
+        });
+      }
+    }
   };
 
   return (
@@ -74,11 +145,21 @@ function GatewayDetail({ gateway }: { gateway: Gateway }) {
             ? '在线'
             : '错误'}
         </Button>
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={onRefresh}
+        >
           <Icons.refreshCw className="mr-2 h-4 w-4" />
           刷新
         </Button>
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={handleDelete}
+        >
           <Icons.trash2 className="mr-2 h-4 w-4" />
           删除
         </Button>
@@ -87,17 +168,15 @@ function GatewayDetail({ gateway }: { gateway: Gateway }) {
   );
 }
 
-export function GatewaySidebar({ gateway, onClose }: Props) {
-  const { data: sources, error: sourcesError } = useSWR<SourceDataModel[]>(
-    `/api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}/cameras`,
-    fetcher
+export function GatewaySidebar({ gateway, onClose, onRefresh }: Props) {
+  const { data: sources, error: sourcesError } = useAuthSWR<SourceDataModel[]>(
+    `/api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}/cameras`
   );
 
-  const { data: deployments, error: deploymentsError } = useSWR<
+  const { data: deployments, error: deploymentsError } = useAuthSWR<
     DeploymentDataModel[]
   >(
-    `/api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}/deployments`,
-    fetcher
+    `/api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}/deployments`
   );
 
   const tabConfig = [
@@ -150,7 +229,13 @@ export function GatewaySidebar({ gateway, onClose }: Props) {
     <Sidebar
       title={gateway.name}
       onClose={onClose}
-      detailContent={<GatewayDetail gateway={gateway} />}
+      detailContent={
+        <GatewayDetail
+          gateway={gateway}
+          onRefresh={onRefresh}
+          onClose={onClose}
+        />
+      }
       tabs={tabConfig}
       defaultTab="sources"
     />

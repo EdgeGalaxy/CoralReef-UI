@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import ky from 'ky';
+import { useSession } from 'next-auth/react';
 import { getApiUrl } from './api-config';
 
 export function cn(...inputs: ClassValue[]) {
@@ -25,54 +26,48 @@ export const setSelectWorkspaceId = (workspaceId: string): void => {
 // 从本地存储中获取 JWT token
 export const getToken = (): string => {
   if (typeof window !== 'undefined') {
+    // const { data: session } = useSession();
+    // return session?.accessToken || '';
     return localStorage.getItem('jwt_token') || '';
   }
   return '';
 };
 
-// Token 设置函数
-export const setToken = (token: string): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('jwt_token', token);
-  }
-};
-
-// Token 清除函数
-export const clearToken = (): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('jwt_token');
-  }
-};
-
-export const api = ky.create({
+export const noAuthApi = ky.create({
   prefixUrl: getApiUrl(''),
-  hooks: {
-    beforeRequest: [
-      (request) => {
-        const token = getToken();
-        if (token) {
-          request.headers.set('Authorization', `Bearer ${token}`);
-        }
-      }
-    ]
-  },
-  retry: 0,
-  timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-export const fetcher = async (url: string) => {
+export function createApi(token: string) {
+  return ky.create({
+    prefixUrl: getApiUrl(''),
+    hooks: {
+      beforeRequest: [
+        (request) => {
+          if (token) {
+            request.headers.set('Authorization', `Bearer ${token}`);
+          }
+        }
+      ]
+    },
+    retry: 0,
+    timeout: 30000,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+export const fetcher = async <T>(url: string, token: string): Promise<T> => {
   const fullUrl = getApiUrl(url);
   const response = await fetch(fullUrl, {
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`
+      Authorization: `Bearer ${token}`
     }
   });
-
-  console.log(response);
 
   if (!response.ok) {
     throw new Error('An error occurred while fetching the data.');

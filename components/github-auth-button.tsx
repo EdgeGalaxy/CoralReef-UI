@@ -7,7 +7,7 @@ import { Icons } from './icons';
 
 export default function GithubSignInButton() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl');
+  const callbackUrl = searchParams?.get('callbackUrl');
 
   return (
     <Button
@@ -19,7 +19,7 @@ export default function GithubSignInButton() {
       }
     >
       <Icons.gitHub className="mr-2 h-4 w-4" />
-      Continue with Github
+      使用 Github 登录
     </Button>
   );
 }

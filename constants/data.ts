@@ -50,11 +50,5 @@ export const navItems: NavItem[] = [
     href: '/dashboard/settings',
     icon: 'settings',
     label: 'settings'
-  },
-  {
-    title: '登录',
-    href: '/',
-    icon: 'login',
-    label: 'login'
   }
 ];

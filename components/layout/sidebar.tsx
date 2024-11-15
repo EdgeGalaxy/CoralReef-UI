@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import useSWR from 'swr';
 import {
   Select,
   SelectContent,
@@ -8,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { fetcher } from '@/lib/utils';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { navItems } from '@/constants/data';
 import { cn } from '@/lib/utils';
@@ -17,6 +15,7 @@ import { useSidebar } from '@/hooks/useSidebar';
 import Link from 'next/link';
 import { NavItem } from '@/types';
 import { setSelectWorkspaceId, getSelectWorkspaceId } from '@/lib/utils';
+import { useAuthSWR } from '@/hooks/useAuthReq';
 
 type SidebarProps = {
   className?: string;
@@ -33,9 +32,8 @@ export default function Sidebar({ className }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
 
-  const { data: workspaces, error } = useSWR<Workspace[]>(
-    '/api/reef/workspaces/me',
-    fetcher
+  const { data: workspaces, error } = useAuthSWR<Workspace[]>(
+    '/api/reef/workspaces/me'
   );
 
   useEffect(() => {

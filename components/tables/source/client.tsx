@@ -33,7 +33,7 @@ export function SourceTable({ sources, onSelectSource }: Props) {
         </TableHeader>
         <TableBody>
           {sources.map((source) => (
-            <TableRow key={source.name} onClick={() => onSelectSource(source)}>
+            <TableRow key={source.id} onClick={() => onSelectSource(source)}>
               {columns().map((column) => (
                 <TableCell key={column.accessorKey as string}>
                   {column.cell

@@ -8,8 +8,8 @@ import { DeploymentTable } from '@/components/tables/deployment/client';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { DeploymentSidebar } from '@/components/sidebar/deployment';
-import useSWR from 'swr';
-import { fetcher, getSelectWorkspaceId } from '@/lib/utils';
+import { useAuthSWR } from '@/hooks/useAuthReq';
+import { getSelectWorkspaceId } from '@/lib/utils';
 import { useParams } from 'next/navigation';
 
 const breadcrumbItems = [
@@ -23,10 +23,17 @@ export default function DeploymentPage() {
   const params = useParams();
   const workspaceId = params?.workspaceId || getSelectWorkspaceId();
 
-  const { data: deployments, error } = useSWR<DeploymentDataModel[]>(
-    `/api/reef/workspaces/${workspaceId}/deployments`,
-    fetcher
+  const {
+    data: deployments,
+    error,
+    mutate
+  } = useAuthSWR<DeploymentDataModel[]>(
+    `/api/reef/workspaces/${workspaceId}/deployments`
   );
+
+  const handleCreateSuccess = async () => {
+    await mutate(undefined, { revalidate: true });
+  };
 
   // Handle loading state
   if (!deployments) return <div>Loading...</div>;
@@ -40,7 +47,7 @@ export default function DeploymentPage() {
         <div className="container mx-auto p-4">
           <div className="flex items-start justify-between">
             <Heading
-              title={`服务 (${deployments.length})`}
+              title={`服务 (${deployments?.length || 0})`}
               description="管理部署服务"
             />
           </div>

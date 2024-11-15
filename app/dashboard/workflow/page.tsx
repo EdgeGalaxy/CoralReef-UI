@@ -8,9 +8,9 @@ import { Workflow } from '@/constants/deploy';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { WorkflowTemplateCreateModal } from '@/components/modal/create-workflow';
-import useSWR from 'swr';
-import { fetcher, getSelectWorkspaceId } from '@/lib/utils';
+import { getSelectWorkspaceId } from '@/lib/utils';
 import { useParams } from 'next/navigation';
+import { useAuthSWR } from '@/hooks/useAuthReq';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
@@ -22,9 +22,8 @@ const WorkflowListPage = () => {
   const params = useParams();
   const workspaceId = params?.workspaceId || getSelectWorkspaceId();
 
-  const { data: workflows, error } = useSWR<Workflow[]>(
-    `/api/reef/workspaces/${workspaceId}/workflows`,
-    fetcher
+  const { data: workflows, error } = useAuthSWR<Workflow[]>(
+    `/api/reef/workspaces/${workspaceId}/workflows`
   );
 
   // 处理加载状态

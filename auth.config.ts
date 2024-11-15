@@ -1,6 +1,24 @@
 import { NextAuthConfig } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
+import { noAuthApi } from '@/lib/utils';
+import { UserRead } from '@/constants/user';
+
+interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
+
+declare module 'next-auth' {
+  interface User extends UserRead {
+    access_token?: string;
+  }
+
+  interface Session {
+    accessToken?: string;
+    user: User;
+  }
+}
 
 const authConfig = {
   providers: [
@@ -21,25 +39,66 @@ const authConfig = {
         }
       },
       async authorize(credentials, req) {
-        const user = {
-          id: '1',
-          name: 'John',
-          email: credentials?.email as string
-        };
-        if (user) {
-          // Any object returned will be saved in `user` property of the JWT
-          return user;
-        } else {
-          // If you return null then an error will be displayed advising the user to check their details.
-          return null;
+        try {
+          const formData = new URLSearchParams({
+            username: credentials?.email as string,
+            password: credentials?.password as string
+          });
 
-          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+          const response = await noAuthApi.post<LoginResponse>(
+            'auth/jwt/login',
+            {
+              body: formData,
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              }
+            }
+          );
+          if (response.status !== 200) {
+            return null;
+          }
+          const data = await response.json();
+
+          const userData = (await noAuthApi
+            .get('auth/users/me', {
+              headers: {
+                Authorization: `Bearer ${data.access_token}`
+              }
+            })
+            .json()) as UserRead;
+
+          userData.access_token = data.access_token;
+
+          return userData;
+        } catch (error) {
+          console.error('Login error:', error);
+          // 登陆失败，弹框提示
+          return null;
         }
       }
     })
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.accessToken = user.access_token;
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      session.accessToken = token.accessToken as string;
+      session.user.id = token.id as string;
+      return session;
+    }
+  },
   pages: {
-    signIn: '/' //sigin page
+    signIn: '/signin',
+    signOut: '/signin'
+  },
+  session: {
+    strategy: 'jwt',
+    maxAge: 35000
   }
 } satisfies NextAuthConfig;
 

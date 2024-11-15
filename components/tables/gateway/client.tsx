@@ -31,10 +31,7 @@ export function GatewayTable({ gateways, onSelectGateway }: Props) {
         </TableHeader>
         <TableBody>
           {gateways.map((gateway) => (
-            <TableRow
-              key={gateway.name}
-              onClick={() => onSelectGateway(gateway)}
-            >
+            <TableRow key={gateway.id} onClick={() => onSelectGateway(gateway)}>
               {columns().map((column) => (
                 <TableCell key={column.accessorKey as string}>
                   {column.cell

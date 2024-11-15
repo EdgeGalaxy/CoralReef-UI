@@ -34,9 +34,8 @@ export type Gateway = {
 };
 
 export enum GatewayStatus {
-  OFFLINE = 0,
-  ONLINE = 1,
-  ERROR = 2
+  OFFLINE = 'offline',
+  ONLINE = 'online'
 }
 
 export type DeploymentDataModel = {

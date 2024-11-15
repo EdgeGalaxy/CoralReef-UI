@@ -8,8 +8,9 @@ import authConfig from './auth.config';
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
+  const path = req.nextUrl.pathname;
   if (!req.auth) {
-    const url = req.url.replace(req.nextUrl.pathname, '/');
+    const url = req.url.replace(path, '/signin');
     return Response.redirect(url);
   }
 });

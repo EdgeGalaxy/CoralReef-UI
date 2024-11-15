@@ -9,8 +9,8 @@ import { GatewaySidebar } from '@/components/sidebar/gateway';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { CreateGatewayModal } from '@/components/modal/create-gateway';
-import useSWR from 'swr';
-import { fetcher, getSelectWorkspaceId } from '@/lib/utils';
+import { useAuthSWR } from '@/hooks/useAuthReq';
+import { getSelectWorkspaceId } from '@/lib/utils';
 import { useParams } from 'next/navigation';
 
 const breadcrumbItems = [
@@ -29,10 +29,15 @@ export default function GatewayPage() {
   const params = useParams();
   const workspaceId = params?.workspaceId || getSelectWorkspaceId();
 
-  const { data: gateways, error } = useSWR<Gateway[]>(
-    `/api/reef/workspaces/${workspaceId}/gateways`,
-    fetcher
-  );
+  const {
+    data: gateways,
+    error,
+    mutate
+  } = useAuthSWR<Gateway[]>(`/api/reef/workspaces/${workspaceId}/gateways`);
+
+  const handleCreateSuccess = async () => {
+    await mutate(undefined, { revalidate: true });
+  };
 
   // Handle loading state
   if (!gateways) return <div>Loading...</div>;
@@ -60,6 +65,7 @@ export default function GatewayPage() {
             <GatewaySidebar
               gateway={selectedGateway}
               onClose={() => setSelectedGateway(null)}
+              onRefresh={handleCreateSuccess}
             />
           )}
         </div>

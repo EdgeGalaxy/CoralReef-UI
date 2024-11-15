@@ -29,8 +29,8 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { api } from '@/lib/utils';
-import { CameraType } from '@/constants/deploy';
+import { useAuthApi, useAuthSWR } from '@/hooks/useAuthReq';
+import { CameraType, Gateway } from '@/constants/deploy';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -43,12 +43,17 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function CreateSourceDialog({
-  workspaceId
+  workspaceId,
+  gateways,
+  onSuccess
 }: {
   workspaceId: string;
+  gateways: Gateway[];
+  onSuccess?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
+  const api = useAuthApi();
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -81,13 +86,12 @@ export default function CreateSourceDialog({
         description: '相机已成功创建'
       });
       setIsOpen(false);
-      // reload current page
-      window.location.reload();
+      onSuccess?.();
     } catch (error) {
       toast({
         variant: 'destructive',
         title: '创建失败',
-        description: error instanceof Error ? error.message : '请稍后重试'
+        description: error instanceof Error ? '内部错误' : '请稍后重试'
       });
       console.error('Failed to create camera:', error);
     }
@@ -189,10 +193,21 @@ export default function CreateSourceDialog({
                 name="gateway_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>网关ID</FormLabel>
-                    <FormControl>
-                      <Input placeholder="输入网关ID（可选）" {...field} />
-                    </FormControl>
+                    <FormLabel>网关</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择网关（可选）" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {gateways?.map((gateway: Gateway) => (
+                          <SelectItem key={gateway.id} value={gateway.id}>
+                            {gateway.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
