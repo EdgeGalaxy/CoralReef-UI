@@ -50,6 +50,7 @@ export type DeploymentDataModel = {
   workflow_id: string;
   workflow_name: string;
   pipeline_id?: string;
+  workspace_id: string;
   running_status: OperationStatus;
   created_at: string;
   updated_at: string;
@@ -69,4 +70,13 @@ export type Workflow = {
   owner_user_id: string;
   created_at: string;
   updated_at: string;
+};
+
+export type DeploymentCreate = {
+  name: string;
+  description: string;
+  gateway: Gateway | undefined;
+  workflow: Workflow | undefined;
+  cameras: SourceDataModel[];
+  parameters: Record<string, any>;
 };

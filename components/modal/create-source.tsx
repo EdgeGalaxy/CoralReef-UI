@@ -29,8 +29,9 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuthApi, useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthApi } from '@/hooks/useAuthReq';
 import { CameraType, Gateway } from '@/constants/deploy';
+import { handleApiRequest } from '@/lib/error-handle';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -66,35 +67,30 @@ export default function CreateSourceDialog({
   });
 
   async function onSubmit(values: FormValues) {
-    try {
-      const submitData = {
-        ...values,
-        path:
-          values.type === CameraType.USB
-            ? parseInt(values.path as string)
-            : values.path
-      };
+    await handleApiRequest(
+      () => {
+        const submitData = {
+          ...values,
+          path:
+            values.type === CameraType.USB
+              ? parseInt(values.path as string)
+              : values.path
+        };
 
-      await api
-        .post(`api/reef/workspaces/${workspaceId}/cameras/`, {
+        return api.post(`api/reef/workspaces/${workspaceId}/cameras/`, {
           json: submitData
-        })
-        .json();
-
-      toast({
-        title: '创建成功',
-        description: '相机已成功创建'
-      });
-      setIsOpen(false);
-      onSuccess?.();
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: '创建失败',
-        description: error instanceof Error ? '内部错误' : '请稍后重试'
-      });
-      console.error('Failed to create camera:', error);
-    }
+        });
+      },
+      {
+        toast,
+        successTitle: '创建成功',
+        errorTitle: '创建失败',
+        onSuccess: () => {
+          setIsOpen(false);
+          onSuccess?.();
+        }
+      }
+    );
   }
 
   return (

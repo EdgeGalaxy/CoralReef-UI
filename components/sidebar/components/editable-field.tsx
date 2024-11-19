@@ -35,7 +35,7 @@ export function EditableField({ value, label, onUpdate }: EditableFieldProps) {
 
   return (
     <div className="flex flex-col">
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
       {isEditing ? (
         <Input
           ref={inputRef}

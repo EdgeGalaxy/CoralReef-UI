@@ -7,6 +7,7 @@ import { DeploymentTable } from '@/components/tables/deployment/client';
 import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
 import { EditableField } from './components/editable-field';
 import { useToast } from '@/components/ui/use-toast';
+import { handleApiRequest } from '@/lib/error-handle';
 
 interface Props {
   source: SourceDataModel;
@@ -22,69 +23,41 @@ function SourceDetail({ source, onRefresh, onClose }: Props) {
     field: keyof SourceDataModel,
     newValue: string
   ) => {
-    try {
-      const res = await api.put(
-        `api/reef/workspaces/${source.workspace_id}/cameras/${source.id}`,
-        {
-          json: {
-            [field]: newValue
+    await handleApiRequest(
+      () =>
+        api.put(
+          `api/reef/workspaces/${source.workspace_id}/cameras/${source.id}`,
+          {
+            json: {
+              [field]: newValue
+            }
           }
-        }
-      );
-      if (res.ok) {
-        toast({
-          title: '数据源更新成功'
-        });
-        onRefresh();
+        ),
+      {
+        toast,
+        successTitle: '数据源更新成功',
+        errorTitle: '数据源更新失败',
+        onSuccess: onRefresh
       }
-    } catch (error: any) {
-      if (error.name === 'HTTPError') {
-        const res = await error.response.json();
-        toast({
-          variant: 'destructive',
-          title: '数据源更新失败',
-          description: `${res.message}`
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: '数据源更新失败',
-          description:
-            error instanceof Error ? `${error.message}` : '请稍后重试'
-        });
-      }
-    }
+    );
   };
 
   const handleDelete = async () => {
-    try {
-      const res = await api.delete(
-        `api/reef/workspaces/${source.workspace_id}/cameras/${source.id}`
-      );
-      if (res.ok) {
-        toast({
-          title: '数据源删除成功'
-        });
-        onRefresh();
-        onClose();
+    await handleApiRequest(
+      () =>
+        api.delete(
+          `api/reef/workspaces/${source.workspace_id}/cameras/${source.id}`
+        ),
+      {
+        toast,
+        successTitle: '数据源删除成功',
+        errorTitle: '数据源删除失败',
+        onSuccess: () => {
+          onRefresh();
+          onClose();
+        }
       }
-    } catch (error: any) {
-      if (error.name === 'HTTPError') {
-        const res = await error.response.json();
-        toast({
-          variant: 'destructive',
-          title: '数据源删除失败',
-          description: `${res.message}`
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: '数据源删除失败',
-          description:
-            error instanceof Error ? `${error.message}` : '请稍后重试'
-        });
-      }
-    }
+    );
   };
 
   return (

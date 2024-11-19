@@ -11,6 +11,7 @@ import { DeploymentSidebar } from '@/components/sidebar/deployment';
 import { useAuthSWR } from '@/hooks/useAuthReq';
 import { getSelectWorkspaceId } from '@/lib/utils';
 import { useParams } from 'next/navigation';
+import { CreateDeploymentModal } from '@/components/modal/create-deployment';
 
 const breadcrumbItems = [
   { title: '部署', link: '/dashboard/deploy/gateway' },
@@ -21,7 +22,7 @@ export default function DeploymentPage() {
   const [selectedDeployment, setSelectedDeployment] =
     useState<DeploymentDataModel | null>(null);
   const params = useParams();
-  const workspaceId = params?.workspaceId || getSelectWorkspaceId();
+  const workspaceId = (params?.workspaceId as string) || getSelectWorkspaceId();
 
   const {
     data: deployments,
@@ -50,6 +51,10 @@ export default function DeploymentPage() {
               title={`服务 (${deployments?.length || 0})`}
               description="管理部署服务"
             />
+            <CreateDeploymentModal
+              workspaceId={workspaceId}
+              onSuccess={handleCreateSuccess}
+            />
           </div>
           <Separator className="my-4" />
           <DeploymentTable
@@ -62,6 +67,7 @@ export default function DeploymentPage() {
             <DeploymentSidebar
               deployment={selectedDeployment}
               onClose={() => setSelectedDeployment(null)}
+              onRefresh={handleCreateSuccess}
             />
           )}
         </div>

@@ -1,15 +1,16 @@
 'use client';
 
 import { Gateway, SourceDataModel, GatewayStatus } from '@/constants/deploy';
-import { DeploymentDataModel } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
+import { DeploymentDataModel } from '@/constants/deploy';
 import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { Sidebar } from './_sidebar';
+import { EditableField } from './components/editable-field';
 import { DeploymentTable } from '../tables/deployment/client';
 import { SourceTable } from '../tables/source/client';
-import { EditableField } from './components/editable-field';
+import { handleApiRequest } from '@/lib/error-handle';
 
 interface Props {
   gateway: Gateway;
@@ -22,82 +23,41 @@ function GatewayDetail({ gateway, onRefresh, onClose }: Props) {
   const { toast } = useToast();
 
   const handleUpdate = async (field: keyof Gateway, newValue: string) => {
-    try {
-      const res = await api.put(
-        `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`,
-        {
-          json: {
-            [field]: newValue
+    await handleApiRequest(
+      () =>
+        api.put(
+          `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`,
+          {
+            json: {
+              [field]: newValue
+            }
           }
-        }
-      );
-      if (res.ok) {
-        toast({
-          title: '网关更新成功'
-        });
-        onRefresh();
-      } else {
-        toast({
-          variant: 'destructive',
-          title: '网关更新失败',
-          description: `错误码: ${res.status}`
-        });
+        ),
+      {
+        toast,
+        successTitle: '网关更新成功',
+        errorTitle: '网关更新失败',
+        onSuccess: onRefresh
       }
-    } catch (error: any) {
-      if (error.name === 'HTTPError') {
-        const res = await error.response.json();
-        toast({
-          variant: 'destructive',
-          title: '网关更新失败',
-          description: `${res.message}`
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: '网关更新失败',
-          description:
-            error instanceof Error ? `${error.message}` : '请稍后重试'
-        });
-      }
-    }
+    );
   };
 
   const handleDelete = async () => {
-    try {
-      const res = await api.delete(
-        `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`
-      );
-      if (res.ok) {
-        toast({
-          title: '网关删除成功'
-        });
-        onRefresh();
-        onClose();
-      } else {
-        toast({
-          variant: 'destructive',
-          title: '网关删除失败',
-          description: '请稍后重试'
-        });
+    await handleApiRequest(
+      () =>
+        api.delete(
+          `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`
+        ),
+      {
+        toast,
+        successTitle: '网关删除成功',
+        errorTitle: '网关删除失败',
+        onSuccess: () => {
+          onRefresh();
+          onClose();
+        }
       }
-    } catch (error: any) {
-      if (error.name === 'HTTPError') {
-        const res = await error.response.json();
-        console.log(res);
-        toast({
-          variant: 'destructive',
-          title: '网关删除失败',
-          description: `${res.message}`
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: '网关删除失败',
-          description:
-            error instanceof Error ? `${error.message}` : '请稍后重试'
-        });
-      }
-    }
+    );
   };
 
   return (

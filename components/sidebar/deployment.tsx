@@ -5,20 +5,56 @@ import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
 import { EditableField } from './components/editable-field';
+import { useAuthApi } from '@/hooks/useAuthReq';
+import { useToast } from '@/components/ui/use-toast';
+import { handleApiRequest } from '@/lib/error-handle';
 
 interface Props {
   deployment: DeploymentDataModel;
   onClose: () => void;
+  onRefresh: () => void;
 }
 
-function DeploymentDetail({ deployment }: { deployment: DeploymentDataModel }) {
+function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
+  const api = useAuthApi();
+  const { toast } = useToast();
+  const is_disabled = deployment.running_status !== OperationStatus.RUNNING;
+
   const handleUpdate = async (
     field: keyof DeploymentDataModel,
     newValue: string
   ) => {
-    // Implement the API call to update the gateway
-    console.log(`Updating ${field} to ${newValue}`);
-    // Example: await updateGateway(gateway.id, { [field]: newValue });
+    await handleApiRequest(
+      () =>
+        api.put(
+          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}`,
+          { json: { [field]: newValue } }
+        ),
+      {
+        toast,
+        successTitle: '更新成功',
+        errorTitle: '更新失败',
+        onSuccess: onRefresh
+      }
+    );
+  };
+
+  const handleDelete = async () => {
+    await handleApiRequest(
+      () =>
+        api.delete(
+          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}`
+        ),
+      {
+        toast,
+        successTitle: '服务删除成功',
+        errorTitle: '服务删除失败',
+        onSuccess: () => {
+          onRefresh();
+          onClose();
+        }
+      }
+    );
   };
 
   return (
@@ -68,15 +104,40 @@ function DeploymentDetail({ deployment }: { deployment: DeploymentDataModel }) {
             ? '运行中'
             : '错误'}
         </Button>
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          disabled={is_disabled}
+        >
           <Icons.power className="mr-2 h-4 w-4" />
           重启
         </Button>
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          disabled={is_disabled}
+        >
           <Icons.stopped className="mr-2 h-4 w-4" />
           停止
         </Button>
-        <Button variant="outline" size="sm" className="text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={onRefresh}
+        >
+          <Icons.refreshCw className="mr-2 h-4 w-4" />
+          刷新
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={handleDelete}
+          disabled={is_disabled}
+        >
           <Icons.trash2 className="mr-2 h-4 w-4" />
           删除
         </Button>
@@ -85,7 +146,7 @@ function DeploymentDetail({ deployment }: { deployment: DeploymentDataModel }) {
   );
 }
 
-export function DeploymentSidebar({ deployment, onClose }: Props) {
+export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
   const tabConfig = [
     {
       value: 'stream',
@@ -118,7 +179,13 @@ export function DeploymentSidebar({ deployment, onClose }: Props) {
     <Sidebar
       title={deployment.name}
       onClose={onClose}
-      detailContent={<DeploymentDetail deployment={deployment} />}
+      detailContent={
+        <DeploymentDetail
+          deployment={deployment}
+          onRefresh={onRefresh}
+          onClose={onClose}
+        />
+      }
       tabs={tabConfig}
       defaultTab="stream"
     />
