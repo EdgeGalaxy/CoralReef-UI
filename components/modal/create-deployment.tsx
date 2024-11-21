@@ -84,6 +84,7 @@ export function CreateDeploymentModal({
     Record<number, Record<string, string>>
   >({});
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const steps = [
     {
@@ -243,44 +244,54 @@ export function CreateDeploymentModal({
   };
 
   const handleSubmit = async () => {
-    await handleApiRequest(
-      () =>
-        api.post(`api/reef/workspaces/${workspaceId}/deployments`, {
-          json: {
-            name: deploymentConfig.name,
-            description: deploymentConfig.description,
-            gateway_id: deploymentConfig.gateway?.id,
-            workflow_id: deploymentConfig.workflow?.id,
-            camera_ids: deploymentConfig.cameras?.map((c) => c.id),
-            parameters: deploymentConfig.parameters
+    setIsLoading(true);
+    try {
+      await handleApiRequest(
+        () =>
+          api.post(`api/reef/workspaces/${workspaceId}/deployments`, {
+            json: {
+              name: deploymentConfig.name,
+              description: deploymentConfig.description,
+              gateway_id: deploymentConfig.gateway?.id,
+              workflow_id: deploymentConfig.workflow?.id,
+              camera_ids: deploymentConfig.cameras?.map((c) => c.id),
+              parameters: deploymentConfig.parameters
+            }
+          }),
+        {
+          toast: toast,
+          successTitle: '部署创建成功',
+          errorTitle: '部署创建失败',
+          onSuccess: () => {
+            onSuccess();
+            setOpen(false);
+            resetDeploymentConfig();
           }
-        }),
-      {
-        toast: toast,
-        successTitle: '部署创建成功',
-        errorTitle: '部署创建失败',
-        onSuccess: () => {
-          onSuccess();
-          setOpen(false);
-          resetDeploymentConfig();
         }
-      }
-    );
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRemoveItem = (
+  const handleRemoveItem = async (
     type: 'gateway' | 'workflow' | 'camera',
     itemId?: string
   ) => {
-    if (type === 'gateway') {
-      setDeploymentConfig((prev) => ({ ...prev, gateway: undefined }));
-    } else if (type === 'workflow') {
-      setDeploymentConfig((prev) => ({ ...prev, workflow: undefined }));
-    } else if (type === 'camera' && itemId) {
-      setDeploymentConfig((prev) => ({
-        ...prev,
-        cameras: prev.cameras?.filter((c) => c.id !== itemId)
-      }));
+    setIsLoading(true);
+    try {
+      if (type === 'gateway') {
+        setDeploymentConfig((prev) => ({ ...prev, gateway: undefined }));
+      } else if (type === 'workflow') {
+        setDeploymentConfig((prev) => ({ ...prev, workflow: undefined }));
+      } else if (type === 'camera' && itemId) {
+        setDeploymentConfig((prev) => ({
+          ...prev,
+          cameras: prev.cameras?.filter((c) => c.id !== itemId)
+        }));
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -357,7 +368,15 @@ export function CreateDeploymentModal({
       <DialogTrigger asChild>
         <Button>创建部署</Button>
       </DialogTrigger>
-      <DialogContent className="flex h-full w-full flex-col sm:max-h-[80vh] sm:max-w-[70vw]">
+      <DialogContent
+        className="flex h-full w-full flex-col sm:max-h-[80vh] sm:max-w-[70vw]"
+        style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
+            <RefreshCw className="h-6 w-6 animate-spin" />
+          </div>
+        )}
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">创建服务</DialogTitle>
           <div className="mt-4 flex gap-4">
@@ -621,7 +640,7 @@ export function CreateDeploymentModal({
                 !deploymentConfig.workflow)
             }
           >
-            {currentStep === DeploymentStep.WORKFLOW ? 'Deploy' : 'Continue'}
+            {currentStep === DeploymentStep.WORKFLOW ? '部署' : '下一步'}
           </Button>
         </div>
       </DialogContent>

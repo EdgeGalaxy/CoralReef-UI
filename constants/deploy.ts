@@ -57,9 +57,12 @@ export type DeploymentDataModel = {
 };
 
 export enum OperationStatus {
-  STOPPED = 0,
-  RUNNING = 1,
-  ERROR = 2
+  PENDING = 'pending',
+  STOPPED = 'stopped',
+  RUNNING = 'running',
+  SUCCESS = 'success',
+  FAILURE = 'failure',
+  TIMEOUT = 'timeout'
 }
 
 export type Workflow = {
@@ -79,4 +82,47 @@ export type DeploymentCreate = {
   workflow: Workflow | undefined;
   cameras: SourceDataModel[];
   parameters: Record<string, any>;
+};
+
+export const STATUS_CONFIG = {
+  [OperationStatus.STOPPED]: {
+    text: '停止',
+    color: 'gray',
+    icon: 'stopped'
+  },
+  [OperationStatus.RUNNING]: {
+    text: '运行中',
+    color: 'green',
+    icon: 'online'
+  },
+  [OperationStatus.PENDING]: {
+    text: '初始化',
+    color: 'yellow',
+    icon: 'spinner'
+  },
+  [OperationStatus.TIMEOUT]: {
+    text: '超时',
+    color: 'orange',
+    icon: 'offline'
+  },
+  [OperationStatus.SUCCESS]: {
+    text: '成功',
+    color: 'green',
+    icon: 'online'
+  },
+  [OperationStatus.FAILURE]: {
+    text: '失败',
+    color: 'red',
+    icon: 'offline'
+  }
+} as const;
+
+export const getStatusConfig = (status: OperationStatus) => {
+  return (
+    STATUS_CONFIG[status] || {
+      text: '错误',
+      color: 'gray',
+      icon: 'offline'
+    }
+  );
 };

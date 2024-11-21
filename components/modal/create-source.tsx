@@ -32,6 +32,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuthApi } from '@/hooks/useAuthReq';
 import { CameraType, Gateway } from '@/constants/deploy';
 import { handleApiRequest } from '@/lib/error-handle';
+import { RefreshCw } from 'lucide-react';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -53,6 +54,7 @@ export default function CreateSourceDialog({
   onSuccess?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const api = useAuthApi();
   const form = useForm<FormValues>({
@@ -67,37 +69,52 @@ export default function CreateSourceDialog({
   });
 
   async function onSubmit(values: FormValues) {
-    await handleApiRequest(
-      () => {
-        const submitData = {
-          ...values,
-          path:
-            values.type === CameraType.USB
-              ? parseInt(values.path as string)
-              : values.path
-        };
+    setIsLoading(true);
+    try {
+      await handleApiRequest(
+        () => {
+          const submitData = {
+            ...values,
+            path:
+              values.type === CameraType.USB
+                ? parseInt(values.path as string)
+                : values.path
+          };
 
-        return api.post(`api/reef/workspaces/${workspaceId}/cameras/`, {
-          json: submitData
-        });
-      },
-      {
-        toast,
-        successTitle: '创建成功',
-        errorTitle: '创建失败',
-        onSuccess: () => {
-          setIsOpen(false);
-          onSuccess?.();
+          return api.post(`api/reef/workspaces/${workspaceId}/cameras/`, {
+            json: submitData
+          });
+        },
+        {
+          toast,
+          successTitle: '创建成功',
+          errorTitle: '创建失败',
+          onSuccess: () => {
+            setIsOpen(false);
+            onSuccess?.();
+          }
         }
-      }
-    );
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>创建相机</Button>
+      <Button onClick={() => setIsOpen(true)} disabled={isLoading}>
+        创建相机
+      </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent
+          className="sm:max-w-[425px]"
+          style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+        >
+          {isLoading && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
+              <RefreshCw className="h-6 w-6 animate-spin" />
+            </div>
+          )}
           <DialogHeader>
             <DialogTitle>创建相机</DialogTitle>
           </DialogHeader>
@@ -209,7 +226,9 @@ export default function CreateSourceDialog({
                 )}
               />
               <DialogFooter>
-                <Button type="submit">创建相机</Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? '创建中...' : '创建相机'}
+                </Button>
               </DialogFooter>
             </form>
           </Form>

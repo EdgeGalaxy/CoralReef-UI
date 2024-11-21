@@ -1,6 +1,11 @@
 'use client';
 
-import { DeploymentDataModel, OperationStatus } from '@/constants/deploy';
+import React from 'react';
+import {
+  DeploymentDataModel,
+  OperationStatus,
+  getStatusConfig
+} from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
@@ -18,7 +23,21 @@ interface Props {
 function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
   const api = useAuthApi();
   const { toast } = useToast();
+  const [operationType, setOperationType] = React.useState<string | null>(null);
   const is_disabled = deployment.running_status !== OperationStatus.RUNNING;
+
+  const handleOperation = async (
+    type: string,
+    operation: () => Promise<void>
+  ) => {
+    if (operationType) return;
+    setOperationType(type);
+    try {
+      await operation();
+    } finally {
+      setOperationType(null);
+    }
+  };
 
   const handleUpdate = async (
     field: keyof DeploymentDataModel,
@@ -39,23 +58,27 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
     );
   };
 
-  const handleDelete = async () => {
-    await handleApiRequest(
-      () =>
-        api.delete(
-          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}`
-        ),
-      {
-        toast,
-        successTitle: '服务删除成功',
-        errorTitle: '服务删除失败',
-        onSuccess: () => {
-          onRefresh();
-          onClose();
+  const handleDelete = () => {
+    return handleOperation('delete', async () => {
+      await handleApiRequest(
+        () =>
+          api.delete(
+            `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}`
+          ),
+        {
+          toast,
+          successTitle: '服务删除成功',
+          errorTitle: '服务删除失败',
+          onSuccess: () => {
+            onRefresh();
+            onClose();
+          }
         }
-      }
-    );
+      );
+    });
   };
+
+  const status = getStatusConfig(deployment.running_status);
 
   return (
     <div>
@@ -83,62 +106,73 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
       <div className="mb-6 flex space-x-4">
         <Button
           size="sm"
-          className={`text-xs ${
-            deployment.running_status === OperationStatus.STOPPED
-              ? 'bg-gray-500 hover:bg-gray-600'
-              : deployment.running_status === OperationStatus.RUNNING
-              ? 'bg-green-500 hover:bg-green-600'
-              : 'bg-red-500 hover:bg-red-600'
-          }`}
+          className={`text-xs bg-${status.color}-500 hover:bg-${status.color}-600`}
         >
-          {deployment.running_status === OperationStatus.STOPPED ? (
-            <Icons.stopped className="mr-2 h-4 w-4" />
-          ) : deployment.running_status === OperationStatus.RUNNING ? (
-            <Icons.online className="mr-2 h-4 w-4" />
-          ) : (
-            <Icons.offline className="mr-2 h-4 w-4" />
-          )}
-          {deployment.running_status === OperationStatus.STOPPED
-            ? '停止'
-            : deployment.running_status === OperationStatus.RUNNING
-            ? '运行中'
-            : '错误'}
+          {React.createElement(Icons[status.icon], {
+            className: 'mr-2 h-4 w-4'
+          })}
+          {status.text}
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="text-xs"
-          disabled={is_disabled}
+          disabled={
+            is_disabled || (!!operationType && operationType !== 'restart')
+          }
+          onClick={() => handleOperation('restart', async () => onRefresh())}
         >
-          <Icons.power className="mr-2 h-4 w-4" />
+          {operationType === 'restart' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.power className="mr-2 h-4 w-4" />
+          )}
           重启
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="text-xs"
-          disabled={is_disabled}
+          disabled={
+            is_disabled || (!!operationType && operationType !== 'stop')
+          }
+          onClick={() => handleOperation('stop', async () => onRefresh())}
         >
-          <Icons.stopped className="mr-2 h-4 w-4" />
+          {operationType === 'stop' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.stopped className="mr-2 h-4 w-4" />
+          )}
           停止
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="text-xs"
-          onClick={onRefresh}
+          disabled={!!operationType && operationType !== 'refresh'}
+          onClick={() => handleOperation('refresh', async () => onRefresh())}
         >
-          <Icons.refreshCw className="mr-2 h-4 w-4" />
+          {operationType === 'refresh' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.refreshCw className="mr-2 h-4 w-4" />
+          )}
           刷新
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="text-xs"
-          onClick={handleDelete}
-          disabled={is_disabled}
+          disabled={
+            is_disabled || (!!operationType && operationType !== 'delete')
+          }
+          onClick={() => handleOperation('delete', async () => handleDelete())}
         >
-          <Icons.trash2 className="mr-2 h-4 w-4" />
+          {operationType === 'delete' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.trash2 className="mr-2 h-4 w-4" />
+          )}
           删除
         </Button>
       </div>

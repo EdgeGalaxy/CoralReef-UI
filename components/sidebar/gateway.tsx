@@ -11,6 +11,7 @@ import { EditableField } from './components/editable-field';
 import { DeploymentTable } from '../tables/deployment/client';
 import { SourceTable } from '../tables/source/client';
 import { handleApiRequest } from '@/lib/error-handle';
+import React from 'react';
 
 interface Props {
   gateway: Gateway;
@@ -21,6 +22,20 @@ interface Props {
 function GatewayDetail({ gateway, onRefresh, onClose }: Props) {
   const api = useAuthApi();
   const { toast } = useToast();
+  const [operationType, setOperationType] = React.useState<string | null>(null);
+
+  const handleOperation = async (
+    type: string,
+    operation: () => Promise<void>
+  ) => {
+    if (operationType) return;
+    setOperationType(type);
+    try {
+      await operation();
+    } finally {
+      setOperationType(null);
+    }
+  };
 
   const handleUpdate = async (field: keyof Gateway, newValue: string) => {
     await handleApiRequest(
@@ -42,22 +57,24 @@ function GatewayDetail({ gateway, onRefresh, onClose }: Props) {
     );
   };
 
-  const handleDelete = async () => {
-    await handleApiRequest(
-      () =>
-        api.delete(
-          `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`
-        ),
-      {
-        toast,
-        successTitle: '网关删除成功',
-        errorTitle: '网关删除失败',
-        onSuccess: () => {
-          onRefresh();
-          onClose();
+  const handleDelete = () => {
+    return handleOperation('delete', async () => {
+      await handleApiRequest(
+        () =>
+          api.delete(
+            `api/reef/workspaces/${gateway.workspace_id}/gateways/${gateway.id}`
+          ),
+        {
+          toast,
+          successTitle: '网关删除成功',
+          errorTitle: '网关删除失败',
+          onSuccess: () => {
+            onRefresh();
+            onClose();
+          }
         }
-      }
-    );
+      );
+    });
   };
 
   return (
@@ -109,18 +126,28 @@ function GatewayDetail({ gateway, onRefresh, onClose }: Props) {
           variant="outline"
           size="sm"
           className="text-xs"
-          onClick={onRefresh}
+          disabled={!!operationType && operationType !== 'refresh'}
+          onClick={() => handleOperation('refresh', async () => onRefresh())}
         >
-          <Icons.refreshCw className="mr-2 h-4 w-4" />
+          {operationType === 'refresh' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.refreshCw className="mr-2 h-4 w-4" />
+          )}
           刷新
         </Button>
         <Button
           variant="outline"
           size="sm"
           className="text-xs"
-          onClick={handleDelete}
+          disabled={!!operationType && operationType !== 'delete'}
+          onClick={() => handleOperation('delete', async () => handleDelete())}
         >
-          <Icons.trash2 className="mr-2 h-4 w-4" />
+          {operationType === 'delete' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.trash2 className="mr-2 h-4 w-4" />
+          )}
           删除
         </Button>
       </div>

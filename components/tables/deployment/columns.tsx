@@ -1,6 +1,10 @@
 'use client';
 
-import { DeploymentDataModel, OperationStatus } from '@/constants/deploy';
+import {
+  DeploymentDataModel,
+  OperationStatus,
+  getStatusConfig
+} from '@/constants/deploy';
 
 interface Column {
   accessorKey: keyof DeploymentDataModel;
@@ -28,23 +32,10 @@ export const columns = (): Column[] => [
   {
     accessorKey: 'running_status',
     header: '状态',
-    cell: ({ row }) => (
-      <span
-        className={`${
-          row.original.running_status === OperationStatus.STOPPED
-            ? 'text-gray-500'
-            : row.original.running_status === OperationStatus.RUNNING
-            ? 'text-green-500'
-            : 'text-red-500'
-        }`}
-      >
-        {row.original.running_status === OperationStatus.STOPPED
-          ? '停止'
-          : row.original.running_status === OperationStatus.RUNNING
-          ? '运行中'
-          : '错误'}
-      </span>
-    )
+    cell: ({ row }) => {
+      const status = getStatusConfig(row.original.running_status);
+      return <span className={`text-${status.color}-500`}>{status.text}</span>;
+    }
   },
   {
     accessorKey: 'created_at',

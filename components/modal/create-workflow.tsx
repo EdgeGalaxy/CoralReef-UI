@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
+import { RefreshCw } from 'lucide-react';
 
 import { Workflow } from '@/constants/deploy';
 
@@ -24,12 +25,43 @@ export function WorkflowTemplateCreateModal({
   onCreateWorkflow,
   onCreateNewWorkflow
 }: TemplateModalProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const handleCreateWorkflow = async (templateId: string) => {
+    setIsLoading(true);
+    try {
+      await onCreateWorkflow(templateId);
+      setOpen(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateNewWorkflow = async () => {
+    setIsLoading(true);
+    try {
+      await onCreateNewWorkflow();
+      setOpen(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>创建工作流</Button>
       </DialogTrigger>
-      <DialogContent className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]">
+      <DialogContent
+        className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]"
+        style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
+            <RefreshCw className="h-6 w-6 animate-spin" />
+          </div>
+        )}
         <DialogHeader>
           <DialogTitle>选择工作流模板</DialogTitle>
         </DialogHeader>
@@ -39,7 +71,7 @@ export function WorkflowTemplateCreateModal({
               <Card
                 key={template.id}
                 className="cursor-pointer transition-shadow hover:shadow-lg"
-                onClick={() => onCreateWorkflow(template.id)}
+                onClick={() => handleCreateWorkflow(template.id)}
               >
                 <CardHeader>
                   <CardTitle>{template.name}</CardTitle>
@@ -52,7 +84,7 @@ export function WorkflowTemplateCreateModal({
           </div>
         </div>
         <div className="mt-4 flex justify-center">
-          <Button onClick={onCreateNewWorkflow}>创建新工作流</Button>
+          <Button onClick={handleCreateNewWorkflow}>创建新工作流</Button>
         </div>
       </DialogContent>
     </Dialog>
