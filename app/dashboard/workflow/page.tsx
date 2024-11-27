@@ -8,9 +8,9 @@ import { Workflow } from '@/constants/deploy';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { WorkflowTemplateCreateModal } from '@/components/modal/create-workflow';
-import { getSelectWorkspaceId } from '@/lib/utils';
 import { useParams } from 'next/navigation';
 import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useSession } from 'next-auth/react';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
@@ -20,7 +20,9 @@ const breadcrumbItems = [
 const WorkflowListPage = () => {
   const [templates, setTemplates] = useState<Workflow[]>([]);
   const params = useParams();
-  const workspaceId = params?.workspaceId || getSelectWorkspaceId();
+  const session = useSession();
+  const workspaceId =
+    (params?.workspaceId as string) || session.data?.user.select_workspace_id;
 
   const { data: workflows, error } = useAuthSWR<Workflow[]>(
     `/api/reef/workspaces/${workspaceId}/workflows`

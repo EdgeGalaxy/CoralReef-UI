@@ -40,7 +40,8 @@ import {
   RefreshCw,
   Trash2,
   MinusCircle,
-  Power
+  Power,
+  Package
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -78,6 +79,7 @@ export const Icons = {
   moon: Moon,
   laptop: Laptop,
   editable: Pencil,
+  model: Package,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

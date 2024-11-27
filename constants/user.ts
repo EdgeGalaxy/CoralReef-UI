@@ -3,6 +3,7 @@ export interface UserRead {
   email: string;
   username: string;
   phone?: string;
+  select_workspace_id?: string;
   is_active: boolean;
   is_superuser: boolean;
   is_verified: boolean;
@@ -21,4 +22,20 @@ export interface UserUpdate {
   email?: string;
   username?: string;
   phone?: string;
+}
+
+export interface WorkspaceCreate {
+  name: string;
+  description?: string;
+  max_users?: number;
+}
+
+export interface WorkspaceResponse {
+  id: string;
+  name: string;
+  description?: string;
+  max_users: number;
+  owner_user_id: string;
+  created_at: string;
+  updated_at: string;
 }

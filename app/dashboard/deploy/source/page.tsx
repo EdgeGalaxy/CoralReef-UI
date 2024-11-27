@@ -10,7 +10,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import CreateSourceDialog from '@/components/modal/create-source';
 import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
-import { getSelectWorkspaceId } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
 const breadcrumbItems = [
@@ -23,7 +23,11 @@ export default function SourcePage() {
     null
   );
   const params = useParams();
-  const workspaceId = (params?.workspaceId as string) || getSelectWorkspaceId();
+  const session = useSession();
+  const workspaceId =
+    (params?.workspaceId as string) ||
+    session.data?.user.select_workspace_id ||
+    '';
 
   const { data: gateways, error: gatewaysError } = useAuthSWR<Gateway[]>(
     `/api/reef/workspaces/${workspaceId}/gateways`

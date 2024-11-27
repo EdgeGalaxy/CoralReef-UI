@@ -109,6 +109,12 @@ export default function CreateSourceDialog({
         <DialogContent
           className="sm:max-w-[425px]"
           style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+          onPointerDownOutside={(e) => {
+            e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+          }}
         >
           {isLoading && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">

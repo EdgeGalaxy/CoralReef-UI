@@ -3,14 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  LayoutGrid,
-  RefreshCw,
-  Video,
-  Settings,
-  X,
-  Filter
-} from 'lucide-react';
+import { LayoutGrid, RefreshCw, Video, X, Filter } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,14 +11,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription
-} from '@/components/ui/card';
 import { useAuthSWR } from '@/hooks/useAuthReq';
-import { getSelectWorkspaceId } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import {
   Popover,
@@ -47,7 +33,6 @@ import { handleApiRequest } from '@/lib/error-handle';
 import { GatewayStepSelectedItem } from './steps/gateway-step';
 import { CameraStepSelectedItem } from './steps/camera-step';
 import { WorkflowStepSelectedItem } from './steps/workflow-step';
-import { ApiError } from 'next/dist/server/api-utils';
 import { EditableField } from '@/components/sidebar/components/editable-field';
 
 enum DeploymentStep {
@@ -371,6 +356,12 @@ export function CreateDeploymentModal({
       <DialogContent
         className="flex h-full w-full flex-col sm:max-h-[80vh] sm:max-w-[70vw]"
         style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+        }}
       >
         {isLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">

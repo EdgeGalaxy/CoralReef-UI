@@ -10,7 +10,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { CreateGatewayModal } from '@/components/modal/create-gateway';
 import { useAuthSWR } from '@/hooks/useAuthReq';
-import { getSelectWorkspaceId } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
 const breadcrumbItems = [
@@ -27,7 +27,9 @@ const createGatewayMock = {
 export default function GatewayPage() {
   const [selectedGateway, setSelectedGateway] = useState<Gateway | null>(null);
   const params = useParams();
-  const workspaceId = params?.workspaceId || getSelectWorkspaceId();
+  const session = useSession();
+  const workspaceId =
+    (params?.workspaceId as string) || session.data?.user.select_workspace_id;
 
   const {
     data: gateways,

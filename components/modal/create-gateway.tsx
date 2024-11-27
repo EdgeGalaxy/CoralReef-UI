@@ -38,7 +38,15 @@ export function CreateGatewayModal({
       <DialogTrigger asChild>
         <Button>创建网关</Button>
       </DialogTrigger>
-      <DialogContent className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]">
+      <DialogContent
+        className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{name}</DialogTitle>
         </DialogHeader>

@@ -56,6 +56,12 @@ export function WorkflowTemplateCreateModal({
       <DialogContent
         className="flex h-full w-full flex-col sm:max-h-[60vh] sm:max-w-[70vw]"
         style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+        }}
       >
         {isLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">

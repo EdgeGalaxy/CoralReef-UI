@@ -9,7 +9,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { DeploymentSidebar } from '@/components/sidebar/deployment';
 import { useAuthSWR } from '@/hooks/useAuthReq';
-import { getSelectWorkspaceId } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { CreateDeploymentModal } from '@/components/modal/create-deployment';
 
@@ -22,7 +22,11 @@ export default function DeploymentPage() {
   const [selectedDeployment, setSelectedDeployment] =
     useState<DeploymentDataModel | null>(null);
   const params = useParams();
-  const workspaceId = (params?.workspaceId as string) || getSelectWorkspaceId();
+  const session = useSession();
+  const workspaceId =
+    (params?.workspaceId as string) ||
+    session.data?.user.select_workspace_id ||
+    '';
 
   const {
     data: deployments,

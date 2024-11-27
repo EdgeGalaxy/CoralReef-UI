@@ -2,7 +2,7 @@ import { NextAuthConfig } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
 import { noAuthApi } from '@/lib/utils';
-import { UserRead } from '@/constants/user';
+import { UserRead, WorkspaceResponse } from '@/constants/user';
 
 interface LoginResponse {
   access_token: string;
@@ -67,8 +67,19 @@ const authConfig = {
             })
             .json()) as UserRead;
 
-          userData.access_token = data.access_token;
+          const userWorkspaces = (await noAuthApi
+            .get('api/reef/workspaces/me', {
+              headers: {
+                Authorization: `Bearer ${data.access_token}`
+              }
+            })
+            .json()) as WorkspaceResponse[];
 
+          userData.access_token = data.access_token;
+          userData.select_workspace_id = userWorkspaces.find(
+            (workspace) => workspace.owner_user_id === userData.id
+          )?.id;
+          console.log('userData', userData);
           return userData;
         } catch (error) {
           console.error('Login error:', error);
@@ -83,12 +94,20 @@ const authConfig = {
       if (user) {
         token.accessToken = user.access_token;
         token.id = user.id;
+        token.select_workspace_id = user.select_workspace_id;
+        token.is_superuser = user.is_superuser;
+        token.is_active = user.is_active;
+        token.is_verified = user.is_verified;
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.user.id = token.id as string;
+      session.user.select_workspace_id = token.select_workspace_id as string;
+      session.user.is_superuser = token.is_superuser as boolean;
+      session.user.is_active = token.is_active as boolean;
+      session.user.is_verified = token.is_verified as boolean;
       return session;
     }
   },

@@ -10,11 +10,11 @@ import {
 import { DashboardNav } from '@/components/dashboard-nav';
 import { navItems } from '@/constants/data';
 import { cn } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 import { ChevronLeft } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import Link from 'next/link';
 import { NavItem } from '@/types';
-import { setSelectWorkspaceId, getSelectWorkspaceId } from '@/lib/utils';
 import { useAuthSWR } from '@/hooks/useAuthReq';
 
 type SidebarProps = {
@@ -30,26 +30,30 @@ interface Workspace {
 export default function Sidebar({ className }: SidebarProps) {
   const { isMinimized, toggle } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [selectedWorkspace, setSelectedWorkspace] = useState<string>('');
+  const session = useSession();
+  const [selectedWorkspace, setSelectedWorkspace] = useState<string>(
+    session.data?.user.select_workspace_id || ''
+  );
 
   const { data: workspaces, error } = useAuthSWR<Workspace[]>(
     '/api/reef/workspaces/me'
   );
 
   useEffect(() => {
-    setSelectedWorkspace(getSelectWorkspaceId());
-  }, []);
+    setSelectedWorkspace(session.data?.user.select_workspace_id || '');
+  }, [session.data?.user.select_workspace_id]);
 
   useEffect(() => {
-    if (workspaces?.length && !selectedWorkspace) {
-      const workspaceId = workspaces[0].id;
-      setSelectWorkspaceId(workspaceId);
-      setSelectedWorkspace(workspaceId);
+    if (workspaces?.length && !selectedWorkspace && session.data?.user) {
+      setSelectedWorkspace(session.data.user.select_workspace_id || '');
     }
   }, [workspaces, selectedWorkspace]);
 
   const handleWorkspaceSelect = (workspaceId: string) => {
-    setSelectWorkspaceId(workspaceId);
+    if (session.data) {
+      session.data.user.select_workspace_id = workspaceId;
+      setSelectedWorkspace(workspaceId);
+    }
   };
 
   const handleToggle = () => {
