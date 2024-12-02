@@ -35,7 +35,7 @@ const roboflowModelSchema = z.object({
   platform: z.literal(MLPlatform.ROBOFLOW)
 });
 
-type RoboflowModelFormValues = z.infer<typeof roboflowModelSchema>;
+export type RoboflowModelFormValues = z.infer<typeof roboflowModelSchema>;
 
 interface RoboflowModelFormProps {
   onSubmit: (values: RoboflowModelFormValues) => Promise<void>;

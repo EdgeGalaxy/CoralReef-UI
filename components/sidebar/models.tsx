@@ -77,11 +77,10 @@ function ModelDetail({ model, onRefresh, onClose }: Props) {
   return (
     <div>
       <div className="mb-6 grid grid-cols-4 gap-4">
-        <EditableField
-          value={model.name}
-          label="模型名称"
-          onUpdate={(newValue) => handleUpdate('name', newValue)}
-        />
+        <div className="flex flex-col">
+          <span className="text-sm text-muted-foreground">模型唯一标识</span>
+          <span className="font-medium">{model.name}</span>
+        </div>
         <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">模型类型</span>
           <span className="font-medium">{model.model_type}</span>
