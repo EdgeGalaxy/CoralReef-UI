@@ -24,10 +24,7 @@ const authConfig = {
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID ?? '',
-      clientSecret: process.env.GITHUB_SECRET ?? '',
-      httpOptions: {
-        timeout: 10000
-      }
+      clientSecret: process.env.GITHUB_SECRET ?? ''
     }),
     CredentialProvider({
       credentials: {
@@ -90,7 +87,12 @@ const authConfig = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, trigger, session, user }) {
+      // 当 session 更新时，更新 token 中的 select_workspace_id
+      if (trigger === 'update') {
+        token.select_workspace_id = session.user.select_workspace_id;
+        return token;
+      }
       if (user) {
         token.accessToken = user.access_token;
         token.id = user.id;

@@ -333,7 +333,7 @@ const DesignPage = () => {
           if (image.name) {
             kindValues[kindName].push({
               manifest_type_identifier: node.data.manifest_type_identifier,
-              property_name: `$input.${image.name}`,
+              property_name: `$inputs.${image.name}`,
               property_description: 'Image',
               compatible_element: 'workflow_image',
               is_list_element: false,
@@ -350,7 +350,7 @@ const DesignPage = () => {
           if (param.name) {
             kindValues[kindName].push({
               manifest_type_identifier: node.data.manifest_type_identifier,
-              property_name: `$input.${param.name}`,
+              property_name: `$inputs.${param.name}`,
               property_description: 'Parameter',
               compatible_element: 'workflow_parameter',
               is_list_element: false,
@@ -399,14 +399,14 @@ const DesignPage = () => {
           const updatedImages = formData.images.map((image: any) => ({
             name: image.name,
             selected_element: 'workflow_image',
-            kind: `$input.${image.name}`
+            kind: `$inputs.${image.name}`
           }));
 
           const updatedParams = formData.params.map((param: any) => ({
             name: param.name,
             value: param.value,
             selected_element: 'workflow_parameter',
-            kind: `$input.${param.name}`
+            kind: `$inputs.${param.name}`
           }));
 
           setNodes((nds) =>

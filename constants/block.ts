@@ -48,4 +48,4 @@ export type NodeData = BlockDescription & {
   formData: Record<string, any>;
 };
 
-export const skipFormFields = ['type'];
+export const skipFormFields = [''];

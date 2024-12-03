@@ -9,6 +9,7 @@ import { withTheme } from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import { Theme as SemanticUITheme } from '@rjsf/semantic-ui';
 import 'semantic-ui-css/semantic.min.css';
+import { JSONSchema7 } from 'json-schema';
 
 import {
   NodeData,
@@ -18,7 +19,11 @@ import {
 } from '@/constants/block';
 
 import KindField from './kind-field';
-import { Button } from '@/components/ui/button'; // Add this import
+import { Button } from '@/components/ui/button';
+
+interface ExtendedJSONSchema7 extends JSONSchema7 {
+  'x-internal-type'?: string;
+}
 
 const Form = withTheme(SemanticUITheme);
 
@@ -29,7 +34,7 @@ interface NodeDetailProps {
   onFormChange: (formData: any) => void;
   availableKindValues: Record<string, PropertyDefinition[]>;
   kindsConnections: KindsConnections;
-  onDeleteNode: () => void; // Add this new prop
+  onDeleteNode: () => void;
 }
 
 const NodeDetail: React.FC<NodeDetailProps> = React.memo(
@@ -61,19 +66,20 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
       ...nodeData.block_schema,
       properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
         (acc, [key, value]) => {
-          // TODO: 指定字段特殊赋值
           if (skipFormFields.includes(key)) {
-            return acc; // Skip fields in skipFormFields
+            return acc;
           }
+
           if (typeof value === 'object' && value !== null && 'anyOf' in value) {
+            // 保留 anyOf 的验证规则，但添加额外的标记
             acc[key] = {
-              type: 'string',
-              title: value.title || key
+              ...value,
+              'x-internal-type': 'anyOf-field' // 添加自定义标记
             };
           } else if (
             typeof value === 'object' &&
             value !== null &&
-            key === 'name'
+            (key === 'name' || key === 'type')
           ) {
             acc[key] = {
               type: 'string',
@@ -91,11 +97,12 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
 
     const uiSchema = Object.keys(nodeData.block_schema.properties || {}).reduce(
       (acc, key) => {
-        const property = nodeData.block_schema.properties?.[key];
+        const property = nodeData.block_schema.properties?.[
+          key
+        ] as ExtendedJSONSchema7;
         if (
-          typeof property === 'object' &&
           property !== null &&
-          'anyOf' in property
+          property['x-internal-type'] === 'anyOf-field'
         ) {
           acc[key] = {
             'ui:field': 'AnyOfField',
@@ -107,7 +114,6 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
         return acc;
       },
       {
-        // Add this configuration to hide the submit button
         'ui:submitButtonOptions': {
           norender: true
         },

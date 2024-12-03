@@ -16,6 +16,7 @@ import { useSidebar } from '@/hooks/useSidebar';
 import Link from 'next/link';
 import { NavItem } from '@/types';
 import { useAuthSWR } from '@/hooks/useAuthReq';
+import CreateWorkspaceDialog from '@/components/modal/create-workspace';
 
 type SidebarProps = {
   className?: string;
@@ -30,29 +31,58 @@ interface Workspace {
 export default function Sidebar({ className }: SidebarProps) {
   const { isMinimized, toggle } = useSidebar();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const session = useSession();
+  const { data: session, update: updateSession } = useSession();
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>(
-    session.data?.user.select_workspace_id || ''
+    session?.user.select_workspace_id || ''
   );
+  const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = useState(false);
 
-  const { data: workspaces, error } = useAuthSWR<Workspace[]>(
-    '/api/reef/workspaces/me'
-  );
+  const {
+    data: workspaces,
+    error,
+    mutate
+  } = useAuthSWR<Workspace[]>('/api/reef/workspaces/me');
 
   useEffect(() => {
-    setSelectedWorkspace(session.data?.user.select_workspace_id || '');
-  }, [session.data?.user.select_workspace_id]);
+    setSelectedWorkspace(session?.user.select_workspace_id || '');
+  }, [session?.user.select_workspace_id]);
 
   useEffect(() => {
-    if (workspaces?.length && !selectedWorkspace && session.data?.user) {
-      setSelectedWorkspace(session.data.user.select_workspace_id || '');
+    if (workspaces?.length && !selectedWorkspace && session?.user) {
+      setSelectedWorkspace(session.user.select_workspace_id || '');
     }
   }, [workspaces, selectedWorkspace]);
 
-  const handleWorkspaceSelect = (workspaceId: string) => {
-    if (session.data) {
-      session.data.user.select_workspace_id = workspaceId;
-      setSelectedWorkspace(workspaceId);
+  const handleWorkspaceSelect = async (value: string) => {
+    if (value === 'create-new') {
+      setIsCreateWorkspaceOpen(true);
+      return;
+    }
+
+    try {
+      // 1. 先更新本地状态
+      setSelectedWorkspace(value);
+
+      // 2. 调用 update session
+      const result = await updateSession({
+        ...session,
+        user: {
+          ...session?.user,
+          select_workspace_id: value
+        }
+      });
+
+      // 3. 验证更新是否成功
+      if (!result) {
+        console.error('Session update failed');
+        // 可能需要回滚本地状态
+        setSelectedWorkspace(session?.user.select_workspace_id || '');
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to update workspace:', error);
+      // 发生错误时回滚本地状态
+      setSelectedWorkspace(session?.user.select_workspace_id || '');
     }
   };
 
@@ -111,6 +141,9 @@ export default function Sidebar({ className }: SidebarProps) {
                 {workspace.name}
               </SelectItem>
             ))}
+            <SelectItem value="create-new" className="text-primary">
+              + 创建新工作空间
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -133,6 +166,13 @@ export default function Sidebar({ className }: SidebarProps) {
           </div>
         </div>
       </div>
+      <CreateWorkspaceDialog
+        isOpen={isCreateWorkspaceOpen}
+        onClose={() => setIsCreateWorkspaceOpen(false)}
+        onSuccess={() => {
+          mutate();
+        }}
+      />
     </aside>
   );
 }

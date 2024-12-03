@@ -6,7 +6,6 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Node } from 'reactflow';
 
 import { FieldProps, RJSFSchema } from '@rjsf/utils';
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Link1Icon } from '@radix-ui/react-icons';
 import { Label } from '@/components/ui/label';
 
-import { buildInNodes, outputNode } from '@/constants/init-data';
+import { outputNode } from '@/constants/init-data';
 import {
   NodeData,
   PropertyDefinition,
@@ -48,6 +47,9 @@ const KindField: React.FC<KindFieldProps> = (props) => {
 
   useEffect(() => {
     setInputValue(formData || '');
+    if (formData && typeof formData === 'string' && formData.includes('$')) {
+      setIsKindMode(true);
+    }
   }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,7 +57,9 @@ const KindField: React.FC<KindFieldProps> = (props) => {
   };
 
   const handleInputBlur = () => {
-    onChange(inputValue);
+    if (inputValue !== formData) {
+      onChange(inputValue);
+    }
   };
 
   const handleSelectChange = (selectedValue: string) => {
@@ -65,6 +69,11 @@ const KindField: React.FC<KindFieldProps> = (props) => {
 
   const toggleKindMode = () => {
     setIsKindMode(!isKindMode);
+    if (isKindMode) {
+      setInputValue('');
+    } else {
+      setInputValue(kindOptions?.[0] || '');
+    }
   };
 
   const hasKindOption = (originalSchema || schema)?.anyOf?.some(
@@ -72,7 +81,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
   );
 
   const kindOptions = useMemo(() => {
-    // TODO: 特殊处理，当节点为output时，直接取所有的availableKindValues的值中的property_name
+    // 特殊处理，当节点为output时，直接取所有的availableKindValues的值中的property_name
     if (
       nodeData.manifest_type_identifier ===
       outputNode.data.manifest_type_identifier
@@ -86,7 +95,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
         const currentNodeName = nodeData.formData.name;
 
         const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
-          // TODO: 特殊处理, 当 selected_element 为 workflow_param 时, 使用 string 作为 kindName
+          // 特殊处理, 当 selected_element 为 workflow_parameter 时, 使用 string 作为 kindName
           const kindName =
             item.selected_element === 'workflow_parameter'
               ? 'string'
