@@ -24,6 +24,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import CustomNode from '@/components/workflow/custom-node';
 import { BlockDescription, KindsConnections } from '@/constants/block';
 import NodeDetail from '@/components/workflow/node-detail';
+import { useSession } from 'next-auth/react';
 import { NodeData } from '@/constants/block';
 import BuiltInNode from '@/components/workflow/buildin-node';
 import {
@@ -35,6 +36,10 @@ import {
 import { OutputDefinition, Kind, PropertyDefinition } from '@/constants/block';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { toast } from '@/components/ui/use-toast';
+import { WorkflowCreate, WorkflowResponse } from '@/constants/workflow';
+import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
+import { handleApiRequest } from '@/lib/error-handle';
 
 const nodeTypes = {
   customNode: CustomNode,
@@ -49,6 +54,11 @@ const breadcrumbItems = [
 const DesignPage = () => {
   const params = useParams();
   const workflowId = params?.workflowId as string;
+  const isNewWorkflow = workflowId === 'new';
+  const session = useSession();
+  const api = useAuthApi();
+  const workspaceId =
+    (params?.workspaceId as string) || session.data?.user.select_workspace_id;
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -63,31 +73,21 @@ const DesignPage = () => {
     Record<string, PropertyDefinition[]>
   >({});
 
-  useEffect(() => {
-    const fetchWorkflowData = async () => {
-      try {
-        const response = await fetch(`/api/workflows/${workflowId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setNodes(data.nodes);
-          setEdges(data.edges);
-        } else if (response.status === 404) {
-          // If workflow not found, use default data
-          setNodes(initialNodes);
-          setEdges(initialEdges);
-        } else {
-          throw new Error('Failed to fetch workflow data');
-        }
-      } catch (error) {
-        console.error('Error fetching workflow data:', error);
-        // Use default data in case of any error
-        setNodes(initialNodes);
-        setEdges(initialEdges);
-      }
-    };
+  const { data: workflowData } = useAuthSWR<WorkflowResponse>(
+    !isNewWorkflow
+      ? `/api/reef/workspaces/${workspaceId}/workflows/${workflowId}`
+      : ''
+  );
 
-    fetchWorkflowData();
-  }, [workflowId]);
+  useEffect(() => {
+    if (isNewWorkflow) {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+    } else if (workflowData) {
+      setNodes(workflowData.data.nodes);
+      setEdges(workflowData.data.edges);
+    }
+  }, [workflowId, workflowData]);
 
   useEffect(() => {
     fetch('/describe.json')
@@ -316,6 +316,33 @@ const DesignPage = () => {
     };
   }, [onKeyDown]);
 
+  const addKindValue = (
+    kindValues: Record<string, PropertyDefinition[]>,
+    kindName: string,
+    item: { name: string },
+    node: Node,
+    config: {
+      prefix: string;
+      description: string;
+      element: string;
+    }
+  ) => {
+    if (!kindValues[kindName]) {
+      kindValues[kindName] = [];
+    }
+
+    if (item.name) {
+      kindValues[kindName].push({
+        manifest_type_identifier: node.data.manifest_type_identifier,
+        property_name: `${config.prefix}${item.name}`,
+        property_description: config.description,
+        compatible_element: config.element,
+        is_list_element: false,
+        is_dict_element: false
+      });
+    }
+  };
+
   const updateAvailableKindValues = useCallback(() => {
     const kindValues: Record<string, PropertyDefinition[]> = {};
     nodes.forEach((node: Node) => {
@@ -325,38 +352,18 @@ const DesignPage = () => {
       ) {
         // Handle input node
         node.data.formData.images.forEach((image: any) => {
-          // TODO: kindName 后续需要更改为动态值，不能写死
-          const kindName = 'image';
-          if (!kindValues[kindName]) {
-            kindValues[kindName] = [];
-          }
-          if (image.name) {
-            kindValues[kindName].push({
-              manifest_type_identifier: node.data.manifest_type_identifier,
-              property_name: `$inputs.${image.name}`,
-              property_description: 'Image',
-              compatible_element: 'workflow_image',
-              is_list_element: false,
-              is_dict_element: false
-            });
-          }
+          addKindValue(kindValues, 'image', image, node, {
+            prefix: '$inputs.',
+            description: 'Image',
+            element: 'workflow_image'
+          });
         });
         node.data.formData.params.forEach((param: any) => {
-          // TODO: kindName 后续需要更改为动态值，不能写死, 此处默认给string
-          const kindName = 'string';
-          if (!kindValues[kindName]) {
-            kindValues[kindName] = [];
-          }
-          if (param.name) {
-            kindValues[kindName].push({
-              manifest_type_identifier: node.data.manifest_type_identifier,
-              property_name: `$inputs.${param.name}`,
-              property_description: 'Parameter',
-              compatible_element: 'workflow_parameter',
-              is_list_element: false,
-              is_dict_element: false
-            });
-          }
+          addKindValue(kindValues, 'string', param, node, {
+            prefix: '$inputs.',
+            description: 'Parameter',
+            element: 'workflow_parameter'
+          });
         });
       } else if (node.data.outputs_manifest) {
         // Handle output nodes kinds
@@ -368,13 +375,10 @@ const DesignPage = () => {
               kindValues[kindName] = [];
             }
             if (node.data.formData.name) {
-              kindValues[kindName].push({
-                manifest_type_identifier: node.data.manifest_type_identifier,
-                property_name: `$steps.${node.data.formData.name}.${output.name}`,
-                property_description: 'Output',
-                compatible_element: 'step_output',
-                is_list_element: false,
-                is_dict_element: false
+              addKindValue(kindValues, kindName, output, node, {
+                prefix: `$steps.${node.data.formData.name}.`,
+                description: 'Output',
+                element: 'step_output'
               });
             }
           });
@@ -390,6 +394,7 @@ const DesignPage = () => {
 
   const onFormChange = useCallback(
     (formData: any) => {
+      let _formData: any = {};
       if (selectedNode) {
         if (
           selectedNode.type === 'builtInNode' &&
@@ -409,32 +414,36 @@ const DesignPage = () => {
             kind: `$inputs.${param.name}`
           }));
 
-          setNodes((nds) =>
-            nds.map((node) =>
-              node.id === selectedNode.id
-                ? {
-                    ...node,
-                    data: {
-                      ...node.data,
-                      formData: {
-                        images: updatedImages,
-                        params: updatedParams
-                      }
-                    }
-                  }
-                : node
-            )
-          );
+          _formData = {
+            images: updatedImages,
+            params: updatedParams
+          };
+        } else if (
+          selectedNode.type === 'builtInNode' &&
+          selectedNode.data.manifest_type_identifier === 'output'
+        ) {
+          // Handle Output built-in node
+          const updatedParams = formData.params.map((param: any) => ({
+            name: param.name,
+            selector: param.value,
+            value: param.value
+          }));
+
+          _formData = {
+            params: updatedParams
+          };
         } else {
           // Handle other nodes
-          setNodes((nds) =>
-            nds.map((node) =>
-              node.id === selectedNode.id
-                ? { ...node, data: { ...node.data, formData } }
-                : node
-            )
-          );
+          _formData = formData;
         }
+
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === selectedNode.id
+              ? { ...node, data: { ...node.data, formData: _formData } }
+              : node
+          )
+        );
         updateAvailableKindValues();
       }
     },
@@ -463,10 +472,66 @@ const DesignPage = () => {
     [nodes, setNodes]
   );
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      if (isNewWorkflow) {
+        await handleApiRequest(
+          () => {
+            const workflowData: WorkflowCreate = {
+              name: 'New Workflow',
+              description: 'Workflow Description',
+              data: {
+                nodes: nodes,
+                edges: edges
+              }
+            };
+
+            return api.post(`api/reef/workspaces/${workspaceId}/workflows`, {
+              json: workflowData
+            });
+          },
+          {
+            toast,
+            successTitle: '工作流保存成功',
+            errorTitle: '工作流保存失败',
+            onSuccess: () => {
+              window.location.href = `/dashboard/workflow`;
+            }
+          }
+        );
+      } else {
+        await handleApiRequest(
+          () =>
+            api.put(
+              `api/reef/workspaces/${workspaceId}/workflows/${workflowId}`,
+              {
+                json: { data: { nodes: nodes, edges: edges } }
+              }
+            ),
+          {
+            toast,
+            successTitle: '工作流更新成功',
+            errorTitle: '工作流更新失败'
+          }
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <PageContainer scrollable={true}>
       <div className="space-y-4">
-        <Breadcrumbs items={breadcrumbItems} />
+        <div className="flex items-center justify-between">
+          <Breadcrumbs items={breadcrumbItems} />
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? '保存中...' : '保存工作流'}
+          </Button>
+        </div>
         <div
           style={{
             width: flowWidth,

@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
 import { columns } from './columns';
 import { Workflow } from '@/constants/deploy';
 
@@ -18,6 +19,20 @@ interface Props {
 
 export function WorkflowTable({ workflows }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
+
+  const handleClick = (workflow: Workflow) => {
+    if (workflow.data) {
+      router.push(`/dashboard/workflow/${workflow.id}`);
+    } else {
+      toast({
+        title: `${workflow.name} 工作流数据为空`,
+        description: '数据不完整，无法编辑，非当前平台编辑创建',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <Table>
       <TableHeader className="bg-gray-100 shadow-sm">
@@ -29,10 +44,7 @@ export function WorkflowTable({ workflows }: Props) {
       </TableHeader>
       <TableBody>
         {workflows.map((workflow) => (
-          <TableRow
-            key={workflow.id}
-            onClick={() => router.push(`/dashboard/workflow/${workflow.id}`)}
-          >
+          <TableRow key={workflow.id} onClick={() => handleClick(workflow)}>
             {columns.map((column) => (
               <TableCell key={column.accessorKey}>
                 {column.cell

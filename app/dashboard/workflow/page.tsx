@@ -39,9 +39,7 @@ const WorkflowListPage = () => {
   };
 
   const handleCreateNewWorkflow = () => {
-    const newWorkflowId = Math.random().toString(36).substr(2, 9);
-    console.log(`Creating new workflow with ID: ${newWorkflowId}`);
-    window.location.href = `/dashboard/workflow/${newWorkflowId}`;
+    window.location.href = `/dashboard/workflow/new`;
   };
 
   return (

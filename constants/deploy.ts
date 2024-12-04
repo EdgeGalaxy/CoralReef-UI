@@ -69,6 +69,7 @@ export type Workflow = {
   id: string;
   name: string;
   description?: string;
+  data?: Record<string, any>;
   specification: Record<string, any>;
   owner_user_id: string;
   created_at: string;
