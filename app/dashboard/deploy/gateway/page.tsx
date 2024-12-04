@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
-import { Gateway, GatewayStatus } from '@/constants/deploy';
+import { Gateway } from '@/constants/deploy';
 import { GatewayTable } from '@/components/tables/gateway/client';
 import { GatewaySidebar } from '@/components/sidebar/gateway';
 import PageContainer from '@/components/layout/page-container';

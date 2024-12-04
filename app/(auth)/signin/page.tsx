@@ -1,4 +1,3 @@
-import { Metadata } from 'next';
 import UserAuthForm from '@/components/forms/user-auth-form';
 import AuthLayout from '@/components/layout/auth-layout';
 

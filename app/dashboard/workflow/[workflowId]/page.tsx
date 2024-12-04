@@ -87,7 +87,7 @@ const DesignPage = () => {
       setNodes(workflowData.data.nodes);
       setEdges(workflowData.data.edges);
     }
-  }, [workflowId, workflowData]);
+  }, [workflowId, workflowData, isNewWorkflow]);
 
   useEffect(() => {
     fetch('/describe.json')
