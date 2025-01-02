@@ -50,7 +50,7 @@ export const navItems: NavItem[] = [
     href: '/dashboard/ml-models',
     icon: 'model',
     label: 'model',
-    is_superuser: true
+    is_superuser: false
   },
   // {
   //   title: '监控',
