@@ -51,9 +51,11 @@ const authConfig = {
               }
             }
           );
+
           if (response.status !== 200) {
-            return null;
+            throw new Error(`Login failed with status: ${response.status}`);
           }
+
           const data = await response.json();
 
           const userData = (await noAuthApi
@@ -80,8 +82,9 @@ const authConfig = {
           return userData;
         } catch (error) {
           console.error('Login error:', error);
-          // 登陆失败，弹框提示
-          return null;
+          throw new Error(
+            error instanceof Error ? error.message : 'Login failed'
+          );
         }
       }
     })
