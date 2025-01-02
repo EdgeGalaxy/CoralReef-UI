@@ -21,7 +21,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 # NextAuth 所需环境变量
 ENV NEXTAUTH_URL=http://localhost:3000
-ENV NEXTAUTH_SECRET=your-nextauth-secret
+ENV NEXTAUTH_SECRET=abcdef0123456789ghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
 
 # 复制必要文件
 COPY --from=builder /app/public ./public
