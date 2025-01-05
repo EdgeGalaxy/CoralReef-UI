@@ -18,12 +18,6 @@ const breadcrumbItems = [
   { title: '网关', link: '/dashboard/deploy/gateway' }
 ];
 
-const createGatewayMock = {
-  name: '网关设置',
-  description: '网关设置描述',
-  codeSnippet: 'curl -X GET http://localhost:8080/api/v1/gateway'
-};
-
 export default function GatewayPage() {
   const [selectedGateway, setSelectedGateway] = useState<Gateway | null>(null);
   const params = useParams();
@@ -36,6 +30,12 @@ export default function GatewayPage() {
     error,
     mutate
   } = useAuthSWR<Gateway[]>(`/api/reef/workspaces/${workspaceId}/gateways`);
+
+  const createGatewayMock = {
+    name: '新建网关',
+    description: '在设备上执行以下命令',
+    codeSnippet: `curl -s https://reef.oss-cn-hangzhou.aliyuncs.com/setup/init-bash/setup-client.sh | bash -s ${workspaceId}`
+  };
 
   const handleCreateSuccess = async () => {
     await mutate(undefined, { revalidate: true });
