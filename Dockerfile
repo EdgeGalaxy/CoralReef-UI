@@ -1,6 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# 在构建阶段就设置环境变量
+ENV NEXT_PUBLIC_API_BASE_URL=http://coralreef.loopeai.com:8000
+
 # 复制依赖文件
 COPY package.json package-lock.json ./
 
