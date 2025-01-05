@@ -20,7 +20,7 @@ WORKDIR /app
 # 设置生产环境
 ENV NODE_ENV=production
 # NextAuth 所需环境变量
-ENV NEXTAUTH_URL=http://coralreef.loopeai.com:8000
+ENV NEXTAUTH_URL=http://coralreef.loopeai.com
 ENV NEXTAUTH_SECRET=abcdvwxHINOPUVWXYZ
 ENV NEXT_PUBLIC_API_BASE_URL=http://coralreef.loopeai.com:8000
 
