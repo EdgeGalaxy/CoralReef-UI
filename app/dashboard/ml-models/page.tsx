@@ -53,6 +53,7 @@ export default function ModelsPage() {
             <CreateModelDialog
               workspaceId={workspaceId}
               onSuccess={handleCreateSuccess}
+              models={models}
             />
           </div>
           <Separator className="my-4" />

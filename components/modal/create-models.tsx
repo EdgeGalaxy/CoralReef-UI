@@ -15,7 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuthApi } from '@/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 import { RefreshCw } from 'lucide-react';
-import { MLPlatform, MLTaskType, DatasetType } from '@/constants/models';
+import { MLPlatform, MLModel } from '@/constants/models';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomModelForm, CustomModelFormValues } from './models/custom';
 import { RoboflowModelForm, RoboflowModelFormValues } from './models/roboflow';
@@ -23,14 +23,25 @@ import { RoboflowModelForm, RoboflowModelFormValues } from './models/roboflow';
 interface Props {
   workspaceId: string;
   onSuccess?: () => void;
+  models?: MLModel[];
 }
 
-export default function CreateModelDialog({ workspaceId, onSuccess }: Props) {
+export default function CreateModelDialog({
+  workspaceId,
+  onSuccess,
+  models = []
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<MLPlatform>(MLPlatform.CUSTOM);
   const { toast } = useToast();
   const api = useAuthApi();
+
+  const isModelNameExists = (name: string): boolean => {
+    return models.some(
+      (model) => model.name.toLowerCase() === name.toLowerCase()
+    );
+  };
 
   async function onSubmitCustom(values: CustomModelFormValues) {
     setIsLoading(true);
@@ -56,6 +67,15 @@ export default function CreateModelDialog({ workspaceId, onSuccess }: Props) {
   }
 
   async function onSubmitRoboflow(values: RoboflowModelFormValues) {
+    if (values.model_id && isModelNameExists(values.model_id)) {
+      toast({
+        title: '创建失败',
+        description: '模型名称已存在，请使用其他名称',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       await handleApiRequest(

@@ -24,9 +24,11 @@ const WorkflowListPage = () => {
   const workspaceId =
     (params?.workspaceId as string) || session.data?.user.select_workspace_id;
 
-  const { data: workflows, error } = useAuthSWR<Workflow[]>(
-    `/api/reef/workspaces/${workspaceId}/workflows`
-  );
+  const {
+    data: workflows,
+    error,
+    mutate: refreshWorkflows
+  } = useAuthSWR<Workflow[]>(`/api/reef/workspaces/${workspaceId}/workflows`);
 
   // 处理加载状态
   if (!workflows) return <div>Loading...</div>;
@@ -59,7 +61,11 @@ const WorkflowListPage = () => {
             />
           </div>
           <Separator className="my-4" />
-          <WorkflowTable workflows={workflows} />
+          <WorkflowTable
+            workflows={workflows}
+            workspaceId={workspaceId}
+            onWorkflowsChange={refreshWorkflows}
+          />
         </div>
       </div>
     </PageContainer>

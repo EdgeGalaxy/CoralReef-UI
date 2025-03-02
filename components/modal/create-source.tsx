@@ -33,12 +33,29 @@ import { useAuthApi } from '@/hooks/useAuthReq';
 import { CameraType, Gateway } from '@/constants/deploy';
 import { handleApiRequest } from '@/lib/error-handle';
 import { RefreshCw } from 'lucide-react';
+import { ModelFileUpload } from '@/components/model-file-upload';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
   type: z.nativeEnum(CameraType),
-  path: z.union([z.string(), z.number()]),
+  path: z.string().superRefine((val, ctx) => {
+    const type = ctx.path[0];
+    if (type === CameraType.RTSP && !val.startsWith('rtsp://')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'RTSP地址必须以rtsp://开头'
+      });
+    } else if (type === CameraType.USB) {
+      const num = parseInt(val);
+      if (isNaN(num) || num < 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'USB设备编号必须是非负整数'
+        });
+      }
+    }
+  }),
   gateway_id: z.string().optional()
 });
 
@@ -65,10 +82,38 @@ export default function CreateSourceDialog({
       type: CameraType.RTSP,
       path: '',
       gateway_id: ''
-    }
+    },
+    mode: 'onChange'
   });
 
+  // 监听相机类型变化，重置path字段
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'type') {
+        form.setValue('path', '');
+        form.clearErrors('path');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   async function onSubmit(values: FormValues) {
+    // 手动验证路径
+    let isValid = true;
+
+    if (values.type === CameraType.RTSP && !values.path.startsWith('rtsp://')) {
+      form.setError('path', { message: 'RTSP地址必须以rtsp://开头' });
+      isValid = false;
+    } else if (values.type === CameraType.USB) {
+      const num = parseInt(values.path as string);
+      if (isNaN(num) || num < 0) {
+        form.setError('path', { message: 'USB设备编号必须是非负整数' });
+        isValid = false;
+      }
+    }
+
+    if (!isValid) return;
+
     setIsLoading(true);
     try {
       await handleApiRequest(
@@ -168,10 +213,8 @@ export default function CreateSourceDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={CameraType.RTSP}>
-                          RTSP相机
-                        </SelectItem>
-                        <SelectItem value={CameraType.USB}>USB相机</SelectItem>
+                        <SelectItem value={CameraType.RTSP}>RTSP流</SelectItem>
+                        <SelectItem value={CameraType.USB}>USB设备</SelectItem>
                         <SelectItem value={CameraType.FILE}>
                           视频文件
                         </SelectItem>
@@ -192,16 +235,60 @@ export default function CreateSourceDialog({
                         : '相机路径'}
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={
-                          form.watch('type') === CameraType.USB
-                            ? '输入USB设备编号（如：0）'
-                            : form.watch('type') === CameraType.RTSP
-                            ? '输入RTSP地址'
-                            : '输入视频文件路径'
-                        }
-                        {...field}
-                      />
+                      {form.watch('type') === CameraType.FILE ? (
+                        <div className="space-y-2">
+                          <ModelFileUpload
+                            onUploadComplete={(key) => {
+                              field.onChange(key);
+                              form.setValue('path', key);
+                            }}
+                            label="上传视频文件"
+                            accept=".mp4"
+                            disabled={isLoading}
+                          />
+                          {field.value && (
+                            <div className="truncate text-sm text-muted-foreground">
+                              当前文件: {field.value}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <Input
+                          placeholder={
+                            form.watch('type') === CameraType.USB
+                              ? '输入USB设备编号（如：0）'
+                              : form.watch('type') === CameraType.RTSP
+                              ? '输入RTSP地址（以rtsp://开头）'
+                              : '输入视频文件路径'
+                          }
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e.target.value);
+
+                            // 实时验证
+                            const type = form.getValues('type');
+                            if (
+                              type === CameraType.RTSP &&
+                              !e.target.value.startsWith('rtsp://')
+                            ) {
+                              form.setError('path', {
+                                message: 'RTSP地址必须以rtsp://开头'
+                              });
+                            } else if (type === CameraType.USB) {
+                              const num = parseInt(e.target.value);
+                              if (isNaN(num) || num < 0) {
+                                form.setError('path', {
+                                  message: 'USB设备编号必须是非负整数'
+                                });
+                              } else {
+                                form.clearErrors('path');
+                              }
+                            } else {
+                              form.clearErrors('path');
+                            }
+                          }}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>
