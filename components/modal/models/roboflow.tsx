@@ -32,7 +32,7 @@ import * as React from 'react';
 
 const roboflowModelSchema = z.object({
   model_id: z.string().min(1, '模型ID不能为空'),
-  platform: z.literal(MLPlatform.ROBOFLOW)
+  platform: z.literal(MLPlatform.PUBLIC)
 });
 
 export type RoboflowModelFormValues = z.infer<typeof roboflowModelSchema>;
@@ -54,7 +54,7 @@ export function RoboflowModelForm({
   const form = useForm<RoboflowModelFormValues>({
     resolver: zodResolver(roboflowModelSchema),
     defaultValues: {
-      platform: MLPlatform.ROBOFLOW
+      platform: MLPlatform.PUBLIC
     }
   });
 
@@ -63,7 +63,7 @@ export function RoboflowModelForm({
     error: modelError,
     isLoading: isLoadingModels
   } = useAuthSWR<string[]>(
-    `/api/reef/workspaces/${workspaceId}/models/roboflow/models`
+    `/api/reef/workspaces/${workspaceId}/models/public/models`
   );
 
   const safeRoboflowModels = Array.isArray(roboflowModels)
@@ -86,7 +86,7 @@ export function RoboflowModelForm({
           name="model_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Roboflow模型</FormLabel>
+              <FormLabel>公开模型</FormLabel>
               <Popover open={open} onOpenChange={setOpen} modal>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -99,7 +99,7 @@ export function RoboflowModelForm({
                         !field.value && 'text-muted-foreground'
                       )}
                     >
-                      {field.value || '选择Roboflow模型'}
+                      {field.value || '选择公开模型'}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>

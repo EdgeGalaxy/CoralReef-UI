@@ -33,7 +33,7 @@ import { useAuthApi } from '@/hooks/useAuthReq';
 import { CameraType, Gateway } from '@/constants/deploy';
 import { handleApiRequest } from '@/lib/error-handle';
 import { RefreshCw } from 'lucide-react';
-import { ModelFileUpload } from '@/components/model-file-upload';
+import { FileUpload } from '@/components/model-file-upload';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -237,11 +237,12 @@ export default function CreateSourceDialog({
                     <FormControl>
                       {form.watch('type') === CameraType.FILE ? (
                         <div className="space-y-2">
-                          <ModelFileUpload
+                          <FileUpload
                             onUploadComplete={(key) => {
                               field.onChange(key);
                               form.setValue('path', key);
                             }}
+                            directory="videos"
                             label="上传视频文件"
                             accept=".mp4"
                             disabled={isLoading}

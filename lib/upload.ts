@@ -5,12 +5,14 @@ interface UploadResponse {
 
 export async function uploadFileToOSS(
   file: File,
+  directory: string,
   onProgress?: (progress: number) => void
 ): Promise<UploadResponse> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('directory', directory);
 
     xhr.upload.addEventListener('progress', (e) => {
       if (onProgress && e.lengthComputable) {

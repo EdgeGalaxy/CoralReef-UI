@@ -1,5 +1,5 @@
 export enum MLPlatform {
-  ROBOFLOW = 'roboflow',
+  PUBLIC = 'public',
   CUSTOM = 'custom'
 }
 

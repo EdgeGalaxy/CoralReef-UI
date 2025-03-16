@@ -7,13 +7,15 @@ import { uploadFileToOSS } from '../lib/upload';
 interface ModelFileUploadProps {
   onUploadComplete: (url: string) => void;
   label: string;
+  directory: string;
   accept?: string;
   disabled?: boolean;
 }
 
-export function ModelFileUpload({
+export function FileUpload({
   onUploadComplete,
   label,
+  directory,
   accept = '.onnx,.rknn',
   disabled = false
 }: ModelFileUploadProps) {
@@ -36,7 +38,7 @@ export function ModelFileUpload({
       setIsUploading(true);
       setError(null);
 
-      const result = await uploadFileToOSS(file, (progress) =>
+      const result = await uploadFileToOSS(file, directory, (progress) =>
         setProgress(progress)
       );
 

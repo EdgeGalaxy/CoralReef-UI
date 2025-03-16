@@ -81,7 +81,7 @@ export default function CreateModelDialog({
       await handleApiRequest(
         () =>
           api.post(
-            `api/reef/workspaces/${workspaceId}/models/roboflow/${values.model_id}`,
+            `api/reef/workspaces/${workspaceId}/models/public/${values.model_id}`,
             {}
           ),
         {
@@ -121,7 +121,7 @@ export default function CreateModelDialog({
             <DialogHeader>
               <DialogTitle>创建模型</DialogTitle>
               <DialogDescription>
-                选择创建自定义模型或导入 Roboflow 模型
+                选择创建自定义模型或导入开源模型
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -133,9 +133,7 @@ export default function CreateModelDialog({
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value={MLPlatform.CUSTOM}>自定义模型</TabsTrigger>
-                <TabsTrigger value={MLPlatform.ROBOFLOW}>
-                  Roboflow模型
-                </TabsTrigger>
+                <TabsTrigger value={MLPlatform.PUBLIC}>开源模型</TabsTrigger>
               </TabsList>
 
               <TabsContent value={MLPlatform.CUSTOM}>
@@ -146,7 +144,7 @@ export default function CreateModelDialog({
                 />
               </TabsContent>
 
-              <TabsContent value={MLPlatform.ROBOFLOW}>
+              <TabsContent value={MLPlatform.PUBLIC}>
                 <RoboflowModelForm
                   onSubmit={onSubmitRoboflow}
                   isLoading={isLoading}

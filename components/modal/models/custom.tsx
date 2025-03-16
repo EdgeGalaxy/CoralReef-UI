@@ -39,7 +39,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 import { useState } from 'react';
-import { ModelFileUpload } from '@/components/model-file-upload';
+import { FileUpload } from '@/components/model-file-upload';
 
 const preprocessingConfigSchema = z.object({
   auto_orient: z.object({
@@ -342,12 +342,13 @@ export function CustomModelForm({
               </LabelWithRequired>
               <FormControl>
                 <div className="space-y-2">
-                  <ModelFileUpload
+                  <FileUpload
                     onUploadComplete={(key) => {
                       field.onChange(key);
                       form.setValue('onnx_model_url', key);
                     }}
                     label="ONNX模型"
+                    directory="custom_models"
                     accept=".onnx"
                     disabled={isLoading}
                   />
@@ -373,12 +374,13 @@ export function CustomModelForm({
               </LabelWithRequired>
               <FormControl>
                 <div className="space-y-2">
-                  <ModelFileUpload
+                  <FileUpload
                     onUploadComplete={(url) => {
                       field.onChange(url);
                       form.setValue('rknn_model_url', url);
                     }}
                     label="RKNN模型"
+                    directory="custom_models"
                     accept=".rknn"
                     disabled={isLoading}
                   />
