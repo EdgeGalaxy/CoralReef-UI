@@ -75,9 +75,7 @@ export function Preview({ source }: PreviewProps) {
         try {
           // 通过 API 接口获取签名URL
           const response = await fetch(
-            `${
-              process.env.NEXT_PUBLIC_API_BASE_URL || ''
-            }/api/tokenUrl?key=${encodeURIComponent(sourcePath)}`
+            `/api/tokenUrl?key=${encodeURIComponent(sourcePath)}`
           );
           if (!response.ok) {
             throw new Error('获取签名URL失败');
