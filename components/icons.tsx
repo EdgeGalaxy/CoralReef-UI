@@ -41,7 +41,8 @@ import {
   Trash2,
   MinusCircle,
   Power,
-  Package
+  Package,
+  Play
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -80,6 +81,7 @@ export const Icons = {
   laptop: Laptop,
   editable: Pencil,
   model: Package,
+  play: Play,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

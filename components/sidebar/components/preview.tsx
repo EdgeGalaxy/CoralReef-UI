@@ -5,10 +5,12 @@ import { SourceDataModel } from '@/constants/deploy';
 import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import dynamic from 'next/dynamic';
-import { getSignedUrl } from '@/lib/cloud';
 
 // 动态导入库（需要先安装）
-const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false });
+const ReactPlayer = dynamic(
+  () => import('react-player/lazy').then((mod) => mod.default),
+  { ssr: false }
+);
 // 如果仍需使用 HLS.js，在安装后解除下面的注释
 // const Hls = dynamic(() => import('hls.js'), { ssr: false });
 
@@ -32,6 +34,7 @@ export function Preview({ source }: PreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // 获取视频 URL（异步处理）
   React.useEffect(() => {
@@ -103,6 +106,11 @@ export function Preview({ source }: PreviewProps) {
     setError(null);
   };
 
+  // 处理点击播放的逻辑
+  const handlePlayClick = () => {
+    setIsPlaying(true);
+  };
+
   // 渲染播放器
   const renderPlayer = () => {
     // 检查 URL 是否有效
@@ -114,14 +122,26 @@ export function Preview({ source }: PreviewProps) {
       );
     }
 
-    // 使用类型断言来解决类型问题
-    const PlayerComponent =
-      ReactPlayer as React.ComponentType<ReactPlayerProps>;
+    // 如果还未点击播放按钮，显示占位符
+    if (!isPlaying) {
+      return (
+        <div
+          className="flex h-[400px] cursor-pointer items-center justify-center bg-gray-100"
+          onClick={handlePlayClick}
+        >
+          <div className="text-center">
+            <Icons.play className="mx-auto mb-2 h-12 w-12" />
+            <p className="text-sm font-medium">点击播放视频</p>
+          </div>
+        </div>
+      );
+    }
 
+    // 直接使用 ReactPlayer，不需要额外的类型断言
     return (
-      <PlayerComponent
+      <ReactPlayer
         url={videoUrl}
-        playing
+        playing={isPlaying}
         controls
         width="100%"
         height="400px"
@@ -144,25 +164,13 @@ export function Preview({ source }: PreviewProps) {
 
   return (
     <Card className="overflow-hidden">
-      {loading && (
+      {loading && isPlaying && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
           <Icons.spinner className="h-8 w-8 animate-spin text-white" />
         </div>
       )}
 
       <div className="relative">{renderPlayer()}</div>
-
-      <div className="p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-sm font-medium">视频源信息</span>
-          <span className="text-sm text-muted-foreground">{source.type}</span>
-        </div>
-        <p className="break-all text-sm text-muted-foreground">
-          {typeof source.path === 'string'
-            ? source.path
-            : `设备 ID: ${source.path}`}
-        </p>
-      </div>
     </Card>
   );
 }
