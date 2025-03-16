@@ -163,9 +163,7 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
           variant="outline"
           size="sm"
           className="text-xs"
-          disabled={
-            is_disabled || (!!operationType && operationType !== 'delete')
-          }
+          disabled={!!operationType && operationType !== 'delete'}
           onClick={() => handleOperation('delete', async () => handleDelete())}
         >
           {operationType === 'delete' ? (
