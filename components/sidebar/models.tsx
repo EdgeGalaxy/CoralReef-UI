@@ -6,7 +6,7 @@ import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
 import { EditableField } from './components/editable-field';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 import React from 'react';
 

@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { Badge } from '@/components/ui/badge';
 import {
   Popover,
@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { DeploymentCreate } from '@/constants/deploy';
 import { handleApiRequest } from '@/lib/error-handle';
 import { GatewayStepSelectedItem } from './steps/gateway-step';

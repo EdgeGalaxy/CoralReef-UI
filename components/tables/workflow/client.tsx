@@ -15,7 +15,7 @@ import { columns } from './columns';
 import { Workflow } from '@/constants/deploy';
 import { EditWorkflowModal } from '@/components/modal/edit-workflow';
 import { AlertModal } from '@/components/modal/alert-modal';
-import { useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 
 interface Props {

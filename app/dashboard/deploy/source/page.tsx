@@ -9,7 +9,7 @@ import { SourceSidebar } from '@/components/sidebar/source';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import CreateSourceDialog from '@/components/modal/create-source';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 

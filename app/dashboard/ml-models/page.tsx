@@ -9,7 +9,7 @@ import { ModelSidebar } from '@/components/sidebar/models';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import CreateModelDialog from '@/components/modal/create-models';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 

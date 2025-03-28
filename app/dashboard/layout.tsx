@@ -1,5 +1,9 @@
-import Header from '@/components/layout/header';
-import Sidebar from '@/components/layout/sidebar';
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarInset
+} from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -14,11 +18,13 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex">
-      <Sidebar />
-      <main className="w-full flex-1 overflow-hidden">
-        <Header />
-        {children}
-      </main>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <SidebarTrigger />
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 }

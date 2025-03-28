@@ -8,7 +8,7 @@ import { DeploymentTable } from '@/components/tables/deployment/client';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { DeploymentSidebar } from '@/components/sidebar/deployment';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { CreateDeploymentModal } from '@/components/modal/create-deployment';

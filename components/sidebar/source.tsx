@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
 import { DeploymentTable } from '@/components/tables/deployment/client';
-import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthSWR, useAuthApi } from '@/components/hooks/useAuthReq';
 import { EditableField } from './components/editable-field';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';

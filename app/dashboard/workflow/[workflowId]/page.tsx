@@ -17,7 +17,7 @@ import ReactFlow, {
 
 import 'reactflow/dist/style.css';
 
-import { useSidebar } from '@/hooks/useSidebar';
+import { useSidebar } from '@/components/hooks/useSidebar';
 import NodeSelector from '@/components/workflow/nodes-selector';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -38,7 +38,7 @@ import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { toast } from '@/components/ui/use-toast';
 import { WorkflowCreate, WorkflowResponse } from '@/constants/workflow';
-import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthSWR, useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 
 const nodeTypes = {

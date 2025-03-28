@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/popover';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import * as React from 'react';
 
 const roboflowModelSchema = z.object({

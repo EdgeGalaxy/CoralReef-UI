@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { MLPlatform, MLTaskType, DatasetType } from '@/constants/models';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import {
   Command,
   CommandEmpty,

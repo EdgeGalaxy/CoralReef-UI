@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { Sidebar } from './_sidebar';
 import { EditableField } from './components/editable-field';
-import { useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
 

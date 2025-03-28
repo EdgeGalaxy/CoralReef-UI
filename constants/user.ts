@@ -1,3 +1,14 @@
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  phone?: string;
+  avatar?: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  is_verified: boolean;
+}
+
 export interface UserRead {
   id: string;
   email: string;

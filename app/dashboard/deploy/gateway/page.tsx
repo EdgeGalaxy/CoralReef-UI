@@ -9,7 +9,7 @@ import { GatewaySidebar } from '@/components/sidebar/gateway';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { CreateGatewayModal } from '@/components/modal/create-gateway';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 

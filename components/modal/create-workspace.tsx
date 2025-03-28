@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 import { RefreshCw } from 'lucide-react';
 import {

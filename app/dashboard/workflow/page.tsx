@@ -9,7 +9,7 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { WorkflowTemplateCreateModal } from '@/components/modal/create-workflow';
 import { useParams } from 'next/navigation';
-import { useAuthSWR } from '@/hooks/useAuthReq';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 
 const breadcrumbItems = [

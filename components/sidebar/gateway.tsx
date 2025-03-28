@@ -4,7 +4,7 @@ import { Gateway, SourceDataModel, GatewayStatus } from '@/constants/deploy';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons';
 import { DeploymentDataModel } from '@/constants/deploy';
-import { useAuthSWR, useAuthApi } from '@/hooks/useAuthReq';
+import { useAuthSWR, useAuthApi } from '@/components/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { Sidebar } from './_sidebar';
 import { EditableField } from './components/editable-field';
