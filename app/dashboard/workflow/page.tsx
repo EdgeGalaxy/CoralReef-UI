@@ -12,6 +12,9 @@ import { useParams } from 'next/navigation';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 
+import DashboardLoading from '../loading';
+import DashboardError from '../error';
+
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
   { title: '工作流', link: '/dashboard/workflow' }
@@ -30,10 +33,11 @@ const WorkflowListPage = () => {
     mutate: refreshWorkflows
   } = useAuthSWR<Workflow[]>(`/api/reef/workspaces/${workspaceId}/workflows`);
 
-  // 处理加载状态
-  if (!workflows) return <div>Loading...</div>;
   // 处理错误状态
-  if (error) return <div>Error loading workflows</div>;
+  if (error)
+    return <DashboardError error={error} reset={() => refreshWorkflows()} />;
+  // 处理加载状态
+  if (!workflows) return <DashboardLoading />;
 
   const handleCreateTemplateWorkflow = (templateId: string) => {
     console.log(`Creating workflow from template ${templateId}`);

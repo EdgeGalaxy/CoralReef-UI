@@ -13,6 +13,9 @@ import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
+import DashboardLoading from '../../loading';
+import DashboardError from '../../error';
+
 const breadcrumbItems = [
   { title: '部署', link: '/dashboard/deploy/gateway' },
   { title: '网关', link: '/dashboard/deploy/gateway' }
@@ -41,10 +44,10 @@ export default function GatewayPage() {
     await mutate(undefined, { revalidate: true });
   };
 
-  // Handle loading state
-  if (!gateways) return <div>Loading...</div>;
   // Handle error state
-  if (error) return <div>Error loading gateways</div>;
+  if (error) return <DashboardError error={error} reset={() => mutate()} />;
+  // Handle loading state
+  if (!gateways) return <DashboardLoading />;
 
   return (
     <PageContainer scrollable={true}>

@@ -13,6 +13,9 @@ import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
+import DashboardLoading from '../loading';
+import DashboardError from '../error';
+
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
   { title: '模型管理', link: '/dashboard/ml-models' }
@@ -37,8 +40,8 @@ export default function ModelsPage() {
     await mutate(undefined, { revalidate: true });
   };
 
-  if (!models) return <div>Loading...</div>;
-  if (error) return <div>Error loading models</div>;
+  if (error) return <DashboardError error={error} reset={() => mutate()} />;
+  if (!models) return <DashboardLoading />;
 
   return (
     <PageContainer scrollable={true}>

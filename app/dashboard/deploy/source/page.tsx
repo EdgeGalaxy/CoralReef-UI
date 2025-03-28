@@ -13,6 +13,9 @@ import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
+import DashboardLoading from '../../loading';
+import DashboardError from '../../error';
+
 const breadcrumbItems = [
   { title: '部署', link: '/dashboard/deploy/gateway' },
   { title: '数据源', link: '/dashboard/deploy/source' }
@@ -45,11 +48,12 @@ export default function SourcePage() {
     await mutate(undefined, { revalidate: true });
   };
 
-  // Handle loading state
-  if (!sources) return <div>Loading...</div>;
   // Handle error state
-  if (error) return <div>Error loading cameras</div>;
-  if (gatewaysError) return <div>Error loading gateways</div>;
+  if (error) return <DashboardError error={error} reset={() => mutate()} />;
+  // Handle loading state
+  if (!sources || !gateways) return <DashboardLoading />;
+  if (gatewaysError)
+    return <DashboardError error={gatewaysError} reset={() => mutate()} />;
 
   return (
     <PageContainer scrollable={true}>
