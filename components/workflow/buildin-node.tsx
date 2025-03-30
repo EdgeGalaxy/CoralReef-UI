@@ -44,10 +44,11 @@ const OutputSpecificComponent: React.FC = () => {
   );
 };
 
-const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
-  data,
-  isConnectable
-}) => {
+const BuiltInNode: React.FC<{
+  data: NodeData;
+  isConnectable: boolean;
+  selected: boolean;
+}> = ({ data, isConnectable, selected }) => {
   const { images = [], params = [], models = [] } = data.formData;
   const isInput = data.manifest_type_identifier === 'input';
   const isOutput = data.manifest_type_identifier === 'output';
@@ -63,10 +64,17 @@ const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
   };
 
   const nodeColor = getNodeColor(data.manifest_type_identifier);
+  const [borderColor, bgColor] = nodeColor.split(' ');
 
   return (
     <div>
-      <Card className={`border-2 ${nodeColor.split(' ')[0]} rounded-lg`}>
+      <Card
+        className={`border-2 ${borderColor} rounded-lg ${
+          selected
+            ? `ring-2 ring-offset-2 ${borderColor.replace('border', 'ring')}`
+            : ''
+        }`}
+      >
         {!isInput && (
           <Handle
             type="target"
@@ -74,7 +82,7 @@ const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
             isConnectable={isConnectable}
           />
         )}
-        <CardHeader className={`py-3 ${nodeColor.split(' ')[1]} rounded-t-lg`}>
+        <CardHeader className={`py-3 ${bgColor} rounded-t-lg`}>
           <div className="flex items-center space-x-2 text-sm font-medium">
             <span className="node-icon">
               {isInput ? (

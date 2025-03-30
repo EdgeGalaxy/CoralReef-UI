@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/button';
 import { skipFormFields } from '@/constants/block';
 import { getNodeColor } from '@/lib/node-utils';
 
-const CustomNode = ({ data }: { data: NodeData }) => {
+const CustomNode = ({
+  data,
+  selected
+}: {
+  data: NodeData;
+  selected: boolean;
+}) => {
   const [missRequiredFields, setMissRequiredFields] = useState(false);
   const [missingFieldNames, setMissingFieldNames] = useState<string[]>([]);
 
@@ -50,6 +56,13 @@ const CustomNode = ({ data }: { data: NodeData }) => {
       <Card
         className={`border-2 ${nodeColor.border} rounded-lg ${
           missRequiredFields ? 'shadow-[0_0_0_1px] shadow-orange-300' : ''
+        } ${
+          selected
+            ? `ring-2 ring-offset-2 ${nodeColor.border.replace(
+                'border',
+                'ring'
+              )}`
+            : ''
         }`}
       >
         <Handle type="target" position={Position.Left} />
