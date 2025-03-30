@@ -50,6 +50,27 @@ export default function CreateWorkspaceDialog({
     }
   });
 
+  // 重置表单状态
+  React.useEffect(() => {
+    if (!isOpen) {
+      form.reset();
+    }
+
+    // 清理函数
+    return () => {
+      document.body.style.pointerEvents = '';
+      form.reset();
+    };
+  }, [isOpen, form]);
+
+  const handleClose = React.useCallback(() => {
+    form.reset();
+    setIsLoading(false);
+    // 确保在关闭对话框时重置所有状态
+    document.body.style.pointerEvents = '';
+    onClose?.();
+  }, [form, onClose]);
+
   async function onSubmit(values: WorkspaceFormValues) {
     setIsLoading(true);
     try {
@@ -60,7 +81,7 @@ export default function CreateWorkspaceDialog({
           successTitle: '创建成功',
           errorTitle: '创建失败',
           onSuccess: () => {
-            onClose?.();
+            handleClose();
             onSuccess?.();
           }
         }
@@ -71,12 +92,11 @@ export default function CreateWorkspaceDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
         className="sm:max-w-[425px]"
         style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         {isLoading && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
