@@ -31,7 +31,8 @@ import {
   initialNodes,
   initialEdges,
   inputNode,
-  outputNode
+  outputNode,
+  reactFlowDefaultConfig
 } from '@/constants/init-data';
 import { OutputDefinition, Kind, PropertyDefinition } from '@/constants/block';
 import PageContainer from '@/components/layout/page-container';
@@ -319,7 +320,7 @@ const DesignPage = () => {
   const addKindValue = (
     kindValues: Record<string, PropertyDefinition[]>,
     kindName: string,
-    item: { name: string },
+    item: any,
     node: Node,
     config: {
       prefix: string;
@@ -331,10 +332,13 @@ const DesignPage = () => {
       kindValues[kindName] = [];
     }
 
-    if (item.name) {
+    // 处理不同类型的项目
+    const itemName = item.name || (item.id ? item.id : undefined);
+
+    if (itemName) {
       kindValues[kindName].push({
         manifest_type_identifier: node.data.manifest_type_identifier,
-        property_name: `${config.prefix}${item.name}`,
+        property_name: `${config.prefix}${itemName}`,
         property_description: config.description,
         compatible_element: config.element,
         is_list_element: false,
@@ -365,6 +369,30 @@ const DesignPage = () => {
             element: 'workflow_parameter'
           });
         });
+
+        // 处理models数组，将其作为roboflow_model_id类型的引用添加
+        if (
+          node.data.formData.models &&
+          Array.isArray(node.data.formData.models)
+        ) {
+          node.data.formData.models.forEach((model: any) => {
+            if (model && model.id) {
+              // 为每个模型添加引用值
+              addKindValue(kindValues, 'roboflow_model_id', model, node, {
+                prefix: '$inputs.models.',
+                description: '模型ID',
+                element: 'workflow_parameter'
+              });
+
+              // 同时也作为字符串类型的引用
+              addKindValue(kindValues, 'string', model, node, {
+                prefix: '$inputs.models.',
+                description: '模型ID (字符串)',
+                element: 'workflow_parameter'
+              });
+            }
+          });
+        }
       } else if (node.data.outputs_manifest) {
         // Handle output nodes kinds
         node.data.outputs_manifest.forEach((output: OutputDefinition) => {
@@ -416,7 +444,9 @@ const DesignPage = () => {
 
           _formData = {
             images: updatedImages,
-            params: updatedParams
+            params: updatedParams,
+            // 保留models字段，确保它不会在表单更新过程中丢失
+            models: formData.models || selectedNode.data.formData.models || []
           };
         } else if (
           selectedNode.type === 'builtInNode' &&
@@ -453,14 +483,20 @@ const DesignPage = () => {
   const onNodeDragStop = useCallback(
     (event: React.MouseEvent, node: Node) => {
       if (node.type === 'builtInNode') {
-        // Prevent built-in nodes from being moved outside the visible area
+        // 允许内置节点在更大范围内移动，包括负坐标区域，但有合理限制
         const newNodes = nodes.map((n) => {
           if (n.id === node.id) {
             return {
               ...n,
               position: {
-                x: Math.max(0, Math.min(n.position.x, window.innerWidth - 250)),
-                y: Math.max(0, Math.min(n.position.y, window.innerHeight - 100))
+                x: Math.max(
+                  -500,
+                  Math.min(n.position.x, window.innerWidth - 250)
+                ),
+                y: Math.max(
+                  -500,
+                  Math.min(n.position.y, window.innerHeight - 100)
+                )
               }
             };
           }
@@ -523,19 +559,114 @@ const DesignPage = () => {
     }
   };
 
+  // 监听全局workflow:update_input_models事件，用于更新input节点的models字段
+  useEffect(() => {
+    // 创建全局更新节点数据的方法
+    window.updateWorkflowNode = (nodeId: string, nodeData: any) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId ? { ...node, data: nodeData } : node
+        )
+      );
+    };
+
+    // 监听全局事件
+    const handleUpdateInputModels = (event: CustomEvent) => {
+      const { nodeId, models } = event.detail;
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  formData: {
+                    ...node.data.formData,
+                    models
+                  }
+                }
+              }
+            : node
+        )
+      );
+      console.log('已通过全局事件更新input节点的models字段', models);
+    };
+
+    window.addEventListener(
+      'workflow:update_input_models',
+      handleUpdateInputModels as EventListener
+    );
+
+    // 清理函数
+    return () => {
+      delete window.updateWorkflowNode;
+      window.removeEventListener(
+        'workflow:update_input_models',
+        handleUpdateInputModels as EventListener
+      );
+    };
+  }, [setNodes]);
+
   return (
     <PageContainer scrollable={true}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Breadcrumbs items={breadcrumbItems} />
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? '保存中...' : '保存工作流'}
+          <Button
+            onClick={handleSave}
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg"
+          >
+            {isLoading ? (
+              <>
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                保存中...
+              </>
+            ) : (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                保存工作流
+              </>
+            )}
           </Button>
         </div>
         <div
           style={{
             width: flowWidth,
-            height: '100vh',
+            height: 'calc(100vh - 80px)',
             transition: 'width 0.5s',
             position: 'relative',
             display: 'flex',
@@ -543,29 +674,82 @@ const DesignPage = () => {
           }}
         >
           <ReactFlowProvider>
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
-              onNodeClick={onNodeClick}
-              onNodeDragStop={onNodeDragStop}
-              nodeTypes={nodeTypes}
-              multiSelectionKeyCode={null} // Disable multi-selection
-              selectionKeyCode={null} // Disable selection
-              fitView
+            <div
+              className="react-flow-wrapper"
+              style={{
+                width: '100%',
+                height: '100%',
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                boxShadow:
+                  '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                padding: '4px'
+              }}
             >
-              <Controls />
-              <MiniMap />
-              <Background />
-            </ReactFlow>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+                onNodeClick={onNodeClick}
+                onNodeDragStop={onNodeDragStop}
+                nodeTypes={nodeTypes}
+                multiSelectionKeyCode={null} // Disable multi-selection
+                selectionKeyCode={null} // Disable selection
+                translateExtent={reactFlowDefaultConfig.translateExtent}
+                minZoom={reactFlowDefaultConfig.minZoom}
+                maxZoom={reactFlowDefaultConfig.maxZoom}
+                snapToGrid={reactFlowDefaultConfig.snapToGrid}
+                snapGrid={reactFlowDefaultConfig.snapGrid}
+                defaultViewport={reactFlowDefaultConfig.defaultViewport}
+                fitView
+                fitViewOptions={{ padding: 0.2 }}
+                preventScrolling={true}
+                attributionPosition="bottom-left"
+              >
+                <Controls
+                  position="bottom-left"
+                  style={{ bottom: 10, left: 10 }}
+                />
+                <MiniMap
+                  position="bottom-right"
+                  style={{ bottom: 10, right: 10 }}
+                  zoomable
+                  pannable
+                />
+                <Background color="#aaa" gap={16} size={1} />
+              </ReactFlow>
+            </div>
           </ReactFlowProvider>
+
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" className="absolute right-4 top-4 z-10">
+              <Button
+                variant="default"
+                className="absolute right-6 top-6 z-10 flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-white shadow-md transition-all duration-200 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg"
+                size="sm"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                  <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                  <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                  <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
                 节点选择器
               </Button>
             </SheetTrigger>

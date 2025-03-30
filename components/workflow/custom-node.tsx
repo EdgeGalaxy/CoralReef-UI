@@ -9,14 +9,35 @@ import { getNodeColor } from '@/lib/node-utils';
 
 const CustomNode = ({ data }: { data: NodeData }) => {
   const [missRequiredFields, setMissRequiredFields] = useState(false);
+  const [missingFieldNames, setMissingFieldNames] = useState<string[]>([]);
 
   useEffect(() => {
     const checkRequiredFields = () => {
-      const missingFields = data.block_schema.required
-        ?.filter((field: string) => !skipFormFields.includes(field))
-        .some((field: string) => !data.formData[field]);
+      const missing: string[] = [];
 
-      setMissRequiredFields(missingFields ?? false);
+      // 检查缺少的必填字段
+      if (
+        data.block_schema.required &&
+        Array.isArray(data.block_schema.required)
+      ) {
+        data.block_schema.required
+          .filter((field: string) => !skipFormFields.includes(field))
+          .forEach((field: string) => {
+            const value = data.formData[field];
+            // 检查字段值是否为空（null、undefined、空字符串或空数组）
+            if (
+              value === null ||
+              value === undefined ||
+              value === '' ||
+              (Array.isArray(value) && value.length === 0)
+            ) {
+              missing.push(field);
+            }
+          });
+      }
+
+      setMissingFieldNames(missing);
+      setMissRequiredFields(missing.length > 0);
     };
 
     checkRequiredFields();
@@ -26,7 +47,11 @@ const CustomNode = ({ data }: { data: NodeData }) => {
 
   return (
     <div>
-      <Card className={`border-2 ${nodeColor.border} rounded-lg`}>
+      <Card
+        className={`border-2 ${nodeColor.border} rounded-lg ${
+          missRequiredFields ? 'shadow-[0_0_0_1px] shadow-orange-300' : ''
+        }`}
+      >
         <Handle type="target" position={Position.Left} />
         <CardHeader className={`py-3 ${nodeColor.bg} rounded-t-lg`}>
           <div className="flex items-center space-x-2 truncate text-sm font-normal">
@@ -45,10 +70,14 @@ const CustomNode = ({ data }: { data: NodeData }) => {
             {missRequiredFields ? (
               <Button
                 variant="ghost"
-                className="flex h-6 justify-start truncate bg-yellow-100 px-2 text-xs"
+                className="flex h-6 justify-start truncate bg-yellow-100 px-2 text-xs text-orange-700"
               >
                 <ShieldAlertIcon className="mr-1 h-3 w-3 flex-shrink-0" />
-                <span className="truncate">Configuration Required</span>
+                <span className="truncate">
+                  {missingFieldNames.length > 1
+                    ? `${missingFieldNames.length} 必填字段未配置`
+                    : `"${missingFieldNames[0]}" 字段未配置`}
+                </span>
               </Button>
             ) : null}
           </div>

@@ -67,21 +67,11 @@ const KindField: React.FC<KindFieldProps> = (props) => {
     onChange(selectedValue);
   };
 
-  const toggleKindMode = () => {
-    setIsKindMode(!isKindMode);
-    if (isKindMode) {
-      setInputValue('');
-    } else {
-      setInputValue(kindOptions?.[0] || '');
-    }
-  };
-
   const hasKindOption = (originalSchema || schema)?.anyOf?.some(
     (item: any) => item.kind
   );
 
   const kindOptions = useMemo(() => {
-    // 特殊处理，当节点为output时，直接取所有的availableKindValues的值中的property_name
     if (
       nodeData.manifest_type_identifier ===
       outputNode.data.manifest_type_identifier
@@ -90,32 +80,57 @@ const KindField: React.FC<KindFieldProps> = (props) => {
         .flat()
         .map((item: PropertyDefinition) => item.property_name);
     }
-    return (originalSchema || schema)?.anyOf?.flatMap((item: any) => {
-      if (item.kind && Array.isArray(item.kind)) {
-        const currentNodeName = nodeData.formData.name;
+    return (
+      (originalSchema || schema)?.anyOf?.flatMap((item: any) => {
+        if (item.kind && Array.isArray(item.kind)) {
+          const currentNodeName = nodeData.formData.name;
 
-        const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
-          // 特殊处理, 当 selected_element 为 workflow_parameter 时, 使用 string 作为 kindName
-          const kindName =
-            item.selected_element === 'workflow_parameter'
-              ? 'string'
-              : kindItem.name;
-          const availableKinds = availableKindValues[kindName] || [];
+          const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
+            const kindName =
+              item.selected_element === 'workflow_parameter'
+                ? 'string'
+                : kindItem.name;
+            const availableKinds = availableKindValues[kindName] || [];
 
-          const intersection = availableKinds.filter(
-            (prop: PropertyDefinition) =>
-              prop.compatible_element === item.selected_element &&
-              !prop.property_name.startsWith(`$output.${currentNodeName}.`)
-          );
-          return intersection.map(
-            (prop: PropertyDefinition) => prop.property_name
-          );
-        });
-        return _kindOptions;
+            const intersection = availableKinds.filter(
+              (prop: PropertyDefinition) =>
+                prop.compatible_element === item.selected_element &&
+                !prop.property_name.startsWith(`$output.${currentNodeName}.`)
+            );
+            return intersection.map(
+              (prop: PropertyDefinition) => prop.property_name
+            );
+          });
+          return _kindOptions;
+        }
+        return [];
+      }) || []
+    );
+  }, [schema, nodeData, kindsConnections, availableKindValues, originalSchema]);
+
+  const hasAvailableKindOptions = useMemo(() => {
+    return kindOptions && kindOptions.length > 0;
+  }, [kindOptions]);
+
+  const toggleKindMode = () => {
+    if (!isKindMode && (!kindOptions || kindOptions.length === 0)) {
+      return;
+    }
+
+    const newKindMode = !isKindMode;
+    setIsKindMode(newKindMode);
+
+    if (!newKindMode) {
+      setInputValue('');
+      onChange('');
+    } else {
+      if (kindOptions && kindOptions.length > 0) {
+        const newValue = kindOptions[0];
+        setInputValue(newValue);
+        onChange(newValue);
       }
-      return [];
-    });
-  }, [schema, nodeData, kindsConnections, availableKindValues]);
+    }
+  };
 
   const isRequired = useMemo(() => {
     return Array.isArray(nodeData.block_schema.required)
@@ -135,16 +150,34 @@ const KindField: React.FC<KindFieldProps> = (props) => {
       </div>
       <div className="flex items-center space-x-2">
         {isKindMode ? (
-          <Select onValueChange={handleSelectChange} value={inputValue}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a kind" />
+          <Select
+            onValueChange={handleSelectChange}
+            value={inputValue}
+            disabled={!hasAvailableKindOptions}
+          >
+            <SelectTrigger
+              className={`w-full ${
+                !hasAvailableKindOptions ? 'bg-gray-100' : ''
+              }`}
+            >
+              <SelectValue
+                placeholder={
+                  hasAvailableKindOptions ? '选择引用值' : '无可用引用值'
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              {kindOptions?.map((val: string) => (
-                <SelectItem key={val} value={val}>
-                  {val}
+              {hasAvailableKindOptions ? (
+                kindOptions.map((val: string) => (
+                  <SelectItem key={val} value={val}>
+                    {val}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled>
+                  无可用引用值
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         ) : (
@@ -154,7 +187,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             className="w-full"
-            placeholder="Enter a value"
+            placeholder="输入一个值"
             required={isRequired}
           />
         )}
@@ -163,13 +196,23 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             variant="ghost"
             size="icon"
             onClick={toggleKindMode}
-            className={isKindMode ? 'text-green-500' : 'text-gray-500'}
-            disabled={kindOptions?.length === 0}
+            className={`transition-colors ${
+              isKindMode
+                ? 'border border-blue-200 bg-blue-50 text-blue-500'
+                : 'text-gray-500 hover:bg-gray-100'
+            }`}
+            disabled={isKindMode && !hasAvailableKindOptions}
+            title={isKindMode ? '切换到直接输入模式' : '切换到引用模式'}
           >
             <Link1Icon className="h-4 w-4" />
           </Button>
         )}
       </div>
+      {isKindMode && !hasAvailableKindOptions && (
+        <p className="mt-1 text-xs text-orange-500">
+          当前节点没有可用的引用值。请先配置其他节点或切换到直接输入模式。
+        </p>
+      )}
     </div>
   );
 };

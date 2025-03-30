@@ -4,7 +4,8 @@ import {
   LogOutIcon,
   ImageIcon,
   SlidersHorizontalIcon,
-  PlusIcon
+  PlusIcon,
+  BoxIcon
 } from 'lucide-react';
 import { Handle, Position } from 'reactflow';
 import { NodeData } from '@/constants/block';
@@ -47,7 +48,7 @@ const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
   data,
   isConnectable
 }) => {
-  const { images = [], params = [] } = data.formData;
+  const { images = [], params = [], models = [] } = data.formData;
   const isInput = data.manifest_type_identifier === 'input';
   const isOutput = data.manifest_type_identifier === 'output';
   const getNodeColor = (type: string) => {
@@ -105,6 +106,17 @@ const BuiltInNode: React.FC<{ data: NodeData; isConnectable: boolean }> = ({
                 <SlidersHorizontalIcon className="mr-2 h-4 w-4" /> {param.name}
               </Button>
             ))}
+            {isInput &&
+              models.map((model: any, index: number) => (
+                <Button
+                  key={`model-${index}`}
+                  variant="ghost"
+                  className="h-6 justify-start truncate bg-blue-200 px-2 text-xs"
+                >
+                  <BoxIcon className="mr-2 h-4 w-4" /> {model.name}{' '}
+                  {model.version ? `(${model.version})` : ''}
+                </Button>
+              ))}
             {isInput && <InputSpecificComponent />}
             {isOutput && <OutputSpecificComponent />}
           </div>

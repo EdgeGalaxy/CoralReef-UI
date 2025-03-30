@@ -31,12 +31,40 @@ export const inputNode: Node = {
             },
             required: ['name', 'value']
           }
+        },
+        models: {
+          title: '可用模型列表',
+          description: '来自工作区的可用模型列表',
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: '模型ID'
+              },
+              name: {
+                type: 'string',
+                description: '模型名称'
+              },
+              version: {
+                type: 'string',
+                description: '模型版本'
+              },
+              task_type: {
+                type: 'string',
+                description: '模型任务类型'
+              }
+            },
+            required: ['id', 'name']
+          }
         }
       }
     },
     formData: {
       images: [],
-      params: []
+      params: [],
+      models: []
     },
     label: 'Input Node'
   }
@@ -121,3 +149,21 @@ export const buildInNodes: Node[] = [inputNode, outputNode];
 export const initialNodes: Node[] = [inputNode, outputNode];
 
 export const initialEdges: Edge[] = [];
+
+// ReactFlow 默认配置
+export const reactFlowDefaultConfig = {
+  // 默认视口
+  defaultViewport: { x: 0, y: 0, zoom: 1 },
+  // 缩放配置
+  minZoom: 0.1,
+  maxZoom: 2,
+  // 画布移动范围，允许负坐标
+  translateExtent: [
+    [-1000, -1000] as [number, number],
+    [2000, 2000] as [number, number]
+  ] as [[number, number], [number, number]],
+  // 网格配置
+  snapToGrid: true,
+  snapGrid: [20, 20] as [number, number],
+  nodesDraggable: true
+};
