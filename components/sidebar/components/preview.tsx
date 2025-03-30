@@ -46,6 +46,8 @@ export function Preview({ source }: PreviewProps) {
       } catch (err) {
         console.error('获取视频URL错误:', err);
         setError('无法获取视频源，请检查鉴权信息');
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -111,6 +113,15 @@ export function Preview({ source }: PreviewProps) {
 
   // 渲染播放器
   const renderPlayer = () => {
+    // 如果正在加载，显示加载动画
+    if (loading) {
+      return (
+        <div className="flex h-[400px] items-center justify-center bg-gray-100">
+          <Icons.spinner className="h-8 w-8 animate-spin" />
+        </div>
+      );
+    }
+
     // 检查 URL 是否有效
     if (!videoUrl) {
       return (

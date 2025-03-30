@@ -42,7 +42,9 @@ import {
   MinusCircle,
   Power,
   Package,
-  Play
+  Play,
+  SaveIcon,
+  LayoutGridIcon
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -82,6 +84,8 @@ export const Icons = {
   editable: Pencil,
   model: Package,
   play: Play,
+  save: SaveIcon,
+  grid: LayoutGridIcon,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

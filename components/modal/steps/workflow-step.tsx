@@ -50,13 +50,18 @@ export const WorkflowStepSelectedItem: React.FC<
           {parameters.map((param) => (
             <div key={param.name} className="space-y-2">
               {param.type === 'WorkflowParameter' && (
-                <Input
-                  placeholder={`输入 ${param.name}`}
-                  defaultValue={param.default_value}
-                  onChange={(e) =>
-                    onParameterChange?.(param.name, e.target.value)
-                  }
-                />
+                <div className="space-y-1.5">
+                  <div className="text-sm font-medium text-gray-700">
+                    {param.name}
+                  </div>
+                  <Input
+                    placeholder={`输入 ${param.name}`}
+                    defaultValue={param.default_value}
+                    onChange={(e) =>
+                      onParameterChange?.(param.name, e.target.value)
+                    }
+                  />
+                </div>
               )}
             </div>
           ))}
