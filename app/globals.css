@@ -95,11 +95,29 @@
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Sidebar transitions */
+[data-sidebar] {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+[data-sidebar='sidebar'] {
+  @apply bg-sidebar text-sidebar-foreground;
+}
+
+[data-sidebar='menu-button'] {
+  @apply text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+}
+
+[data-sidebar='menu-button'][data-active='true'] {
+  @apply bg-sidebar-accent text-sidebar-accent-foreground;
+}
+
+[data-sidebar='menu-sub-button'] {
+  @apply text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+}
+
+[data-sidebar='menu-sub-button'][data-active='true'] {
+  @apply bg-sidebar-accent text-sidebar-accent-foreground;
 }

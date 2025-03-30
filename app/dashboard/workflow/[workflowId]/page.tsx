@@ -63,8 +63,8 @@ const DesignPage = () => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { isMinimized } = useSidebar();
-  const [flowWidth, setFlowWidth] = useState('calc(100vw - 72px)');
+  const { isMinimized, toggle: toggleSidebar } = useSidebar();
+  const [flowWidth, setFlowWidth] = useState('calc(100vw - 288px)');
   const [availableNodes, setAvailableNodes] = useState<BlockDescription[]>([]);
   const [kindsConnections, setKindsConnections] = useState<KindsConnections>(
     {}
@@ -73,6 +73,16 @@ const DesignPage = () => {
   const [availableKindValues, setAvailableKindValues] = useState<
     Record<string, PropertyDefinition[]>
   >({});
+
+  useEffect(() => {
+    setFlowWidth(isMinimized ? 'calc(100vw - 72px)' : 'calc(100vw - 288px)');
+  }, [isMinimized]);
+
+  useEffect(() => {
+    if (isMinimized) {
+      toggleSidebar();
+    }
+  }, [isMinimized, toggleSidebar]);
 
   const { data: workflowData } = useAuthSWR<WorkflowResponse>(
     !isNewWorkflow
@@ -99,10 +109,6 @@ const DesignPage = () => {
       })
       .catch((error) => console.error('Error loading blocks:', error));
   }, []);
-
-  useEffect(() => {
-    setFlowWidth(isMinimized ? 'calc(100vw - 72px)' : 'calc(100vw - 288px)');
-  }, [isMinimized]);
 
   const onConnect = useCallback(
     (params: Connection) => {
