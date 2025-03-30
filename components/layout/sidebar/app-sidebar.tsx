@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Home, Workflow, Server, CircuitBoard, Settings } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
+import Image from 'next/image';
 
 import { NavMain } from '@/components/layout/sidebar/nav-main';
 import { NavUser } from '@/components/layout/sidebar/nav-user';
@@ -147,7 +148,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="pt-6">
+        <div className="mb-4 flex justify-center">
+          <Image
+            src="/loopeai.svg"
+            alt="LoopEAI Logo"
+            width={120}
+            height={30}
+            className="dark:invert"
+          />
+        </div>
         <WorkSpaceSwitcher
           workspaces={workspaces}
           selectedWorkSpaceId={selectedWorkspace}

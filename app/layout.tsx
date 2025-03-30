@@ -10,8 +10,11 @@ import { auth } from '@/auth';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn',
-  description: 'Basic dashboard with Next.js and Shadcn'
+  title: 'LoopEAI',
+  description: '完善的设备管理、算法部署工具平台',
+  icons: {
+    icon: '/loopeai.svg'
+  }
 };
 
 export default async function RootLayout({

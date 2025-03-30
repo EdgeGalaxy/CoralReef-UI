@@ -7,8 +7,8 @@ import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Next Shadcn Dashboard Starter',
-  description: 'Basic dashboard with Next.js and Shadcn'
+  title: 'LoopEAI - 控制台',
+  description: '完善的设备管理、算法部署工具平台'
 };
 
 export default function DashboardLayout({
