@@ -40,7 +40,7 @@ interface EditWorkflowModalProps {
   onClose: () => void;
   workflow: Workflow;
   workspaceId: string | undefined;
-  onSuccess: () => void;
+  onSuccess: (values: FormValues) => void | Promise<void>;
 }
 
 export function EditWorkflowModal({
@@ -79,7 +79,7 @@ export function EditWorkflowModal({
           errorTitle: '工作流重命名失败',
           onSuccess: () => {
             onClose();
-            onSuccess();
+            onSuccess(values);
           }
         }
       );

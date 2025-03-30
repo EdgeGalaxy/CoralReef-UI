@@ -14,6 +14,26 @@ import ReactFlow, {
   Connection,
   Edge
 } from 'reactflow';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 import 'reactflow/dist/style.css';
 
@@ -52,6 +72,13 @@ const breadcrumbItems = [
   { title: '编辑', link: `/dashboard/workflow/edit` }
 ];
 
+const formSchema = z.object({
+  name: z.string().min(1, '名称不能为空'),
+  description: z.string().optional()
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const DesignPage = () => {
   const params = useParams();
   const workflowId = params?.workflowId as string;
@@ -73,6 +100,19 @@ const DesignPage = () => {
   const [availableKindValues, setAvailableKindValues] = useState<
     Record<string, PropertyDefinition[]>
   >({});
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [workflowFormData, setWorkflowFormData] = useState({
+    name: '',
+    description: ''
+  });
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      description: ''
+    }
+  });
 
   useEffect(() => {
     setFlowWidth(isMinimized ? 'calc(100vw - 72px)' : 'calc(100vw - 288px)');
@@ -517,51 +557,62 @@ const DesignPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
+    if (isNewWorkflow) {
+      setIsEditModalOpen(true);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      if (isNewWorkflow) {
-        await handleApiRequest(
-          () => {
-            const workflowData: WorkflowCreate = {
-              name: 'New Workflow',
-              description: 'Workflow Description',
-              data: {
-                nodes: nodes,
-                edges: edges
-              }
-            };
-
-            return api.post(`api/reef/workspaces/${workspaceId}/workflows`, {
-              json: workflowData
-            });
-          },
-          {
-            toast,
-            successTitle: '工作流保存成功',
-            errorTitle: '工作流保存失败',
-            onSuccess: () => {
-              window.location.href = `/dashboard/workflow`;
+      await handleApiRequest(
+        () =>
+          api.put(
+            `api/reef/workspaces/${workspaceId}/workflows/${workflowId}`,
+            {
+              json: { data: { nodes: nodes, edges: edges } }
             }
-          }
-        );
-      } else {
-        await handleApiRequest(
-          () =>
-            api.put(
-              `api/reef/workspaces/${workspaceId}/workflows/${workflowId}`,
-              {
-                json: { data: { nodes: nodes, edges: edges } }
-              }
-            ),
-          {
-            toast,
-            successTitle: '工作流更新成功',
-            errorTitle: '工作流更新失败'
-          }
-        );
-      }
+          ),
+        {
+          toast,
+          successTitle: '工作流更新成功',
+          errorTitle: '工作流更新失败'
+        }
+      );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
+    try {
+      await handleApiRequest(
+        () => {
+          const workflowData: WorkflowCreate = {
+            name: values.name,
+            description: values.description || '',
+            data: {
+              nodes: nodes,
+              edges: edges
+            }
+          };
+
+          return api.post(`api/reef/workspaces/${workspaceId}/workflows`, {
+            json: workflowData
+          });
+        },
+        {
+          toast,
+          successTitle: '工作流保存成功',
+          errorTitle: '工作流保存失败',
+          onSuccess: () => {
+            window.location.href = `/dashboard/workflow`;
+          }
+        }
+      );
+    } finally {
+      setIsLoading(false);
+      setIsEditModalOpen(false);
     }
   };
 
@@ -669,6 +720,61 @@ const DesignPage = () => {
             )}
           </Button>
         </div>
+
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent
+            className="sm:max-w-[425px]"
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+            }}
+            onEscapeKeyDown={(e) => {
+              e.preventDefault();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>创建新工作流</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>工作流名称</FormLabel>
+                      <FormControl>
+                        <Input placeholder="输入工作流名称" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>描述</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="输入描述信息" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <DialogFooter>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? '保存中...' : '保存工作流'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
         <div
           style={{
             width: flowWidth,
