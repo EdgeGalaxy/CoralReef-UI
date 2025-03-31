@@ -12,7 +12,6 @@ interface ErrorProps {
 
 export default function DashboardError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // 可以在这里添加错误日志上报逻辑
     console.error(error);
   }, [error]);
 

@@ -53,7 +53,7 @@ const authConfig = {
           );
 
           if (response.status !== 200) {
-            throw new Error(`Login failed with status: ${response.status}`);
+            return null;
           }
 
           const data = await response.json();
@@ -82,9 +82,7 @@ const authConfig = {
           return userData;
         } catch (error) {
           console.error('Login error:', error);
-          throw new Error(
-            error instanceof Error ? error.message : 'Login failed'
-          );
+          return null;
         }
       }
     })

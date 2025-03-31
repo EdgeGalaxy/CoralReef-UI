@@ -30,27 +30,33 @@ export function Sidebar({
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0].value);
 
   return (
-    <Card className="fixed right-0 top-0 flex h-full w-1/2 flex-col shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-6">
+    <Card className="fixed right-0 top-0 z-50 flex h-full w-full flex-col shadow-lg sm:w-1/2">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 md:p-6">
         <div className="flex flex-col">
-          <CardTitle className="text-2xl font-bold">{title}</CardTitle>
+          <CardTitle className="text-xl font-bold md:text-2xl">
+            {title}
+          </CardTitle>
         </div>
         <Button onClick={onClose} variant="ghost" size="icon">
           <Icons.close />
         </Button>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="overflow-y-auto p-4 md:p-6">
         {detailContent}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="mb-4 grid w-full grid-cols-5">
+          <TabsList className="mb-4 flex w-full flex-wrap gap-2">
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value}>
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="min-w-[100px] max-w-[200px] flex-1 text-sm md:text-base"
+              >
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
           {tabs.map((tab) => (
-            <TabsContent key={tab.value} value={tab.value}>
+            <TabsContent key={tab.value} value={tab.value} className="mt-4">
               {tab.content}
             </TabsContent>
           ))}

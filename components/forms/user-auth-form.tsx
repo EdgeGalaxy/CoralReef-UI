@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import GithubSignInButton from '../github-auth-button';
+import { useToast } from '@/components/ui/use-toast';
 
 const formSchema = z.object({
   email: z.string().email({ message: '输入有效的邮箱地址' }),
@@ -28,16 +29,42 @@ export default function UserAuthForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams?.get('callbackUrl');
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema)
   });
 
   const onSubmit = async (data: UserFormValue) => {
-    signIn('credentials', {
-      email: data.email,
-      password: data.password,
-      callbackUrl: callbackUrl ?? '/dashboard'
-    });
+    try {
+      setLoading(true);
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        callbackUrl: callbackUrl ?? '/dashboard',
+        redirect: false
+      });
+
+      if (result?.error) {
+        toast({
+          title: '登录失败',
+          description: '邮箱或密码错误',
+          variant: 'destructive',
+          duration: 3000
+        });
+      } else if (result?.ok) {
+        // 登录成功，使用 router 进行跳转
+        window.location.href = result.url ?? callbackUrl ?? '/dashboard';
+      }
+    } catch (error) {
+      toast({
+        title: '登录失败',
+        description: '请检查网络连接是否正常',
+        variant: 'destructive',
+        duration: 3000
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
