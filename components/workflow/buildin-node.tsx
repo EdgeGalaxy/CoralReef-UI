@@ -86,7 +86,7 @@ const BuiltInNode: React.FC<{
         <CardHeader
           className={`py-3 ${bgColor} rounded-t-lg dark:bg-sidebar-accent dark:!bg-opacity-60`}
         >
-          <div className="flex items-center space-x-2 text-sm font-medium">
+          <div className="flex items-center space-x-2 truncate text-sm">
             <span className="node-icon text-gray-800 dark:text-white">
               {isInput ? (
                 <LogInIcon className="h-4 w-4" />
@@ -94,7 +94,7 @@ const BuiltInNode: React.FC<{
                 <LogOutIcon className="h-4 w-4" />
               )}
             </span>
-            <span className="text-gray-800 dark:text-white">
+            <span className="truncate font-medium text-gray-800 dark:text-white">
               {data.human_friendly_block_name}
             </span>
           </div>

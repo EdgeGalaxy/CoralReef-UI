@@ -141,11 +141,16 @@ const KindField: React.FC<KindFieldProps> = (props) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={props.id} className="text-sm font-medium">
+        <Label
+          htmlFor={props.id}
+          className="text-sm font-medium dark:text-white"
+        >
           <span className="font-bold">
             {originalSchema?.title || props.name}
           </span>
-          {isRequired && <span className="ml-1 text-red-500">*</span>}
+          {isRequired && (
+            <span className="ml-1 text-red-500 dark:text-red-400">*</span>
+          )}
         </Label>
       </div>
       <div className="flex items-center space-x-2">
@@ -166,7 +171,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
                 }
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent sideOffset={4}>
               {hasAvailableKindOptions ? (
                 kindOptions.map((val: string) => (
                   <SelectItem key={val} value={val}>
@@ -186,7 +191,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             value={inputValue}
             onChange={handleInputChange}
             onBlur={handleInputBlur}
-            className="w-full"
+            className="w-full dark:border-gray-400 dark:bg-white dark:text-gray-900 dark:placeholder-gray-500 dark:focus:border-blue-500 dark:focus:ring-2 dark:focus:ring-blue-400 dark:focus:ring-opacity-20"
             placeholder="输入一个值"
             required={isRequired}
           />
@@ -198,8 +203,8 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             onClick={toggleKindMode}
             className={`transition-colors ${
               isKindMode
-                ? 'border border-blue-200 bg-blue-50 text-blue-500'
-                : 'text-gray-500 hover:bg-gray-100'
+                ? 'border border-blue-200 bg-blue-50 text-blue-500 dark:border-blue-400 dark:bg-blue-100 dark:text-blue-700'
+                : 'text-gray-500 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700'
             }`}
             disabled={isKindMode && !hasAvailableKindOptions}
             title={isKindMode ? '切换到直接输入模式' : '切换到引用模式'}
@@ -209,7 +214,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
         )}
       </div>
       {isKindMode && !hasAvailableKindOptions && (
-        <p className="mt-1 text-xs text-orange-500">
+        <p className="mt-1 text-xs text-orange-500 dark:text-orange-300">
           当前节点没有可用的引用值。请先配置其他节点或切换到直接输入模式。
         </p>
       )}

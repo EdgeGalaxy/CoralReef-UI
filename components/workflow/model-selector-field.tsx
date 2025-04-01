@@ -414,18 +414,20 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">
+        <Label className="text-sm font-medium dark:text-white">
           <span className="font-bold">
             {originalSchema?.title || props.name}
           </span>
-          {required && <span className="ml-1 text-red-500">*</span>}
+          {required && (
+            <span className="ml-1 text-red-500 dark:text-red-400">*</span>
+          )}
         </Label>
         {!isKindMode && error && (
           <Button
             variant="ghost"
             size="sm"
             onClick={handleRetry}
-            className="flex items-center gap-1 text-xs text-blue-500"
+            className="flex items-center gap-1 text-xs text-blue-500 dark:text-blue-300"
           >
             <ReloadIcon className="h-3 w-3" />
             重试
@@ -451,7 +453,7 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
                 }
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent sideOffset={4}>
               {hasAvailableKindOptions ? (
                 kindOptions.map((val: string) => (
                   <SelectItem key={val} value={val}>
@@ -479,7 +481,7 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
                 {displayValue}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent sideOffset={4}>
               {isLoading ? (
                 <SelectItem value="" disabled>
                   加载中...
@@ -510,8 +512,8 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
             onClick={toggleKindMode}
             className={`transition-colors ${
               isKindMode
-                ? 'border border-blue-200 bg-blue-50 text-blue-500'
-                : 'text-gray-500 hover:bg-gray-100'
+                ? 'border border-blue-200 bg-blue-50 text-blue-500 dark:border-blue-400 dark:bg-blue-100 dark:text-blue-700'
+                : 'text-gray-500 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700'
             }`}
             disabled={
               (isKindMode && !hasAvailableKindOptions) ||
@@ -535,20 +537,22 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
       </div>
       {/* 错误和提示信息 */}
       {!isKindMode && error && (
-        <p className="mt-1 text-xs text-red-500">加载模型列表失败，请重试</p>
+        <p className="mt-1 text-xs text-red-500 dark:text-red-300">
+          加载模型列表失败，请重试
+        </p>
       )}
       {!isKindMode && !isLoading && !error && modelList.length === 0 && (
-        <p className="mt-1 text-xs text-orange-500">
+        <p className="mt-1 text-xs text-orange-500 dark:text-orange-300">
           当前工作区没有可用的模型，请先导入或创建模型
         </p>
       )}
       {!isKindMode && !hasInputNodeModels && (
-        <p className="mt-1 text-xs text-orange-500">
+        <p className="mt-1 text-xs text-orange-500 dark:text-orange-300">
           输入节点没有模型数据，引用模式不可用。模型数据将在首次加载后自动添加。
         </p>
       )}
       {isKindMode && !hasAvailableKindOptions && (
-        <p className="mt-1 text-xs text-orange-500">
+        <p className="mt-1 text-xs text-orange-500 dark:text-orange-300">
           当前节点没有可用的引用值。请先配置其他节点或切换到模型选择模式。
         </p>
       )}
@@ -558,14 +562,14 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
           nodeData.block_schema.properties?.[props.name],
           originalSchema || schema
         ) && (
-          <p className="mt-1 text-xs text-blue-500">
+          <p className="mt-1 text-xs text-blue-500 dark:text-blue-300">
             提示：此为布尔类型字段，请选择布尔类型的输入参数引用
           </p>
         )}
       {isKindMode &&
         hasAvailableKindOptions &&
         props.name.includes('model_id') && (
-          <p className="mt-1 text-xs text-blue-500">
+          <p className="mt-1 text-xs text-blue-500 dark:text-blue-300">
             提示：此为模型ID字段，请选择字符串类型的输入参数引用
           </p>
         )}
