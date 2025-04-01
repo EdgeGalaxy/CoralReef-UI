@@ -17,13 +17,13 @@ const InputSpecificComponent: React.FC = () => {
     <div className="flex flex-col items-stretch space-y-2">
       <Button
         variant="ghost"
-        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs"
+        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs dark:bg-green-900 dark:text-green-100"
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Image
       </Button>
       <Button
         variant="ghost"
-        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs"
+        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs dark:bg-green-900 dark:text-green-100"
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Params
       </Button>
@@ -36,7 +36,7 @@ const OutputSpecificComponent: React.FC = () => {
     <div>
       <Button
         variant="ghost"
-        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs"
+        className="h-6 justify-start truncate bg-lime-200 px-2 text-xs dark:bg-green-900 dark:text-green-100"
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Response
       </Button>
@@ -55,11 +55,11 @@ const BuiltInNode: React.FC<{
   const getNodeColor = (type: string) => {
     switch (type) {
       case 'input':
-        return 'border-green-200 bg-green-100';
+        return 'border-green-200 bg-green-100 dark:border-green-600 dark:bg-green-900';
       case 'output':
-        return 'border-green-200 bg-green-100';
+        return 'border-green-200 bg-green-100 dark:border-green-600 dark:bg-green-900';
       default:
-        return 'border-stone-500 bg-stone-100';
+        return 'border-stone-500 bg-stone-100 dark:border-stone-600 dark:bg-stone-800';
     }
   };
 
@@ -69,7 +69,7 @@ const BuiltInNode: React.FC<{
   return (
     <div>
       <Card
-        className={`border-2 ${borderColor} rounded-lg ${
+        className={`border-2 ${borderColor} rounded-lg dark:bg-sidebar ${
           selected
             ? `ring-2 ring-offset-2 ${borderColor.replace('border', 'ring')}`
             : ''
@@ -80,27 +80,32 @@ const BuiltInNode: React.FC<{
             type="target"
             position={Position.Left}
             isConnectable={isConnectable}
+            className="dark:border-sidebar-border dark:bg-sidebar-accent"
           />
         )}
-        <CardHeader className={`py-3 ${bgColor} rounded-t-lg`}>
+        <CardHeader
+          className={`py-3 ${bgColor} rounded-t-lg dark:bg-sidebar-accent dark:!bg-opacity-60`}
+        >
           <div className="flex items-center space-x-2 text-sm font-medium">
-            <span className="node-icon">
+            <span className="node-icon text-gray-800 dark:text-white">
               {isInput ? (
                 <LogInIcon className="h-4 w-4" />
               ) : (
                 <LogOutIcon className="h-4 w-4" />
               )}
             </span>
-            <span>{data.human_friendly_block_name}</span>
+            <span className="text-gray-800 dark:text-white">
+              {data.human_friendly_block_name}
+            </span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 py-2">
+        <CardContent className="space-y-2 py-2 dark:bg-sidebar dark:text-sidebar-foreground">
           <div className="flex flex-col items-stretch space-y-2 text-xs">
             {images.map((image: any, index: number) => (
               <Button
                 key={`image-${index}`}
                 variant="ghost"
-                className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
+                className="h-6 justify-start truncate bg-slate-200 px-2 text-xs dark:bg-slate-700 dark:text-slate-100"
               >
                 <ImageIcon className="mr-2 h-4 w-4" /> {image.name}
               </Button>
@@ -109,7 +114,7 @@ const BuiltInNode: React.FC<{
               <Button
                 key={`param-${index}`}
                 variant="ghost"
-                className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
+                className="h-6 justify-start truncate bg-slate-200 px-2 text-xs dark:bg-slate-700 dark:text-slate-100"
               >
                 <SlidersHorizontalIcon className="mr-2 h-4 w-4" /> {param.name}
               </Button>
@@ -119,7 +124,7 @@ const BuiltInNode: React.FC<{
                 <Button
                   key={`model-${index}`}
                   variant="ghost"
-                  className="h-6 justify-start truncate bg-blue-200 px-2 text-xs"
+                  className="h-6 justify-start truncate bg-blue-200 px-2 text-xs dark:bg-blue-800 dark:text-blue-100"
                 >
                   <BoxIcon className="mr-2 h-4 w-4" /> {model.name}{' '}
                   {model.version ? `(${model.version})` : ''}
@@ -134,6 +139,7 @@ const BuiltInNode: React.FC<{
             type="source"
             position={Position.Right}
             isConnectable={isConnectable}
+            className="dark:border-sidebar-border dark:bg-sidebar-accent"
           />
         )}
       </Card>

@@ -673,7 +673,9 @@ const DesignPage = () => {
           <Button
             onClick={handleSave}
             disabled={isLoading}
-            className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md transition-all duration-200 hover:from-green-600 hover:to-green-700 hover:shadow-lg"
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2"
           >
             {isLoading ? (
               <>
@@ -755,7 +757,7 @@ const DesignPage = () => {
         >
           <ReactFlowProvider>
             <div
-              className="react-flow-wrapper"
+              className="react-flow-wrapper dark:border-sidebar-border"
               style={{
                 width: '100%',
                 height: '100%',
@@ -802,7 +804,12 @@ const DesignPage = () => {
                   zoomable
                   pannable
                 />
-                <Background color="#aaa" gap={16} size={1} />
+                <Background
+                  color="#aaa"
+                  gap={16}
+                  size={1}
+                  className="dark:!bg-sidebar"
+                />
               </ReactFlow>
             </div>
           </ReactFlowProvider>
@@ -811,7 +818,7 @@ const DesignPage = () => {
             <SheetTrigger asChild>
               <Button
                 variant="default"
-                className="absolute right-6 top-6 z-10 flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-white shadow-md transition-all duration-200 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg"
+                className="absolute right-6 top-6 z-10 flex items-center gap-2"
                 size="sm"
               >
                 <Icons.grid className="h-4 w-4" />

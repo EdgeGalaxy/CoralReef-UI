@@ -142,3 +142,32 @@
 .dark button.text-red-500 {
   @apply text-red-400 hover:text-red-300;
 }
+
+/* ReactFlow 深色模式适配 */
+.dark .react-flow__handle {
+  @apply border-sidebar-border bg-sidebar-accent;
+}
+
+.dark .react-flow__node {
+  @apply shadow-xl;
+}
+
+.dark .react-flow__controls {
+  @apply border-sidebar-border bg-sidebar-accent text-sidebar-foreground;
+}
+
+.dark .react-flow__controls-button {
+  @apply border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent;
+}
+
+.dark .react-flow__minimap {
+  @apply border-sidebar-border bg-sidebar;
+}
+
+.dark .react-flow-wrapper {
+  @apply border-sidebar-border;
+}
+
+.dark .react-flow__edge-path {
+  @apply stroke-sidebar-foreground;
+}

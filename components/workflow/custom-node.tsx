@@ -54,8 +54,10 @@ const CustomNode = ({
   return (
     <div>
       <Card
-        className={`border-2 ${nodeColor.border} rounded-lg ${
-          missRequiredFields ? 'shadow-[0_0_0_1px] shadow-orange-300' : ''
+        className={`border-2 ${nodeColor.border} rounded-lg dark:bg-sidebar ${
+          missRequiredFields
+            ? 'shadow-[0_0_0_1px] shadow-orange-300 dark:shadow-orange-700'
+            : ''
         } ${
           selected
             ? `ring-2 ring-offset-2 ${nodeColor.border.replace(
@@ -65,25 +67,35 @@ const CustomNode = ({
             : ''
         }`}
       >
-        <Handle type="target" position={Position.Left} />
-        <CardHeader className={`py-3 ${nodeColor.bg} rounded-t-lg`}>
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="dark:border-sidebar-border dark:bg-sidebar-accent"
+        />
+        <CardHeader
+          className={`py-3 ${nodeColor.bg} rounded-t-lg dark:bg-sidebar-accent dark:!bg-opacity-60`}
+        >
           <div className="flex items-center space-x-2 truncate text-sm font-normal">
-            <span className="node-icon">{nodeColor.icon}</span>
-            <span className="truncate">{data.human_friendly_block_name}</span>
+            <span className="node-icon text-gray-800 dark:text-white">
+              {nodeColor.icon}
+            </span>
+            <span className="truncate font-medium text-gray-800 dark:text-white">
+              {data.human_friendly_block_name}
+            </span>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2 py-2">
+        <CardContent className="space-y-2 py-2 dark:bg-sidebar dark:text-sidebar-foreground">
           <div className="flex flex-col items-stretch space-y-2 text-xs">
             <Button
               variant="ghost"
-              className="h-6 justify-start truncate bg-slate-200 px-2 text-xs"
+              className="h-6 justify-start truncate bg-slate-200 px-2 text-xs dark:bg-slate-700 dark:text-slate-100"
             >
               {data.formData.name}
             </Button>
             {missRequiredFields ? (
               <Button
                 variant="ghost"
-                className="flex h-6 justify-start truncate bg-yellow-100 px-2 text-xs text-orange-700"
+                className="flex h-6 justify-start truncate bg-yellow-100 px-2 text-xs text-orange-700 dark:bg-yellow-900 dark:text-yellow-100"
               >
                 <ShieldAlertIcon className="mr-1 h-3 w-3 flex-shrink-0" />
                 <span className="truncate">
@@ -95,7 +107,11 @@ const CustomNode = ({
             ) : null}
           </div>
         </CardContent>
-        <Handle type="source" position={Position.Right} />
+        <Handle
+          type="source"
+          position={Position.Right}
+          className="dark:border-sidebar-border dark:bg-sidebar-accent"
+        />
       </Card>
     </div>
   );
