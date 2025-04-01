@@ -8,10 +8,13 @@ import {
   LogOut,
   Sparkles,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
+import { useTheme } from 'next-themes';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -47,6 +50,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -59,6 +63,10 @@ export function NavUser({
       console.error('登出失败:', error);
       setIsLoggingOut(false);
     }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   // 加载状态处理
@@ -159,6 +167,16 @@ export function NavUser({
               <DropdownMenuItem>
                 <Bell className="mr-2 h-4 w-4" />
                 <span>通知设置</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleTheme}>
+                {theme === 'dark' ? (
+                  <Sun className="mr-2 h-4 w-4" />
+                ) : (
+                  <Moon className="mr-2 h-4 w-4" />
+                )}
+                <span>
+                  {theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
+                </span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

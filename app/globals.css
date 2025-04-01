@@ -40,13 +40,13 @@
   }
 
   .dark {
-    --background: 253 43% 3%;
+    --background: 240 5.9% 10%;
     --foreground: 253 31% 98%;
     --muted: 253 7% 13%;
     --muted-foreground: 253 13% 63%;
-    --popover: 253 43% 3%;
+    --popover: 240 5.9% 10%;
     --popover-foreground: 253 31% 98%;
-    --card: 253 43% 4%;
+    --card: 240 5.9% 10%;
     --card-foreground: 253 31% 99%;
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
@@ -120,4 +120,25 @@
 
 [data-sidebar='menu-sub-button'][data-active='true'] {
   @apply bg-sidebar-accent text-sidebar-accent-foreground;
+}
+
+/* 表格深色模式适配 */
+.dark thead[class*='bg-gray-100'] {
+  @apply bg-sidebar-accent;
+}
+
+.dark tbody tr {
+  @apply border-sidebar-border hover:bg-sidebar-accent;
+}
+
+.dark tbody tr td {
+  @apply text-sidebar-foreground;
+}
+
+.dark button.text-blue-500 {
+  @apply text-blue-400 hover:text-blue-300;
+}
+
+.dark button.text-red-500 {
+  @apply text-red-400 hover:text-red-300;
 }
