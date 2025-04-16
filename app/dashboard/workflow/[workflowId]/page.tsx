@@ -171,12 +171,12 @@ const DesignPage = () => {
           connectNode = imageConnections.find(
             (conn) =>
               conn.manifest_type_identifier === targetManifest &&
-              conn.compatible_element === 'workflow_image'
+              conn.compatible_element === 'any_data'
           );
           propertyName = avaliableImageNodes.find(
             (node) =>
               node.manifest_type_identifier === sourceManifest &&
-              node.compatible_element === 'workflow_image'
+              node.compatible_element === 'any_data'
           )?.property_name;
         } else if (
           targetManifest === outputNode.data.manifest_type_identifier
@@ -406,7 +406,7 @@ const DesignPage = () => {
           addKindValue(kindValues, 'image', image, node, {
             prefix: '$inputs.',
             description: 'Image',
-            element: 'workflow_image'
+            element: 'any_data'
           });
         });
         node.data.formData.params.forEach((param: any) => {
@@ -416,30 +416,6 @@ const DesignPage = () => {
             element: 'workflow_parameter'
           });
         });
-
-        // 处理models数组，将其作为roboflow_model_id类型的引用添加
-        if (
-          node.data.formData.models &&
-          Array.isArray(node.data.formData.models)
-        ) {
-          node.data.formData.models.forEach((model: any) => {
-            if (model && model.id) {
-              // 为每个模型添加引用值
-              addKindValue(kindValues, 'roboflow_model_id', model, node, {
-                prefix: '$inputs.models.',
-                description: '模型ID',
-                element: 'workflow_parameter'
-              });
-
-              // 同时也作为字符串类型的引用
-              addKindValue(kindValues, 'string', model, node, {
-                prefix: '$inputs.models.',
-                description: '模型ID (字符串)',
-                element: 'workflow_parameter'
-              });
-            }
-          });
-        }
       } else if (node.data.outputs_manifest) {
         // Handle output nodes kinds
         node.data.outputs_manifest.forEach((output: OutputDefinition) => {
@@ -478,7 +454,7 @@ const DesignPage = () => {
           // Handle Input built-in node
           const updatedImages = formData.images.map((image: any) => ({
             name: image.name,
-            selected_element: 'workflow_image',
+            selected_element: 'any_data',
             kind: `$inputs.${image.name}`
           }));
 

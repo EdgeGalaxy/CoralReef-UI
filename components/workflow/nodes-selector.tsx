@@ -64,7 +64,7 @@ const NodeSelector: React.FC<NodeSelectorProps> = ({ nodes, onNodeSelect }) => {
           placeholder="Search nodes..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4"
+          className="mb-4 dark:text-white dark:placeholder:text-gray-400"
         />
       </div>
       <ScrollArea className="h-[calc(100vh-100px)] w-full rounded-md border">
@@ -75,7 +75,7 @@ const NodeSelector: React.FC<NodeSelectorProps> = ({ nodes, onNodeSelect }) => {
               open={openSections[type]}
               onOpenChange={() => toggleSection(type)}
             >
-              <CollapsibleTrigger className="mb-2 flex w-full items-center text-lg font-semibold">
+              <CollapsibleTrigger className="mb-2 flex w-full items-center text-lg font-semibold dark:text-white">
                 {openSections[type] ? (
                   <ChevronDown className="mr-2" />
                 ) : (

@@ -21,6 +21,7 @@ import {
 } from '@/constants/block';
 
 import KindField from './kind-field';
+import AnyOfKindField from './anyof-kind-field';
 import ModelSelectorField, {
   isRoboflowModelField
 } from './model-selector-field';
@@ -388,7 +389,7 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           }
 
           return (
-            <KindField
+            <AnyOfKindField
               {...props}
               availableKindValues={availableKindValues}
               nodeData={nodeData}
@@ -397,7 +398,17 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           );
         },
         [availableKindValues, nodeData, kindsConnections]
-      )
+      ),
+      KindField: React.useCallback((props: any) => {
+        return (
+          <KindField
+            {...props}
+            nodeData={nodeData}
+            availableKindValues={availableKindValues}
+            kindsConnections={kindsConnections}
+          />
+        );
+      }, [])
     };
 
     const newSchema = {
@@ -440,12 +451,17 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           const property = nodeData.block_schema.properties?.[
             key
           ] as ExtendedJSONSchema7;
-          if (
-            property !== null &&
-            property['x-internal-type'] === 'anyOf-field'
-          ) {
+          console.log('property', property);
+          if (property !== null && 'anyOf' in property) {
             acc[key] = {
               'ui:field': 'AnyOfField',
+              'ui:options': {
+                originalSchema: property
+              }
+            };
+          } else if (property !== null && 'kind' in property) {
+            acc[key] = {
+              'ui:field': 'KindField',
               'ui:options': {
                 originalSchema: property
               }
@@ -469,6 +485,19 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
         },
         items: {
           'ui:order': ['name', 'id', 'version']
+        }
+      },
+      // 添加images字段的UI配置
+      images: {
+        'ui:options': {
+          addable: false,
+          orderable: false,
+          removable: false
+        },
+        items: {
+          'ui:widget': 'readonly',
+          'ui:readonly': true,
+          'ui:order': ['name']
         }
       }
     };

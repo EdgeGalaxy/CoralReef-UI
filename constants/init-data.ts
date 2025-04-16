@@ -31,40 +31,16 @@ export const inputNode: Node = {
             },
             required: ['name', 'value']
           }
-        },
-        models: {
-          title: '可用模型列表',
-          description: '来自工作区的可用模型列表',
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: {
-                type: 'string',
-                description: '模型ID'
-              },
-              name: {
-                type: 'string',
-                description: '模型名称'
-              },
-              version: {
-                type: 'string',
-                description: '模型版本'
-              },
-              task_type: {
-                type: 'string',
-                description: '模型任务类型'
-              }
-            },
-            required: ['id', 'name']
-          }
         }
       }
     },
     formData: {
-      images: [],
-      params: [],
-      models: []
+      images: [
+        {
+          name: 'image'
+        }
+      ],
+      params: []
     },
     label: 'Input Node'
   }
@@ -112,7 +88,7 @@ export const outputNode: Node = {
                     ],
                     pattern: '^\\$inputs.[A-Za-z_0-9\\-]+$',
                     reference: true,
-                    selected_element: 'workflow_image',
+                    selected_element: 'any_data',
                     type: 'string'
                   },
                   {

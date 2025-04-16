@@ -18,6 +18,7 @@ const InputSpecificComponent: React.FC = () => {
       <Button
         variant="ghost"
         className="h-6 justify-start truncate bg-lime-200 px-2 text-xs dark:bg-green-900 dark:text-green-100"
+        disabled
       >
         <PlusIcon className="mr-2 h-4 w-4" /> Add Image
       </Button>
