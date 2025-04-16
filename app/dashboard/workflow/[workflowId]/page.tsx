@@ -402,7 +402,7 @@ const DesignPage = () => {
         node.data.manifest_type_identifier === 'input'
       ) {
         // Handle input node
-        node.data.formData.images.forEach((image: any) => {
+        node.data.formData.sources.forEach((image: any) => {
           addKindValue(kindValues, 'image', image, node, {
             prefix: '$inputs.',
             description: 'Image',

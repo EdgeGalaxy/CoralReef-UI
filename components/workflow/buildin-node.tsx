@@ -50,7 +50,7 @@ const BuiltInNode: React.FC<{
   isConnectable: boolean;
   selected: boolean;
 }> = ({ data, isConnectable, selected }) => {
-  const { images = [], params = [], models = [] } = data.formData;
+  const { sources = [], params = [] } = data.formData;
   const isInput = data.manifest_type_identifier === 'input';
   const isOutput = data.manifest_type_identifier === 'output';
   const getNodeColor = (type: string) => {
@@ -102,7 +102,7 @@ const BuiltInNode: React.FC<{
         </CardHeader>
         <CardContent className="space-y-2 py-2 dark:bg-sidebar dark:text-sidebar-foreground">
           <div className="flex flex-col items-stretch space-y-2 text-xs">
-            {images.map((image: any, index: number) => (
+            {sources.map((image: any, index: number) => (
               <Button
                 key={`image-${index}`}
                 variant="ghost"
@@ -120,17 +120,6 @@ const BuiltInNode: React.FC<{
                 <SlidersHorizontalIcon className="mr-2 h-4 w-4" /> {param.name}
               </Button>
             ))}
-            {isInput &&
-              models.map((model: any, index: number) => (
-                <Button
-                  key={`model-${index}`}
-                  variant="ghost"
-                  className="h-6 justify-start truncate bg-blue-200 px-2 text-xs dark:bg-blue-800 dark:text-blue-100"
-                >
-                  <BoxIcon className="mr-2 h-4 w-4" /> {model.name}{' '}
-                  {model.version ? `(${model.version})` : ''}
-                </Button>
-              ))}
             {isInput && <InputSpecificComponent />}
             {isOutput && <OutputSpecificComponent />}
           </div>

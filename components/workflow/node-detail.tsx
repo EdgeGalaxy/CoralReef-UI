@@ -399,16 +399,19 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
         },
         [availableKindValues, nodeData, kindsConnections]
       ),
-      KindField: React.useCallback((props: any) => {
-        return (
-          <KindField
-            {...props}
-            nodeData={nodeData}
-            availableKindValues={availableKindValues}
-            kindsConnections={kindsConnections}
-          />
-        );
-      }, [])
+      KindField: React.useCallback(
+        (props: any) => {
+          return (
+            <KindField
+              {...props}
+              nodeData={nodeData}
+              availableKindValues={availableKindValues}
+              kindsConnections={kindsConnections}
+            />
+          );
+        },
+        [availableKindValues, nodeData, kindsConnections]
+      )
     };
 
     const newSchema = {
@@ -451,8 +454,10 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           const property = nodeData.block_schema.properties?.[
             key
           ] as ExtendedJSONSchema7;
-          console.log('property', property);
-          if (property !== null && 'anyOf' in property) {
+          if (
+            property !== null &&
+            property['x-internal-type'] === 'anyOf-field'
+          ) {
             acc[key] = {
               'ui:field': 'AnyOfField',
               'ui:options': {
@@ -476,19 +481,8 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
       },
       'ui:title': '',
       'ui:classNames': 'form-dark-mode',
-      // 添加models字段的UI配置
-      models: {
-        'ui:options': {
-          addable: true,
-          orderable: false,
-          removable: true
-        },
-        items: {
-          'ui:order': ['name', 'id', 'version']
-        }
-      },
-      // 添加images字段的UI配置
-      images: {
+      // // 添加source字段的UI配置
+      sources: {
         'ui:options': {
           addable: false,
           orderable: false,

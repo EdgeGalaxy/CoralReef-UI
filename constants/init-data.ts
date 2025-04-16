@@ -11,7 +11,7 @@ export const inputNode: Node = {
       block_type: 'buildin',
       type: 'object',
       properties: {
-        images: {
+        sources: {
           type: 'array',
           items: {
             type: 'object',
@@ -35,7 +35,7 @@ export const inputNode: Node = {
       }
     },
     formData: {
-      images: [
+      sources: [
         {
           name: 'image'
         }
