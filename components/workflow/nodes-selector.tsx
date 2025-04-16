@@ -88,7 +88,7 @@ const NodeSelector: React.FC<NodeSelectorProps> = ({ nodes, onNodeSelect }) => {
                   const nodeColor = getNodeColor(node.block_schema.block_type);
                   return (
                     <Card
-                      key={node.human_friendly_block_name}
+                      key={node.manifest_type_identifier}
                       className={`mb-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-sidebar-accent ${nodeColor.border} group dark:border-sidebar-border`}
                       onClick={() => onNodeSelect(node)}
                     >

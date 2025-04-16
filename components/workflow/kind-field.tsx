@@ -38,9 +38,20 @@ const KindField: React.FC<KindFieldProps> = (props) => {
     schema
   } = props;
   const originalSchema = uiSchema['ui:options']?.originalSchema as RJSFSchema;
+  const [inputValue, setInputValue] = useState(formData || '');
+
+  useEffect(() => {
+    setInputValue(formData || '');
+  }, [formData]);
 
   const handleSelectChange = (selectedValue: string) => {
-    onChange(selectedValue);
+    setInputValue(selectedValue);
+  };
+
+  const handleSelectBlur = () => {
+    if (inputValue !== formData) {
+      onChange(inputValue);
+    }
   };
 
   const kindOptions = useMemo(() => {
@@ -60,17 +71,15 @@ const KindField: React.FC<KindFieldProps> = (props) => {
     // 处理 kind 字段
     if (schemaToUse.kind && Array.isArray(schemaToUse.kind)) {
       const currentNodeName = nodeData.formData.name;
+      const manifestTypeIdntifier = nodeData.manifest_type_identifier;
       return schemaToUse.kind.flatMap((kindItem: Kind) => {
-        const kindName =
-          schemaToUse.selected_element === 'workflow_parameter'
-            ? 'string'
-            : kindItem.name;
+        const kindName = kindItem.name;
         const availableKinds = availableKindValues[kindName] || [];
 
         return availableKinds
           .filter(
             (prop: PropertyDefinition) =>
-              prop.compatible_element === schemaToUse.selected_element &&
+              prop.manifest_type_identifier !== manifestTypeIdntifier &&
               !prop.property_name.startsWith(`$output.${currentNodeName}.`)
           )
           .map((prop: PropertyDefinition) => prop.property_name);
@@ -108,8 +117,13 @@ const KindField: React.FC<KindFieldProps> = (props) => {
       <div className="flex items-center space-x-2">
         <Select
           onValueChange={handleSelectChange}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleSelectBlur();
+            }
+          }}
           disabled={!hasAvailableKindOptions}
-          defaultValue={hasAvailableKindOptions ? kindOptions[0] : undefined}
+          value={inputValue}
         >
           <SelectTrigger
             className={`w-full ${

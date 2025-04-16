@@ -117,7 +117,11 @@ const BuiltInNode: React.FC<{
                 variant="ghost"
                 className="h-6 justify-start truncate bg-slate-200 px-2 text-xs dark:bg-slate-700 dark:text-slate-100"
               >
-                <SlidersHorizontalIcon className="mr-2 h-4 w-4" /> {param.name}
+                <SlidersHorizontalIcon className="mr-2 h-4 w-4" />
+                {param.name}
+                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                  ({param.type || 'string'})
+                </span>
               </Button>
             ))}
             {isInput && <InputSpecificComponent />}

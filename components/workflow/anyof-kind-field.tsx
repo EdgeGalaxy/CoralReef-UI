@@ -71,6 +71,23 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
     (item: any) => item.kind
   );
 
+  const defaultKindOptions = useMemo(() => {
+    return [
+      ...(availableKindValues['string'] || []).map(
+        (item: PropertyDefinition) => item.property_name
+      ),
+      ...(availableKindValues['number'] || []).map(
+        (item: PropertyDefinition) => item.property_name
+      ),
+      ...(availableKindValues['boolean'] || []).map(
+        (item: PropertyDefinition) => item.property_name
+      ),
+      ...(availableKindValues['dict'] || []).map(
+        (item: PropertyDefinition) => item.property_name
+      )
+    ];
+  }, [availableKindValues]);
+
   const kindOptions = useMemo(() => {
     if (
       nodeData.manifest_type_identifier ===
@@ -84,24 +101,22 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
       (originalSchema || schema)?.anyOf?.flatMap((item: any) => {
         if (item.kind && Array.isArray(item.kind)) {
           const currentNodeName = nodeData.formData.name;
+          const manifestTypeIdntifier = nodeData.manifest_type_identifier;
 
           const _kindOptions = item.kind.flatMap((kindItem: Kind) => {
-            const kindName =
-              item.selected_element === 'workflow_parameter'
-                ? 'string'
-                : kindItem.name;
+            const kindName = kindItem.name;
             const availableKinds = availableKindValues[kindName] || [];
 
             const intersection = availableKinds.filter(
               (prop: PropertyDefinition) =>
-                prop.compatible_element === item.selected_element &&
+                prop.manifest_type_identifier !== manifestTypeIdntifier &&
                 !prop.property_name.startsWith(`$output.${currentNodeName}.`)
             );
             return intersection.map(
               (prop: PropertyDefinition) => prop.property_name
             );
           });
-          return _kindOptions;
+          return [...defaultKindOptions, ..._kindOptions];
         }
         return [];
       }) || []
@@ -109,6 +124,7 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   }, [schema, nodeData, kindsConnections, availableKindValues, originalSchema]);
 
   const hasAvailableKindOptions = useMemo(() => {
+    console.log('has', kindOptions);
     return kindOptions && kindOptions.length > 0;
   }, [kindOptions]);
 
@@ -120,15 +136,14 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
     const newKindMode = !isKindMode;
     setIsKindMode(newKindMode);
 
-    if (!newKindMode) {
-      setInputValue('');
-      onChange('');
+    setInputValue('');
+
+    if (newKindMode && kindOptions && kindOptions.length > 0) {
+      const newValue = kindOptions[0];
+      setInputValue(newValue);
+      onChange(newValue);
     } else {
-      if (kindOptions && kindOptions.length > 0) {
-        const newValue = kindOptions[0];
-        setInputValue(newValue);
-        onChange(newValue);
-      }
+      onChange('');
     }
   };
 

@@ -25,6 +25,7 @@ import AnyOfKindField from './anyof-kind-field';
 import ModelSelectorField, {
   isRoboflowModelField
 } from './model-selector-field';
+import ParamTypeField from './param-type-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
@@ -411,7 +412,10 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           );
         },
         [availableKindValues, nodeData, kindsConnections]
-      )
+      ),
+      ParamTypeField: React.useCallback((props: any) => {
+        return <ParamTypeField {...props} />;
+      }, [])
     };
 
     const newSchema = {
@@ -481,19 +485,32 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
       },
       'ui:title': '',
       'ui:classNames': 'form-dark-mode',
-      // // 添加source字段的UI配置
-      sources: {
-        'ui:options': {
-          addable: false,
-          orderable: false,
-          removable: false
-        },
-        items: {
-          'ui:widget': 'readonly',
-          'ui:readonly': true,
-          'ui:order': ['name']
-        }
-      }
+      ...(nodeData.manifest_type_identifier === 'input'
+        ? {
+            sources: {
+              'ui:options': {
+                addable: false,
+                orderable: false,
+                removable: false
+              },
+              items: {
+                'ui:widget': 'readonly',
+                'ui:readonly': true,
+                'ui:order': ['name']
+              }
+            },
+            params: {
+              'ui:options': {
+                addable: true,
+                orderable: true,
+                removable: true
+              },
+              items: {
+                'ui:field': 'ParamTypeField'
+              }
+            }
+          }
+        : {})
     };
 
     const filteredFormData = Object.fromEntries(

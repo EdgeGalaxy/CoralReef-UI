@@ -23,13 +23,58 @@ export const inputNode: Node = {
         },
         params: {
           type: 'array',
+          title: '参数列表',
           items: {
             type: 'object',
             properties: {
-              name: { type: 'string' },
-              value: { type: 'string' }
+              name: {
+                type: 'string',
+                title: '参数名称'
+              },
+              type: {
+                type: 'string',
+                enum: ['string', 'number', 'boolean', 'dict'],
+                title: '参数类型',
+                default: 'number'
+              },
+              value: {
+                anyOf: [
+                  {
+                    type: 'string',
+                    title: '字符串',
+                    'x-display-if': {
+                      field: 'type',
+                      value: 'string'
+                    }
+                  },
+                  {
+                    type: 'number',
+                    title: '数值',
+                    'x-display-if': {
+                      field: 'type',
+                      value: 'number'
+                    }
+                  },
+                  {
+                    type: 'boolean',
+                    title: '布尔值',
+                    'x-display-if': {
+                      field: 'type',
+                      value: 'boolean'
+                    }
+                  },
+                  {
+                    type: 'object',
+                    title: 'JSON对象',
+                    'x-display-if': {
+                      field: 'type',
+                      value: 'dict'
+                    }
+                  }
+                ]
+              }
             },
-            required: ['name', 'value']
+            required: ['name', 'type', 'value']
           }
         }
       }

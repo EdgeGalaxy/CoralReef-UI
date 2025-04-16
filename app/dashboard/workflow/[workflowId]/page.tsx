@@ -410,10 +410,12 @@ const DesignPage = () => {
           });
         });
         node.data.formData.params.forEach((param: any) => {
-          addKindValue(kindValues, 'string', param, node, {
+          // 根据参数类型添加对应的 kind
+          const kindName = param.type || 'string'; // 默认为 string 类型
+          addKindValue(kindValues, kindName, param, node, {
             prefix: '$inputs.',
             description: 'Parameter',
-            element: 'workflow_parameter'
+            element: 'any_data'
           });
         });
       } else if (node.data.outputs_manifest) {
@@ -435,6 +437,7 @@ const DesignPage = () => {
           });
         });
       }
+      console.log('avaliableKinds', kindValues);
       setAvailableKindValues(kindValues);
     });
   }, [nodes]);
@@ -452,7 +455,7 @@ const DesignPage = () => {
           selectedNode.data.manifest_type_identifier === 'input'
         ) {
           // Handle Input built-in node
-          const updatedImages = formData.images.map((image: any) => ({
+          const updatedImages = formData.sources.map((image: any) => ({
             name: image.name,
             selected_element: 'any_data',
             kind: `$inputs.${image.name}`
@@ -461,15 +464,14 @@ const DesignPage = () => {
           const updatedParams = formData.params.map((param: any) => ({
             name: param.name,
             value: param.value,
-            selected_element: 'workflow_parameter',
+            type: param.type,
+            selected_element: 'any_data',
             kind: `$inputs.${param.name}`
           }));
 
           _formData = {
-            images: updatedImages,
-            params: updatedParams,
-            // 保留models字段，确保它不会在表单更新过程中丢失
-            models: formData.models || selectedNode.data.formData.models || []
+            sources: updatedImages,
+            params: updatedParams
           };
         } else if (
           selectedNode.type === 'builtInNode' &&
