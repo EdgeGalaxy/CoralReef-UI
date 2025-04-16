@@ -680,7 +680,9 @@ const DesignPage = () => {
             }}
           >
             <DialogHeader>
-              <DialogTitle>创建新工作流</DialogTitle>
+              <DialogTitle className="text-gray-900 dark:text-white">
+                创建新工作流
+              </DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form
@@ -692,11 +694,17 @@ const DesignPage = () => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>工作流名称</FormLabel>
+                      <FormLabel className="text-gray-700 dark:text-gray-200">
+                        工作流名称
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="输入工作流名称" {...field} />
+                        <Input
+                          placeholder="输入工作流名称"
+                          className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500 dark:text-red-400" />
                     </FormItem>
                   )}
                 />
@@ -705,16 +713,26 @@ const DesignPage = () => {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>描述</FormLabel>
+                      <FormLabel className="text-gray-700 dark:text-gray-200">
+                        描述
+                      </FormLabel>
                       <FormControl>
-                        <Textarea placeholder="输入描述信息" {...field} />
+                        <Textarea
+                          placeholder="输入描述信息"
+                          className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-500 dark:text-red-400" />
                     </FormItem>
                   )}
                 />
                 <DialogFooter>
-                  <Button type="submit" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                  >
                     {isLoading ? '保存中...' : '保存工作流'}
                   </Button>
                 </DialogFooter>
