@@ -54,6 +54,15 @@ const KindField: React.FC<KindFieldProps> = (props) => {
     }
   };
 
+  // 当组件挂载时，如果没有初始值且有可用选项，使用第一个选项作为默认值
+  useEffect(() => {
+    if (!formData && hasAvailableKindOptions && kindOptions.length > 0) {
+      const defaultValue = kindOptions[0];
+      setInputValue(defaultValue);
+      onChange(defaultValue);
+    }
+  }, []);
+
   const kindOptions = useMemo(() => {
     if (
       nodeData.manifest_type_identifier ===
@@ -123,7 +132,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             }
           }}
           disabled={!hasAvailableKindOptions}
-          value={inputValue}
+          value={inputValue || (hasAvailableKindOptions ? kindOptions[0] : '')}
         >
           <SelectTrigger
             className={`w-full ${

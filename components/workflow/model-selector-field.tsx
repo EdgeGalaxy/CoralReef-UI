@@ -77,7 +77,6 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
   // 状态管理
   const [isKindMode, setIsKindMode] = useState(allKindOptions);
   const [inputValue, setInputValue] = useState(formData || '');
-  const [isLoadingInputModels, setIsLoadingInputModels] = useState(false);
 
   const session = useSession();
   const workspaceId = session.data?.user.select_workspace_id;
@@ -201,16 +200,6 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
     }
   }, [formData]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  const handleInputBlur = () => {
-    if (inputValue !== formData) {
-      onChange(inputValue);
-    }
-  };
-
   const handleSelectChange = (selectedValue: string) => {
     setInputValue(selectedValue);
     onChange(selectedValue);
@@ -277,71 +266,19 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
     fieldSchema: any,
     schema: any
   ): string | undefined => {
-    // 如果是布尔类型字段，寻找布尔类型的引用
-    const isBooleanField = determineIfBooleanField(fieldSchema, schema);
-    const isStringField = determineIfStringField(fieldSchema, schema);
-
-    if (isBooleanField) {
-      // 寻找布尔类型的输入参数引用
+    // 如果是模型ID字段，优先使用模型ID类型的引用
+    if (props.name.includes('model_id')) {
       return refs.find(
         (ref) =>
           ref.startsWith('$inputs.') &&
-          availableKindValues.boolean?.some(
+          availableKindValues.roboflow_model_id?.some(
             (prop) => prop.property_name === ref
           )
-      );
-    } else if (isStringField && props.name.includes('model_id')) {
-      // 对于模型ID字段，寻找字符串类型的引用
-      return refs.find(
-        (ref) =>
-          ref.startsWith('$inputs.') &&
-          (availableKindValues.string?.some(
-            (prop) => prop.property_name === ref
-          ) ||
-            availableKindValues.roboflow_model_id?.some(
-              (prop) => prop.property_name === ref
-            ))
       );
     }
 
     // 默认返回第一个引用
     return refs[0];
-  };
-
-  // 判断字段是否为布尔类型
-  const determineIfBooleanField = (fieldSchema: any, schema: any): boolean => {
-    // 直接检查字段类型
-    if (fieldSchema?.type === 'boolean') return true;
-
-    // 检查anyOf中是否包含布尔类型
-    if (fieldSchema?.anyOf) {
-      return fieldSchema.anyOf.some((item: any) => item.type === 'boolean');
-    }
-
-    // 检查原始schema
-    if (schema?.anyOf) {
-      return schema.anyOf.some((item: any) => item.type === 'boolean');
-    }
-
-    return false;
-  };
-
-  // 判断字段是否为字符串类型
-  const determineIfStringField = (fieldSchema: any, schema: any): boolean => {
-    // 直接检查字段类型
-    if (fieldSchema?.type === 'string') return true;
-
-    // 检查anyOf中是否包含字符串类型
-    if (fieldSchema?.anyOf) {
-      return fieldSchema.anyOf.some((item: any) => item.type === 'string');
-    }
-
-    // 检查原始schema
-    if (schema?.anyOf) {
-      return schema.anyOf.some((item: any) => item.type === 'string');
-    }
-
-    return false;
   };
 
   const handleRetry = () => {
@@ -439,7 +376,9 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
           // 引用模式：显示kind选择器
           <Select
             onValueChange={handleSelectChange}
-            value={inputValue}
+            value={
+              inputValue || (hasAvailableKindOptions ? kindOptions[0] : '')
+            }
             disabled={!hasAvailableKindOptions}
           >
             <SelectTrigger
@@ -558,19 +497,9 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
       )}
       {isKindMode &&
         hasAvailableKindOptions &&
-        determineIfBooleanField(
-          nodeData.block_schema.properties?.[props.name],
-          originalSchema || schema
-        ) && (
-          <p className="mt-1 text-xs text-blue-500 dark:text-blue-300">
-            提示：此为布尔类型字段，请选择布尔类型的输入参数引用
-          </p>
-        )}
-      {isKindMode &&
-        hasAvailableKindOptions &&
         props.name.includes('model_id') && (
           <p className="mt-1 text-xs text-blue-500 dark:text-blue-300">
-            提示：此为模型ID字段，请选择字符串类型的输入参数引用
+            提示：此为模型ID字段，请选择合适的输入参数引用
           </p>
         )}
     </div>
