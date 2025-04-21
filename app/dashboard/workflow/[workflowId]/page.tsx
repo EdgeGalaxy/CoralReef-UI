@@ -837,7 +837,6 @@ const DesignPage = () => {
               nodeData={selectedNode.data}
               onFormChange={onFormChange}
               availableKindValues={availableKindValues}
-              kindsConnections={kindsConnections}
               onDeleteNode={
                 selectedNode.type !== 'builtInNode' ? onDeleteNode : () => {}
               }

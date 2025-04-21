@@ -14,17 +14,11 @@ import { Link1Icon } from '@radix-ui/react-icons';
 import { Label } from '@/components/ui/label';
 
 import { outputNode } from '@/constants/init-data';
-import {
-  NodeData,
-  PropertyDefinition,
-  KindsConnections,
-  Kind
-} from '@/constants/block';
+import { NodeData, PropertyDefinition, Kind } from '@/constants/block';
 
 interface KindFieldProps extends FieldProps {
   nodeData: NodeData;
   availableKindValues: Record<string, PropertyDefinition[]>;
-  kindsConnections: KindsConnections;
 }
 
 const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
@@ -33,7 +27,6 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
     nodeData,
     formData,
     availableKindValues,
-    kindsConnections,
     uiSchema = {},
     schema
   } = props;
@@ -121,7 +114,7 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
         return [];
       }) || []
     );
-  }, [schema, nodeData, kindsConnections, availableKindValues, originalSchema]);
+  }, [schema, nodeData, availableKindValues, originalSchema]);
 
   const hasAvailableKindOptions = useMemo(() => {
     console.log('has', kindOptions);

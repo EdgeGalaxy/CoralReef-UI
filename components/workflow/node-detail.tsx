@@ -16,7 +16,6 @@ import { useSession } from 'next-auth/react';
 import {
   NodeData,
   PropertyDefinition,
-  KindsConnections,
   skipFormFields
 } from '@/constants/block';
 
@@ -144,7 +143,6 @@ interface NodeDetailProps {
   nodeData: NodeData;
   onFormChange: (formData: any) => void;
   availableKindValues: Record<string, PropertyDefinition[]>;
-  kindsConnections: KindsConnections;
   onDeleteNode: () => void;
 }
 
@@ -155,7 +153,6 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
     nodeData,
     onFormChange,
     availableKindValues,
-    kindsConnections,
     onDeleteNode
   }) => {
     // 为深色模式添加自定义样式
@@ -384,7 +381,6 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
                 {...props}
                 nodeData={nodeData}
                 availableKindValues={availableKindValues}
-                kindsConnections={kindsConnections}
               />
             );
           }
@@ -394,11 +390,10 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
               {...props}
               availableKindValues={availableKindValues}
               nodeData={nodeData}
-              kindsConnections={kindsConnections}
             />
           );
         },
-        [availableKindValues, nodeData, kindsConnections]
+        [availableKindValues, nodeData]
       ),
       KindField: React.useCallback(
         (props: any) => {
@@ -407,11 +402,10 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
               {...props}
               nodeData={nodeData}
               availableKindValues={availableKindValues}
-              kindsConnections={kindsConnections}
             />
           );
         },
-        [availableKindValues, nodeData, kindsConnections]
+        [availableKindValues, nodeData]
       ),
       ParamTypeField: React.useCallback((props: any) => {
         return <ParamTypeField {...props} />;
