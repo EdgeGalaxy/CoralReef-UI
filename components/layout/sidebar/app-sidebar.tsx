@@ -2,7 +2,14 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { Home, Workflow, Server, CircuitBoard, Settings } from 'lucide-react';
+import {
+  Home,
+  Workflow,
+  Server,
+  CircuitBoard,
+  Settings,
+  Blocks
+} from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import Image from 'next/image';
@@ -56,6 +63,11 @@ const data = {
       title: '模型',
       url: '/dashboard/ml-models',
       icon: CircuitBoard
+    },
+    {
+      title: '区块翻译',
+      url: '/dashboard/blocks',
+      icon: Blocks
     },
     {
       title: '设置',
