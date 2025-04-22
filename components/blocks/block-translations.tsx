@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +39,7 @@ import {
   type BlockTranslationCreate,
   type BlockTranslationUpdate
 } from '@/lib/blocks';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 
 export function BlockTranslations() {
   const { data: session } = useSession();
@@ -54,11 +55,13 @@ export function BlockTranslations() {
     language: 'en'
   });
 
+  const api = useAuthApi();
+
   const loadBlocks = async () => {
-    if (!session?.user?.token) return;
+    if (!session?.user) return;
     setIsLoading(true);
     try {
-      const data = await getBlockTranslations(session.user.token);
+      const data = await getBlockTranslations(api);
       if (data) {
         setBlocks(data);
       }
@@ -69,10 +72,15 @@ export function BlockTranslations() {
     }
   };
 
+  useEffect(() => {
+    loadBlocks();
+  }, []);
+
   const handleCreate = async () => {
-    if (!session?.user?.token) return;
+    if (!session?.user) return;
+    setIsLoading(true);
     try {
-      const result = await createBlockTranslation(session.user.token, formData);
+      const result = await createBlockTranslation(api, formData);
       if (result) {
         setBlocks([...blocks, result]);
         setIsDialogOpen(false);
@@ -80,6 +88,8 @@ export function BlockTranslations() {
       }
     } catch (error) {
       console.error('Failed to create block:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,13 +97,10 @@ export function BlockTranslations() {
     blockId: string,
     data: BlockTranslationUpdate
   ) => {
-    if (!session?.user?.token) return;
+    if (!session?.user) return;
+    setIsLoading(true);
     try {
-      const result = await updateBlockTranslation(
-        session.user.token,
-        blockId,
-        data
-      );
+      const result = await updateBlockTranslation(api, blockId, data);
       if (result) {
         setBlocks(
           blocks.map((block) => (block.id === blockId ? result : block))
@@ -101,28 +108,31 @@ export function BlockTranslations() {
       }
     } catch (error) {
       console.error('Failed to update block:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (blockId: string) => {
-    if (!session?.user?.token) return;
+    if (!session?.user) return;
+    setIsLoading(true);
     try {
-      const success = await deleteBlockTranslation(session.user.token, blockId);
+      const success = await deleteBlockTranslation(api, blockId);
       if (success) {
         setBlocks(blocks.filter((block) => block.id !== blockId));
       }
     } catch (error) {
       console.error('Failed to delete block:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSync = async () => {
-    if (!session?.user?.token) return;
+    if (!session?.user) return;
+    setIsLoading(true);
     try {
-      const result = await syncBlockTranslations(session.user.token, {
-        source: 'external',
-        data: blocks
-      });
+      const result = await syncBlockTranslations(api);
       if (result) {
         setBlocks(result);
         toast({
@@ -132,6 +142,8 @@ export function BlockTranslations() {
       }
     } catch (error) {
       console.error('Failed to sync blocks:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -140,10 +152,12 @@ export function BlockTranslations() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">区块翻译管理</h2>
         <div className="space-x-2">
-          <Button onClick={handleSync}>同步</Button>
+          <Button onClick={handleSync} disabled={isLoading}>
+            同步{isLoading && '中...'}
+          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>创建新翻译</Button>
+              <Button disabled={isLoading}>创建新翻译</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -185,7 +199,9 @@ export function BlockTranslations() {
                     }
                   />
                 </div>
-                <Button onClick={handleCreate}>创建</Button>
+                <Button onClick={handleCreate} disabled={isLoading}>
+                  创建{isLoading && '中...'}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -213,6 +229,7 @@ export function BlockTranslations() {
                 <div className="space-x-2">
                   <Button
                     variant="outline"
+                    disabled={isLoading}
                     onClick={() => {
                       setEditingBlock(block);
                       setIsDialogOpen(true);
@@ -222,9 +239,10 @@ export function BlockTranslations() {
                   </Button>
                   <Button
                     variant="destructive"
+                    disabled={isLoading}
                     onClick={() => handleDelete(block.id)}
                   >
-                    删除
+                    删除{isLoading && '中...'}
                   </Button>
                 </div>
               </TableCell>

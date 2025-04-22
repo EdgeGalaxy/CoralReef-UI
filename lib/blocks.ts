@@ -1,4 +1,4 @@
-import { createApi } from './utils';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from './error-handle';
 import { toast } from '@/components/ui/use-toast';
 
@@ -30,11 +30,10 @@ export interface BlockTranslationSync {
 }
 
 export async function createBlockTranslation(
-  token: string,
+  api: ReturnType<typeof useAuthApi>,
   data: BlockTranslationCreate
 ): Promise<BlockTranslation | null> {
-  const api = createApi(token);
-  return handleApiRequest(() => api.post('blocks', { json: data }), {
+  return handleApiRequest(() => api.post('api/reef/blocks', { json: data }), {
     toast,
     successTitle: '创建成功',
     errorTitle: '创建失败'
@@ -42,26 +41,25 @@ export async function createBlockTranslation(
 }
 
 export async function getBlockTranslations(
-  token: string,
-  language?: string,
+  api: ReturnType<typeof useAuthApi>,
   disabled?: boolean
 ): Promise<BlockTranslation[] | null> {
-  const api = createApi(token);
   const params = new URLSearchParams();
-  if (language) params.append('language', language);
   if (disabled !== undefined) params.append('disabled', disabled.toString());
 
-  return handleApiRequest(() => api.get(`blocks?${params.toString()}`), {
-    toast,
-    errorTitle: '获取失败'
-  });
+  return handleApiRequest(
+    () => api.get(`api/reef/blocks?${params.toString()}`),
+    {
+      toast,
+      errorTitle: '获取失败'
+    }
+  );
 }
 
 export async function getBlockTranslation(
-  token: string,
+  api: ReturnType<typeof useAuthApi>,
   blockId: string
 ): Promise<BlockTranslation | null> {
-  const api = createApi(token);
   return handleApiRequest(() => api.get(`blocks/${blockId}`), {
     toast,
     errorTitle: '获取失败'
@@ -69,39 +67,47 @@ export async function getBlockTranslation(
 }
 
 export async function updateBlockTranslation(
-  token: string,
+  api: ReturnType<typeof useAuthApi>,
   blockId: string,
   data: BlockTranslationUpdate
 ): Promise<BlockTranslation | null> {
-  const api = createApi(token);
-  return handleApiRequest(() => api.put(`blocks/${blockId}`, { json: data }), {
-    toast,
-    successTitle: '更新成功',
-    errorTitle: '更新失败'
-  });
+  return handleApiRequest(
+    () => api.put(`api/reef/blocks/${blockId}`, { json: data }),
+    {
+      toast,
+      successTitle: '更新成功',
+      errorTitle: '更新失败'
+    }
+  );
 }
 
 export async function deleteBlockTranslation(
-  token: string,
+  api: ReturnType<typeof useAuthApi>,
   blockId: string
 ): Promise<boolean> {
-  const api = createApi(token);
-  const result = await handleApiRequest(() => api.delete(`blocks/${blockId}`), {
-    toast,
-    successTitle: '删除成功',
-    errorTitle: '删除失败'
-  });
+  const result = await handleApiRequest(
+    () => api.delete(`api/reef/blocks/${blockId}`),
+    {
+      toast,
+      successTitle: '删除成功',
+      errorTitle: '删除失败'
+    }
+  );
   return result !== null;
 }
 
 export async function syncBlockTranslations(
-  token: string,
-  data: BlockTranslationSync
+  api: ReturnType<typeof useAuthApi>
 ): Promise<BlockTranslation[] | null> {
-  const api = createApi(token);
-  return handleApiRequest(() => api.post('blocks/sync', { json: data }), {
-    toast,
-    successTitle: '同步成功',
-    errorTitle: '同步失败'
-  });
+  return handleApiRequest(
+    () =>
+      api.post('api/reef/blocks/sync', {
+        json: {}
+      }),
+    {
+      toast,
+      successTitle: '同步成功',
+      errorTitle: '同步失败'
+    }
+  );
 }
