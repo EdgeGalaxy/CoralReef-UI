@@ -39,25 +39,12 @@ export async function createBlockTranslation(
   api: ReturnType<typeof useAuthApi>,
   data: BlockTranslationCreate
 ): Promise<BlockTranslation | null> {
-  return handleApiRequest(() => api.post('api/reef/blocks', { json: data }), {
-    toast,
-    successTitle: '创建成功',
-    errorTitle: '创建失败'
-  });
-}
-
-export async function getBlockTranslations(
-  api: ReturnType<typeof useAuthApi>,
-  disabled?: boolean
-): Promise<BlockTranslation[] | null> {
-  const params = new URLSearchParams();
-  if (disabled !== undefined) params.append('disabled', disabled.toString());
-
   return handleApiRequest(
-    () => api.get(`api/reef/blocks?${params.toString()}`),
+    () => api.post('api/reef/workflows/blocks', { json: data }),
     {
       toast,
-      errorTitle: '获取失败'
+      successTitle: '创建成功',
+      errorTitle: '创建失败'
     }
   );
 }
@@ -66,10 +53,13 @@ export async function getBlockTranslation(
   api: ReturnType<typeof useAuthApi>,
   blockId: string
 ): Promise<BlockTranslation | null> {
-  return handleApiRequest(() => api.get(`blocks/${blockId}`), {
-    toast,
-    errorTitle: '获取失败'
-  });
+  return handleApiRequest(
+    () => api.get(`api/reef/workflows/blocks/${blockId}`),
+    {
+      toast,
+      errorTitle: '获取失败'
+    }
+  );
 }
 
 export async function updateBlockTranslation(
@@ -78,7 +68,7 @@ export async function updateBlockTranslation(
   data: BlockTranslationUpdate
 ): Promise<BlockTranslation | null> {
   return handleApiRequest(
-    () => api.put(`api/reef/blocks/${blockId}`, { json: data }),
+    () => api.put(`api/reef/workflows/blocks/${blockId}`, { json: data }),
     {
       toast,
       successTitle: '更新成功',
@@ -92,7 +82,7 @@ export async function deleteBlockTranslation(
   blockId: string
 ): Promise<boolean> {
   const result = await handleApiRequest(
-    () => api.delete(`api/reef/blocks/${blockId}`),
+    () => api.delete(`api/reef/workflows/blocks/${blockId}`),
     {
       toast,
       successTitle: '删除成功',
@@ -107,7 +97,7 @@ export async function syncBlockTranslations(
 ): Promise<BlockTranslation[] | null> {
   return handleApiRequest(
     () =>
-      api.post('api/reef/blocks/sync', {
+      api.post('api/reef/workflows/blocks/sync', {
         json: {}
       }),
     {

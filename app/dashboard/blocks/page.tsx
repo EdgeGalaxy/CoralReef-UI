@@ -20,13 +20,6 @@ const breadcrumbItems = [
 ];
 
 export default function BlocksPage() {
-  const params = useParams();
-  const session = useSession();
-  const workspaceId =
-    (params?.workspaceId as string) ||
-    session.data?.user.select_workspace_id ||
-    '';
-
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -40,7 +33,7 @@ export default function BlocksPage() {
     page_size: number;
     total_pages: number;
     items: BlockTranslation[];
-  }>(`/api/reef/blocks?page=${page}&page_size=${pageSize}`);
+  }>(`/api/reef/workflows/blocks?page=${page}&page_size=${pageSize}`);
 
   if (error) return <DashboardError error={error} reset={() => mutate()} />;
   if (!blocks) return <DashboardLoading />;
