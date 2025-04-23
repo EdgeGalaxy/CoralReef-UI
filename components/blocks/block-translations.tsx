@@ -3,21 +3,6 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import {
-  ChevronFirst,
-  ChevronLast,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -34,16 +19,14 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { BlockTranslationTable } from '@/components/tables/block/client';
 import {
+  BlockTranslation,
+  BlockTranslationCreate,
+  Language,
   createBlockTranslation,
-  getBlockTranslations,
-  updateBlockTranslation,
-  deleteBlockTranslation,
-  syncBlockTranslations,
-  type BlockTranslation,
-  type BlockTranslationCreate,
-  type BlockTranslationUpdate
+  deleteBlockTranslation
 } from '@/lib/blocks';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
 
@@ -56,15 +39,15 @@ interface BlockTranslationsProps {
     items: BlockTranslation[];
   };
   mutate: () => Promise<any>;
-  setCurrentPage: (page: number) => void;
-  setPageSize: (pageSize: number) => void;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function BlockTranslations({
   blocks,
   mutate,
-  setCurrentPage,
-  setPageSize
+  onPageChange,
+  onPageSizeChange
 }: BlockTranslationsProps) {
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
@@ -80,10 +63,6 @@ export function BlockTranslations({
   });
   const api = useAuthApi();
 
-  // 确保blocks和items存在
-  if (!blocks || !blocks.items) {
-    return <div className="p-4 text-center text-gray-500">暂无数据</div>;
-  }
   const handleCreate = async () => {
     if (!session?.user) return;
     setIsLoading(true);
@@ -106,24 +85,6 @@ export function BlockTranslations({
     }
   };
 
-  const handleUpdate = async (
-    blockId: string,
-    data: BlockTranslationUpdate
-  ) => {
-    if (!session?.user) return;
-    setIsLoading(true);
-    try {
-      const result = await updateBlockTranslation(api, blockId, data);
-      if (result) {
-        await mutate();
-      }
-    } catch (error) {
-      console.error('Failed to update block:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleDelete = async (blockId: string) => {
     if (!session?.user) return;
     setIsLoading(true);
@@ -139,33 +100,11 @@ export function BlockTranslations({
     }
   };
 
-  const handleSync = async () => {
-    if (!session?.user) return;
-    setIsLoading(true);
-    try {
-      const result = await syncBlockTranslations(api);
-      if (result) {
-        await mutate();
-        toast({
-          title: '同步成功',
-          description: '区块翻译已成功同步'
-        });
-      }
-    } catch (error) {
-      console.error('Failed to sync blocks:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">区块翻译管理</h2>
         <div className="space-x-2">
-          <Button onClick={handleSync} disabled={isLoading}>
-            同步{isLoading && '中...'}
-          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button disabled={isLoading}>创建新翻译</Button>
@@ -225,7 +164,6 @@ export function BlockTranslations({
                         const schema = JSON.parse(e.target.value);
                         setFormData({ ...formData, block_schema: schema });
                       } catch (error) {
-                        // 如果JSON解析失败，不更新状态
                         console.error('Invalid JSON schema');
                       }
                     }}
@@ -241,134 +179,14 @@ export function BlockTranslations({
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>区块名称</TableHead>
-            <TableHead>语言</TableHead>
-            <TableHead>标识符</TableHead>
-            <TableHead>状态</TableHead>
-            <TableHead>操作</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {blocks.items.map((block) => (
-            <TableRow key={block.id}>
-              <TableCell>{block.human_friendly_block_name}</TableCell>
-              <TableCell>{block.language}</TableCell>
-              <TableCell>{block.manifest_type_identifier}</TableCell>
-              <TableCell>{block.disabled ? '禁用' : '启用'}</TableCell>
-              <TableCell>
-                <div className="space-x-2">
-                  <Button
-                    variant="outline"
-                    disabled={isLoading}
-                    onClick={() => {
-                      setEditingBlock(block);
-                      setIsDialogOpen(true);
-                    }}
-                  >
-                    编辑
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    disabled={isLoading}
-                    onClick={() => handleDelete(block.id)}
-                  >
-                    删除{isLoading && '中...'}
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          共 {blocks.total} 条记录
-        </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">每页记录数</p>
-            <Select
-              value={String(blocks.page_size)}
-              onValueChange={(value) => {
-                const newPageSize = Number(value);
-                setPageSize(newPageSize);
-                setCurrentPage(1);
-                mutate();
-              }}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={blocks.page_size} />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {[10, 20, 30, 40, 50].map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-            第 {blocks.page} / {blocks.total_pages} 页
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
-              onClick={() => {
-                setCurrentPage(1);
-                mutate();
-              }}
-              disabled={blocks.page <= 1}
-            >
-              <span className="sr-only">跳转到第一页</span>
-              <ChevronFirst className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => {
-                const newPage = blocks.page - 1;
-                setCurrentPage(newPage);
-                mutate();
-              }}
-              disabled={blocks.page <= 1}
-            >
-              <span className="sr-only">上一页</span>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => {
-                const newPage = blocks.page + 1;
-                setCurrentPage(newPage);
-                mutate();
-              }}
-              disabled={blocks.page >= blocks.total_pages}
-            >
-              <span className="sr-only">下一页</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              className="hidden h-8 w-8 p-0 lg:flex"
-              onClick={() => {
-                const newPage = blocks.total_pages;
-                setCurrentPage(newPage);
-                mutate();
-              }}
-              disabled={blocks.page >= blocks.total_pages}
-            >
-              <span className="sr-only">跳转到最后一页</span>
-              <ChevronLast className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <BlockTranslationTable
+        blocks={blocks}
+        onSelectBlock={setEditingBlock}
+        onDeleteBlock={handleDelete}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
