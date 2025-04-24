@@ -1,5 +1,6 @@
 import { BlockTranslation } from '@/lib/blocks';
 import { Switch } from '@/components/ui/switch';
+import { format } from 'date-fns';
 
 export interface Column {
   key: string;
@@ -21,7 +22,14 @@ export const columns: Column[] = [
   },
   {
     key: 'sync_at',
-    header: '同步时间'
+    header: '同步时间',
+    cell: (item: BlockTranslation) => (
+      <span>
+        {item.sync_at
+          ? format(new Date(item.sync_at), 'yyyy-MM-dd HH:mm:ss')
+          : '-'}
+      </span>
+    )
   },
   {
     key: 'disabled',
