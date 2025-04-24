@@ -24,14 +24,10 @@ import {
   BlockTranslationUpdate,
   Language
 } from '@/lib/blocks';
-import dynamic from 'next/dynamic';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
-
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
-  ssr: false
-});
+import { TranslationForm } from './translation-form';
 
 interface BlockEditModalProps {
   block: BlockTranslation | null;
@@ -68,13 +64,13 @@ export function BlockEditModal({
     try {
       await handleApiRequest(
         () =>
-          api.put(`/api/blocks/${block.id}`, {
+          api.put(`api/reef/workflows/blocks/${block.id}`, {
             json: formData
           }),
         {
           toast,
-          successTitle: '区块更新成功',
-          errorTitle: '区块更新失败',
+          successTitle: '节点更新成功',
+          errorTitle: '节点更新失败',
           onSuccess: async () => {
             await onUpdate();
             handleClose();
@@ -91,6 +87,16 @@ export function BlockEditModal({
     onClose();
   };
 
+  const handlePropertiesChange = (updatedProperties: Record<string, any>) => {
+    setFormData((prev) => ({
+      ...prev,
+      block_schema: {
+        ...prev.block_schema,
+        properties: updatedProperties
+      }
+    }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="flex max-h-[90vh] max-w-[800px] flex-col overflow-hidden">
@@ -99,7 +105,7 @@ export function BlockEditModal({
           <DialogClose />
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
-          <div className="space-y-4">
+          <div className="space-y-4 p-6">
             <div>
               <Label>节点名称</Label>
               <Input
@@ -141,32 +147,13 @@ export function BlockEditModal({
                 }
               />
             </div>
-            <div>
-              <Label>Schema</Label>
-              <div className="h-[400px] rounded-md border">
-                <MonacoEditor
-                  height="400px"
-                  language="json"
-                  theme="vs-dark"
-                  value={JSON.stringify(formData.block_schema ?? {}, null, 2)}
-                  onChange={(value) => {
-                    try {
-                      const schema = JSON.parse(value || '{}');
-                      setFormData({ ...formData, block_schema: schema });
-                    } catch (error) {
-                      console.error('Invalid JSON schema');
-                    }
-                  }}
-                  options={{
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    fontSize: 14,
-                    tabSize: 2
-                  }}
-                />
-              </div>
-            </div>
           </div>
+          {formData.block_schema?.properties && (
+            <TranslationForm
+              properties={formData.block_schema.properties}
+              onChange={handlePropertiesChange}
+            />
+          )}
         </div>
         <DialogFooter className="mt-auto border-t px-4 pt-2">
           <Button variant="outline" onClick={handleClose}>

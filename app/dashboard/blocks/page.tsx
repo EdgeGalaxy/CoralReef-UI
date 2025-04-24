@@ -54,8 +54,8 @@ export default function BlocksPage() {
         <div className="container mx-auto p-4">
           <div className="flex items-center justify-between">
             <Heading
-              title={`区块翻译 (${blocks?.total || 0})`}
-              description="管理区块翻译内容"
+              title={`节点 (${blocks?.total || 0})`}
+              description="管理节点内容"
             />
           </div>
           <Separator className="my-4" />
