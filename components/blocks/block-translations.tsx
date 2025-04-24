@@ -84,7 +84,6 @@ export function BlockTranslations({
       <BlockTranslationTable
         blocks={blocks}
         onSelectBlock={setEditingBlock}
-        onDeleteBlock={handleDelete}
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
         isLoading={isLoading}
