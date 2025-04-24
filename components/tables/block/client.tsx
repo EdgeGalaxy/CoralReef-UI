@@ -35,6 +35,7 @@ interface BlockTranslationTableProps {
   onSelectBlock: (block: BlockTranslation) => void;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  onToggleStatus?: (id: string, disabled: boolean) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -43,6 +44,7 @@ export function BlockTranslationTable({
   onSelectBlock,
   onPageChange,
   onPageSizeChange,
+  onToggleStatus,
   isLoading = false
 }: BlockTranslationTableProps) {
   return (
@@ -73,7 +75,7 @@ export function BlockTranslationTable({
                           </button>
                         </div>
                       ) : column.cell ? (
-                        column.cell(item)
+                        column.cell(item, onToggleStatus)
                       ) : (
                         String(item[column.key as keyof BlockTranslation] || '')
                       )}

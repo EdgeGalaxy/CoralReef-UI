@@ -1,35 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { BlockTranslationTable } from '@/components/tables/block/client';
-import {
-  BlockTranslation,
-  BlockTranslationCreate,
-  Language,
-  createBlockTranslation,
-  deleteBlockTranslation
-} from '@/lib/blocks';
-import { useAuthApi } from '@/components/hooks/useAuthReq';
+import { BlockTranslation } from '@/lib/blocks';
 import { BlockEditModal } from './block-edit-modal';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
+import { useToast } from '@/components/ui/use-toast';
+import { handleApiRequest } from '@/lib/error-handle';
 
 interface BlockTranslationsProps {
   blocks: {
@@ -50,32 +27,28 @@ export function BlockTranslations({
   onPageChange,
   onPageSizeChange
 }: BlockTranslationsProps) {
-  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBlock, setEditingBlock] = useState<BlockTranslation | null>(
     null
   );
-  const [formData, setFormData] = useState<BlockTranslationCreate>({
-    language: 'ZH',
-    human_friendly_block_name: '',
-    block_schema: {},
-    manifest_type_identifier: ''
-  });
   const api = useAuthApi();
+  const { toast } = useToast();
 
-  const handleDelete = async (blockId: string) => {
-    if (!session?.user) return;
-    setIsLoading(true);
+  const handleToggleStatus = async (id: string, disabled: boolean) => {
     try {
-      const success = await deleteBlockTranslation(api, blockId);
-      if (success) {
-        await mutate();
-      }
+      await handleApiRequest(
+        () => api.patch(`api/reef/workflows/blocks/${id}/toggle`),
+        {
+          toast,
+          successTitle: `节点${disabled ? '禁用' : '启用'}成功`,
+          errorTitle: `节点${disabled ? '禁用' : '启用'}失败`,
+          onSuccess: async () => {
+            await mutate();
+          }
+        }
+      );
     } catch (error) {
-      console.error('Failed to delete block:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('切换节点状态失败:', error);
     }
   };
 
@@ -86,6 +59,7 @@ export function BlockTranslations({
         onSelectBlock={setEditingBlock}
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
+        onToggleStatus={handleToggleStatus}
         isLoading={isLoading}
       />
 

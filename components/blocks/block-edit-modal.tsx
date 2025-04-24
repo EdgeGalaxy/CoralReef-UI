@@ -99,7 +99,15 @@ export function BlockEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="flex max-h-[90vh] max-w-[800px] flex-col overflow-hidden">
+      <DialogContent
+        className="flex max-h-[90vh] max-w-[800px] flex-col overflow-hidden"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+        }}
+      >
         <DialogHeader className="border-b">
           <DialogTitle>编辑节点</DialogTitle>
           <DialogClose />
