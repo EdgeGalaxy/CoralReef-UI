@@ -29,6 +29,7 @@ import {
   deleteBlockTranslation
 } from '@/lib/blocks';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
+import { BlockEditModal } from './block-edit-modal';
 
 interface BlockTranslationsProps {
   blocks: {
@@ -101,84 +102,7 @@ export function BlockTranslations({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">区块翻译管理</h2>
-        <div className="space-x-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button disabled={isLoading}>创建新翻译</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>创建新翻译</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>区块名称</Label>
-                  <Input
-                    value={formData.human_friendly_block_name}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        human_friendly_block_name: e.target.value
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>语言</Label>
-                  <Select
-                    value={formData.language}
-                    onValueChange={(value: Language) =>
-                      setFormData({ ...formData, language: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EN">English</SelectItem>
-                      <SelectItem value="ZH">中文</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>标识符</Label>
-                  <Input
-                    value={formData.manifest_type_identifier}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        manifest_type_identifier: e.target.value
-                      })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Schema</Label>
-                  <Textarea
-                    value={JSON.stringify(formData.block_schema, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        const schema = JSON.parse(e.target.value);
-                        setFormData({ ...formData, block_schema: schema });
-                      } catch (error) {
-                        console.error('Invalid JSON schema');
-                      }
-                    }}
-                    placeholder="请输入有效的 JSON"
-                  />
-                </div>
-                <Button onClick={handleCreate} disabled={isLoading}>
-                  创建{isLoading && '中...'}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
+    <div className="flex flex-col gap-4">
       <BlockTranslationTable
         blocks={blocks}
         onSelectBlock={setEditingBlock}
@@ -186,6 +110,13 @@ export function BlockTranslations({
         onPageChange={onPageChange}
         onPageSizeChange={onPageSizeChange}
         isLoading={isLoading}
+      />
+
+      <BlockEditModal
+        block={editingBlock}
+        isOpen={!!editingBlock}
+        onClose={() => setEditingBlock(null)}
+        onUpdate={mutate}
       />
     </div>
   );
