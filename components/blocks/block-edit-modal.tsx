@@ -95,13 +95,13 @@ export function BlockEditModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="flex max-h-[90vh] max-w-[800px] flex-col overflow-hidden">
         <DialogHeader className="border-b">
-          <DialogTitle>编辑区块</DialogTitle>
+          <DialogTitle>编辑节点</DialogTitle>
           <DialogClose />
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-4">
             <div>
-              <Label>区块名称</Label>
+              <Label>节点名称</Label>
               <Input
                 value={formData.human_friendly_block_name ?? ''}
                 onChange={(e) =>

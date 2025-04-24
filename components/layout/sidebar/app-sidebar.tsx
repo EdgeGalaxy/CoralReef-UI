@@ -65,7 +65,7 @@ const data = {
       icon: CircuitBoard
     },
     {
-      title: '区块翻译',
+      title: '节点',
       url: '/dashboard/blocks',
       icon: Blocks
     },

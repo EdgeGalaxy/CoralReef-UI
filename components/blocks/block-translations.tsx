@@ -64,28 +64,6 @@ export function BlockTranslations({
   });
   const api = useAuthApi();
 
-  const handleCreate = async () => {
-    if (!session?.user) return;
-    setIsLoading(true);
-    try {
-      const result = await createBlockTranslation(api, formData);
-      if (result) {
-        await mutate();
-        setIsDialogOpen(false);
-        setFormData({
-          language: 'ZH',
-          human_friendly_block_name: '',
-          block_schema: {},
-          manifest_type_identifier: ''
-        });
-      }
-    } catch (error) {
-      console.error('Failed to create block:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleDelete = async (blockId: string) => {
     if (!session?.user) return;
     setIsLoading(true);
