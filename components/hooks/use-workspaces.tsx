@@ -1,11 +1,7 @@
 'use client';
 
 import type { KyInstance } from 'ky';
-import {
-  WorkspaceDetail,
-  PaginationResponse,
-  WorkspaceResponse
-} from '@/constants/user';
+import { WorkspaceDetail, PaginationResponse } from '@/constants/user';
 
 export function useWorkspaces(api: KyInstance) {
   const getMyWorkspaces = async (
