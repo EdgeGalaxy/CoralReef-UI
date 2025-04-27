@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -67,6 +67,38 @@ function UserManagementDialog({
   onRemoveUser
 }: UserManagementDialogProps) {
   const [userId, setUserId] = useState('');
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [localWorkspace, setLocalWorkspace] = useState<WorkspaceDetail | null>(
+    workspace
+  );
+
+  useEffect(() => {
+    if (workspace) {
+      setLocalWorkspace(workspace);
+    }
+  }, [workspace]);
+
+  const handleAddUser = async () => {
+    if (localWorkspace && userId) {
+      setIsAddingUser(true);
+      try {
+        await onAddUser(localWorkspace.id, currentUserId, userId, 'member');
+        setUserId('');
+      } finally {
+        setIsAddingUser(false);
+      }
+    }
+  };
+
+  const handleRemoveUser = async (workspaceId: string, userId: string) => {
+    setRemovingUserId(userId);
+    try {
+      await onRemoveUser(workspaceId, userId);
+    } finally {
+      setRemovingUserId(null);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -82,19 +114,12 @@ function UserManagementDialog({
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
             />
-            <Button
-              onClick={() => {
-                if (workspace && userId) {
-                  onAddUser(workspace.id, currentUserId, userId, 'member');
-                  setUserId('');
-                }
-              }}
-            >
-              添加成员
+            <Button onClick={handleAddUser} disabled={isAddingUser}>
+              {isAddingUser ? '添加中...' : '添加成员'}
             </Button>
           </div>
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-gray-100 shadow-sm">
               <TableRow>
                 <TableHead className="w-[200px]">用户名</TableHead>
                 <TableHead className="w-[250px]">邮箱</TableHead>
@@ -104,27 +129,34 @@ function UserManagementDialog({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {workspace?.users?.map((user) => (
+              {localWorkspace?.users?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>{user.join_at}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="destructive"
+                    <button
                       onClick={() =>
-                        workspace && onRemoveUser(workspace.id, user.id)
+                        localWorkspace &&
+                        handleRemoveUser(localWorkspace.id, user.id)
                       }
-                      disabled={user.id === currentUserId}
+                      disabled={
+                        user.id === currentUserId || removingUserId === user.id
+                      }
                       title={
                         user.id === currentUserId
-                          ? '无法移除当前用户'
+                          ? '管理员用户不可移除'
                           : '移除用户'
                       }
+                      className={`${
+                        user.id === currentUserId || removingUserId === user.id
+                          ? 'cursor-not-allowed text-gray-400'
+                          : 'text-red-500 hover:text-red-700'
+                      }`}
                     >
-                      移除
-                    </Button>
+                      {removingUserId === user.id ? '移除中...' : '移除'}
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -150,6 +182,45 @@ export function WorkspaceTable({
     useState<WorkspaceDetail | null>(null);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
+  const handleManageUsers = async (
+    workspaceId: string,
+    ownerUserId: string,
+    userId: string,
+    role: string
+  ) => {
+    await onManageUsers(workspaceId, ownerUserId, userId, role);
+    // 刷新工作空间用户列表
+    await mutate();
+
+    // 重新获取最新的工作空间数据并更新选中的工作空间
+    const updatedWorkspaces = await mutate();
+    if (updatedWorkspaces && updatedWorkspaces.items) {
+      const updatedWorkspace = updatedWorkspaces.items.find(
+        (w: WorkspaceDetail) => w.id === workspaceId
+      );
+      if (updatedWorkspace) {
+        setSelectedWorkspace(updatedWorkspace);
+      }
+    }
+  };
+
+  const handleRemoveUser = async (workspaceId: string, userId: string) => {
+    await onRemoveUser(workspaceId, userId);
+    // 刷新工作空间用户列表
+    await mutate();
+
+    // 重新获取最新的工作空间数据并更新选中的工作空间
+    const updatedWorkspaces = await mutate();
+    if (updatedWorkspaces && updatedWorkspaces.items) {
+      const updatedWorkspace = updatedWorkspaces.items.find(
+        (w: WorkspaceDetail) => w.id === workspaceId
+      );
+      if (updatedWorkspace) {
+        setSelectedWorkspace(updatedWorkspace);
+      }
+    }
+  };
+
   const table = useReactTable({
     data: workspaces.items || [],
     columns,
@@ -172,7 +243,7 @@ export function WorkspaceTable({
     <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-100 shadow-sm">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -230,8 +301,8 @@ export function WorkspaceTable({
         isOpen={isUserDialogOpen}
         onClose={() => setIsUserDialogOpen(false)}
         currentUserId={currentUserId}
-        onAddUser={onManageUsers}
-        onRemoveUser={onRemoveUser}
+        onAddUser={handleManageUsers}
+        onRemoveUser={handleRemoveUser}
       />
     </div>
   );

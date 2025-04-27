@@ -38,29 +38,29 @@ export const columns: ColumnDef<WorkspaceDetail>[] = [
     cell: ({ row, table }) => {
       const workspace = row.original;
       return (
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
+        <div className="flex items-center gap-2">
+          <button
             onClick={() => {
               const { meta } = table.options;
               if (meta?.onManageUsers) {
                 meta.onManageUsers(workspace);
               }
             }}
+            className="text-blue-500 hover:text-blue-700"
           >
             管理成员
-          </Button>
-          <Button
-            variant="destructive"
+          </button>
+          <button
             onClick={() => {
               const { meta } = table.options;
               if (meta?.onDelete) {
                 meta.onDelete(workspace.id);
               }
             }}
+            className="text-red-500 hover:text-red-700"
           >
             删除
-          </Button>
+          </button>
         </div>
       );
     }
