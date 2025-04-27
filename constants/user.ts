@@ -41,14 +41,31 @@ export interface WorkspaceCreate {
   max_users?: number;
 }
 
+export interface WorkspaceUser {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  join_at: string;
+}
+
 export interface WorkspaceResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  items: WorkspaceDetail[];
+}
+
+export interface WorkspaceDetail {
   id: string;
   name: string;
   description?: string;
-  max_users: number;
-  owner_user_id: string;
+  users?: WorkspaceUser[];
   created_at: string;
   updated_at: string;
+  user_count: number;
+  current_user_role: string;
 }
 
 export interface PaginationResponse<T> {

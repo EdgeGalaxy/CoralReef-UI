@@ -72,10 +72,10 @@ const authConfig = {
                 Authorization: `Bearer ${data.access_token}`
               }
             })
-            .json()) as WorkspaceResponse[];
+            .json()) as WorkspaceResponse;
 
           userData.access_token = data.access_token;
-          userData.select_workspace_id = userWorkspaces.find(
+          userData.select_workspace_id = userWorkspaces.items.find(
             (workspace) => workspace.owner_user_id === userData.id
           )?.id;
           console.log('userData', userData);

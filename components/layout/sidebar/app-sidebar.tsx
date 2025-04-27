@@ -27,7 +27,7 @@ import {
 import CreateWorkspaceDialog from '@/components/modal/create-workspace';
 import {
   UserProfile,
-  WorkspaceResponse,
+  WorkspaceDetail,
   PaginationResponse
 } from '@/constants/user';
 
@@ -99,7 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     data: workspacesData,
     error: workspacesError,
     mutate: mutateWorkspaces
-  } = useAuthSWR<PaginationResponse<WorkspaceResponse>>(
+  } = useAuthSWR<PaginationResponse<WorkspaceDetail>>(
     '/api/reef/workspaces/me'
   );
 
@@ -188,7 +188,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           selectedWorkSpaceId={selectedWorkspace}
           onWorkSpaceSelect={handleWorkspaceSelect}
           onCreateWorkSpace={() => setIsCreateWorkspaceOpen(true)}
-          isLoading={!workspacesData?.items || !workspacesError}
+          isLoading={!workspacesData}
           error={workspacesError}
         />
       </SidebarHeader>

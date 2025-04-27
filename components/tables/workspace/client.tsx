@@ -40,7 +40,8 @@ interface WorkspaceTableProps {
     userId: string,
     role: string
   ) => void;
-  onDelete: (id: string) => void;
+  onRemoveUser: (workspaceId: string, userId: string) => void;
+  onDelete: (workspaceId: string) => void;
 }
 
 interface UserManagementDialogProps {
@@ -84,7 +85,7 @@ function UserManagementDialog({
             <Button
               onClick={() => {
                 if (workspace && userId) {
-                  onAddUser(workspace.id, '1', userId, 'member');
+                  onAddUser(workspace.id, currentUserId, userId, 'member');
                   setUserId('');
                 }
               }}
@@ -142,6 +143,7 @@ export function WorkspaceTable({
   onPageChange,
   onPageSizeChange,
   onManageUsers,
+  onRemoveUser,
   onDelete
 }: WorkspaceTableProps) {
   const [selectedWorkspace, setSelectedWorkspace] =
@@ -157,7 +159,12 @@ export function WorkspaceTable({
         setSelectedWorkspace(workspace);
         setIsUserDialogOpen(true);
       },
-      onDelete
+      onRemoveUser: (workspaceId: string, userId: string) => {
+        onRemoveUser(workspaceId, userId);
+      },
+      onDelete: (workspaceId: string) => {
+        onDelete(workspaceId);
+      }
     }
   });
 
@@ -224,7 +231,7 @@ export function WorkspaceTable({
         onClose={() => setIsUserDialogOpen(false)}
         currentUserId={currentUserId}
         onAddUser={onManageUsers}
-        onRemoveUser={onDelete}
+        onRemoveUser={onRemoveUser}
       />
     </div>
   );

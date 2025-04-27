@@ -135,11 +135,11 @@ export default function WorkspaceSettingsPage() {
           <WorkspaceTable
             workspaces={workspaces}
             mutate={mutate}
-            currentUserId={currentUserId}
+            currentUserId={currentUserId || ''}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
             onManageUsers={handleAddUser}
-            onDelete={handleDeleteWorkspace}
+            onRemoveUser={handleRemoveUser}
           />
         </div>
       </div>

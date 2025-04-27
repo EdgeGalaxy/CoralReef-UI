@@ -7,7 +7,8 @@ import { WorkspaceDetail } from '@/types/workspace';
 declare module '@tanstack/table-core' {
   interface TableMeta<TData extends unknown> {
     onManageUsers: (workspace: WorkspaceDetail) => void;
-    onDelete: (id: string) => void;
+    onRemoveUser: (workspaceId: string, userId: string) => void;
+    onDelete: (workspaceId: string) => void;
   }
 }
 
