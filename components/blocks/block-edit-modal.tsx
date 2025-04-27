@@ -146,6 +146,7 @@ export function BlockEditModal({
             <div>
               <Label>标识符</Label>
               <Input
+                disabled={true}
                 value={formData.manifest_type_identifier ?? ''}
                 onChange={(e) =>
                   setFormData({

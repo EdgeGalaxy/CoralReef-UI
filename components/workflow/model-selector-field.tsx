@@ -94,9 +94,7 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
   const findModelNameById = (modelId: string): string => {
     if (!modelList.length || !modelId) return '';
     const model = modelList.find((m) => m.id === modelId);
-    return model
-      ? `${model.name} ${model.version ? `(${model.version})` : ''}`
-      : modelId;
+    return model ? model.name : modelId;
   };
 
   const displayValue = useMemo(() => {
@@ -174,8 +172,8 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
               </SelectItem>
             ) : (
               modelList.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.name} {model.version ? `(${model.version})` : ''}
+                <SelectItem key={model.id} value={model.name}>
+                  {model.name}
                 </SelectItem>
               ))
             )}

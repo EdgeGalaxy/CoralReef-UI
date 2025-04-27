@@ -25,7 +25,11 @@ import {
   SidebarRail
 } from '@/components/ui/sidebar';
 import CreateWorkspaceDialog from '@/components/modal/create-workspace';
-import { UserProfile, WorkspaceResponse } from '@/constants/user';
+import {
+  UserProfile,
+  WorkspaceResponse,
+  PaginationResponse
+} from '@/constants/user';
 
 const data = {
   navMain: [
@@ -72,7 +76,13 @@ const data = {
     {
       title: '设置',
       url: '/dashboard/settings',
-      icon: Settings
+      icon: Settings,
+      items: [
+        {
+          title: '工作空间',
+          url: '/dashboard/setting/workspace'
+        }
+      ]
     }
   ]
 };
@@ -89,7 +99,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     data: workspacesData,
     error: workspacesError,
     mutate: mutateWorkspaces
-  } = useAuthSWR<WorkspaceResponse[]>('/api/reef/workspaces/me');
+  } = useAuthSWR<PaginationResponse<WorkspaceResponse>>(
+    '/api/reef/workspaces/me'
+  );
 
   // 获取用户详细信息
   const {
@@ -103,19 +115,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [session?.user.select_workspace_id]);
 
   useEffect(() => {
-    if (workspacesData?.length && !selectedWorkspace && session?.user) {
+    if (workspacesData?.items?.length && !selectedWorkspace && session?.user) {
       setSelectedWorkspace(session.user.select_workspace_id || '');
     }
   }, [workspacesData, selectedWorkspace, session?.user]);
 
   // 将 API 数据转换为 WorkSpaceSwitcher 所需的格式
-  const workspaces =
-    workspacesData?.map((workspace) => ({
-      id: workspace.id,
-      name: workspace.name,
-      logo: Server,
-      plan: 'Enterprise' // 默认值，可以根据实际情况调整
-    })) || [];
+  const workspaces = Array.isArray(workspacesData?.items)
+    ? workspacesData?.items?.map((workspace) => ({
+        id: workspace.id,
+        name: workspace.name,
+        logo: Server,
+        plan: 'Enterprise' // 默认值，可以根据实际情况调整
+      }))
+    : [];
 
   // 构建用户数据，优先使用 API 获取的详细信息，回退到 session 中的基本信息
   const userData = {
@@ -175,7 +188,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           selectedWorkSpaceId={selectedWorkspace}
           onWorkSpaceSelect={handleWorkspaceSelect}
           onCreateWorkSpace={() => setIsCreateWorkspaceOpen(true)}
-          isLoading={!workspacesData && !workspacesError}
+          isLoading={!workspacesData?.items || !workspacesError}
           error={workspacesError}
         />
       </SidebarHeader>

@@ -50,3 +50,11 @@ export interface WorkspaceResponse {
   created_at: string;
   updated_at: string;
 }
+
+export interface PaginationResponse<T> {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  items: T[];
+}
