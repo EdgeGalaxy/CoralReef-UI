@@ -2,11 +2,11 @@
 
 import { ColumnDef, TableMeta } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { Workspace, WorkspaceDetail } from '@/types/workspace';
+import { WorkspaceDetail } from '@/types/workspace';
 
 declare module '@tanstack/table-core' {
   interface TableMeta<TData extends unknown> {
-    onManageUsers: (workspace: Workspace) => void;
+    onManageUsers: (workspace: WorkspaceDetail) => void;
     onDelete: (id: string) => void;
   }
 }
@@ -27,6 +27,10 @@ export const columns: ColumnDef<WorkspaceDetail>[] = [
   {
     accessorKey: 'current_user_role',
     header: '当前角色'
+  },
+  {
+    accessorKey: 'created_at',
+    header: '创建时间'
   },
   {
     header: '操作',

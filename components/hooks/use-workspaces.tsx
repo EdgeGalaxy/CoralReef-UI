@@ -1,14 +1,14 @@
 'use client';
 
 import type { KyInstance } from 'ky';
-import { Workspace } from '@/types/workspace';
+import { WorkspaceDetail } from '@/types/workspace';
 
 export interface WorkspaceResponse {
   total: number;
   page: number;
   page_size: number;
   total_pages: number;
-  items: Workspace[];
+  items: WorkspaceDetail[];
 }
 
 export function useWorkspaces(api: KyInstance) {

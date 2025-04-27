@@ -1,19 +1,18 @@
 export interface WorkspaceUser {
   id: string;
   username: string;
+  email: string;
   role: string;
+  join_at: string;
 }
 
-export interface Workspace {
+export interface WorkspaceDetail {
   id: string;
   name: string;
   description: string;
   users?: WorkspaceUser[];
   created_at: string;
   updated_at: string;
-}
-
-export interface WorkspaceDetail extends Workspace {
   user_count: number;
   current_user_role: string;
 }

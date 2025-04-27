@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useAuthApi, useAuthSWR } from '@/components/hooks/useAuthReq';
+import { useSession } from 'next-auth/react';
 import { useToast } from '@/components/ui/use-toast';
 import {
   useWorkspaces,
   WorkspaceResponse
 } from '@/components/hooks/use-workspaces';
 import { WorkspaceTable } from '@/components/tables/workspace/client';
-import { Workspace } from '@/types/workspace';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import PageContainer from '@/components/layout/page-container';
@@ -36,6 +36,7 @@ export default function WorkspaceSettingsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const { toast } = useToast();
+  const session = useSession();
   const api = useAuthApi();
   const {
     getMyWorkspaces,
@@ -49,11 +50,13 @@ export default function WorkspaceSettingsPage() {
     error,
     mutate
   } = useAuthSWR<WorkspaceResponse>(
-    `/api/reef/workspaces/me?page=${page}&page_size=${pageSize}`
+    `/api/reef/workspaces/me?page=${page}&page_size=${pageSize}&with_users=true`
   );
 
   if (error) return <DashboardError error={error} reset={() => mutate()} />;
   if (!workspaces) return <DashboardLoading />;
+
+  const currentUserId = session.data?.user.id;
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -132,6 +135,7 @@ export default function WorkspaceSettingsPage() {
           <WorkspaceTable
             workspaces={workspaces}
             mutate={mutate}
+            currentUserId={currentUserId}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
             onManageUsers={handleAddUser}

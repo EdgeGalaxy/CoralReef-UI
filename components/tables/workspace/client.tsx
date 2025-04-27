@@ -24,13 +24,14 @@ import {
   flexRender
 } from '@tanstack/react-table';
 import { columns } from './columns';
-import { Workspace, WorkspaceDetail } from '@/types/workspace';
+import { WorkspaceDetail } from '@/types/workspace';
 import { Pagination } from '@/components/tables/pagination';
 import { WorkspaceResponse } from '@/components/hooks/use-workspaces';
 
 interface WorkspaceTableProps {
   workspaces: WorkspaceResponse;
   mutate: () => Promise<any>;
+  currentUserId: string;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onManageUsers: (
@@ -46,6 +47,7 @@ interface UserManagementDialogProps {
   workspace: WorkspaceDetail | null;
   isOpen: boolean;
   onClose: () => void;
+  currentUserId: string;
   onAddUser: (
     workspaceId: string,
     ownerUserId: string,
@@ -59,6 +61,7 @@ function UserManagementDialog({
   workspace,
   isOpen,
   onClose,
+  currentUserId,
   onAddUser,
   onRemoveUser
 }: UserManagementDialogProps) {
@@ -66,12 +69,12 @@ function UserManagementDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="flex h-[90vh] max-h-[800px] w-full max-w-[90vw] flex-col md:max-w-[800px] lg:max-w-[1000px] xl:max-w-[1200px]">
         <DialogHeader>
           <DialogTitle>管理工作空间成员</DialogTitle>
           <DialogDescription>添加或移除工作空间成员</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto">
           <div className="flex space-x-2">
             <Input
               placeholder="用户ID"
@@ -92,21 +95,31 @@ function UserManagementDialog({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>用户名</TableHead>
-                <TableHead>角色</TableHead>
-                <TableHead>操作</TableHead>
+                <TableHead className="w-[200px]">用户名</TableHead>
+                <TableHead className="w-[250px]">邮箱</TableHead>
+                <TableHead className="w-[120px]">角色</TableHead>
+                <TableHead className="w-[200px]">加入时间</TableHead>
+                <TableHead className="w-[100px]">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {workspace?.users?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
+                  <TableCell>{user.join_at}</TableCell>
                   <TableCell>
                     <Button
                       variant="destructive"
                       onClick={() =>
                         workspace && onRemoveUser(workspace.id, user.id)
+                      }
+                      disabled={user.id === currentUserId}
+                      title={
+                        user.id === currentUserId
+                          ? '无法移除当前用户'
+                          : '移除用户'
                       }
                     >
                       移除
@@ -125,14 +138,14 @@ function UserManagementDialog({
 export function WorkspaceTable({
   workspaces,
   mutate,
+  currentUserId,
   onPageChange,
   onPageSizeChange,
   onManageUsers,
   onDelete
 }: WorkspaceTableProps) {
-  const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(
-    null
-  );
+  const [selectedWorkspace, setSelectedWorkspace] =
+    useState<WorkspaceDetail | null>(null);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
   const table = useReactTable({
@@ -140,7 +153,7 @@ export function WorkspaceTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     meta: {
-      onManageUsers: (workspace: Workspace) => {
+      onManageUsers: (workspace: WorkspaceDetail) => {
         setSelectedWorkspace(workspace);
         setIsUserDialogOpen(true);
       },
@@ -209,6 +222,7 @@ export function WorkspaceTable({
         workspace={selectedWorkspace}
         isOpen={isUserDialogOpen}
         onClose={() => setIsUserDialogOpen(false)}
+        currentUserId={currentUserId}
         onAddUser={onManageUsers}
         onRemoveUser={onDelete}
       />
