@@ -24,12 +24,11 @@ import {
   flexRender
 } from '@tanstack/react-table';
 import { columns } from './columns';
-import { WorkspaceDetail } from '@/types/workspace';
 import { Pagination } from '@/components/tables/pagination';
-import { WorkspaceResponse } from '@/components/hooks/use-workspaces';
+import { PaginationResponse, WorkspaceDetail } from '@/constants/user';
 
 interface WorkspaceTableProps {
-  workspaces: WorkspaceResponse;
+  workspaces: PaginationResponse<WorkspaceDetail>;
   mutate: () => Promise<any>;
   currentUserId: string;
   onPageChange: (page: number) => void;
@@ -142,20 +141,28 @@ function UserManagementDialog({
                         handleRemoveUser(localWorkspace.id, user.id)
                       }
                       disabled={
-                        user.id === currentUserId || removingUserId === user.id
+                        removingUserId === user.id ||
+                        user.id === localWorkspace?.owner_user_id
                       }
                       title={
-                        user.id === currentUserId
-                          ? '管理员用户不可移除'
+                        user.id === localWorkspace?.owner_user_id
+                          ? '创建者不可移除'
+                          : user.id === currentUserId
+                          ? '退出工作空间'
                           : '移除用户'
                       }
                       className={`${
-                        user.id === currentUserId || removingUserId === user.id
+                        removingUserId === user.id ||
+                        user.id === localWorkspace?.owner_user_id
                           ? 'cursor-not-allowed text-gray-400'
                           : 'text-red-500 hover:text-red-700'
                       }`}
                     >
-                      {removingUserId === user.id ? '移除中...' : '移除'}
+                      {removingUserId === user.id
+                        ? '处理中...'
+                        : user.id === currentUserId
+                        ? '退出'
+                        : '移除'}
                     </button>
                   </TableCell>
                 </TableRow>

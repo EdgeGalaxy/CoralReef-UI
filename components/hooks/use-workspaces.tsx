@@ -1,21 +1,17 @@
 'use client';
 
 import type { KyInstance } from 'ky';
-import { WorkspaceDetail } from '@/types/workspace';
-
-export interface WorkspaceResponse {
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-  items: WorkspaceDetail[];
-}
+import {
+  WorkspaceDetail,
+  PaginationResponse,
+  WorkspaceResponse
+} from '@/constants/user';
 
 export function useWorkspaces(api: KyInstance) {
   const getMyWorkspaces = async (
     page?: number,
     pageSize?: number
-  ): Promise<WorkspaceResponse> => {
+  ): Promise<PaginationResponse<WorkspaceDetail>> => {
     const queryParams = new URLSearchParams();
     if (page !== undefined) queryParams.append('page', page.toString());
     if (pageSize !== undefined)
@@ -38,7 +34,7 @@ export function useWorkspaces(api: KyInstance) {
       };
     }
 
-    return data as WorkspaceResponse;
+    return data as PaginationResponse<WorkspaceDetail>;
   };
 
   const deleteWorkspace = async (workspaceId: string): Promise<Response> => {

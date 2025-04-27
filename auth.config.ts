@@ -2,7 +2,11 @@ import { NextAuthConfig } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
 import { noAuthApi } from '@/lib/utils';
-import { UserRead, WorkspaceResponse } from '@/constants/user';
+import {
+  UserRead,
+  PaginationResponse,
+  WorkspaceDetail
+} from '@/constants/user';
 
 interface LoginResponse {
   access_token: string;
@@ -72,7 +76,7 @@ const authConfig = {
                 Authorization: `Bearer ${data.access_token}`
               }
             })
-            .json()) as WorkspaceResponse;
+            .json()) as PaginationResponse<WorkspaceDetail>;
 
           userData.access_token = data.access_token;
           userData.select_workspace_id = userWorkspaces.items.find(

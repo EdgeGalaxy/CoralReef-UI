@@ -1,8 +1,7 @@
 'use client';
 
 import { ColumnDef, TableMeta } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { WorkspaceDetail } from '@/types/workspace';
+import { WorkspaceDetail } from '@/constants/user';
 
 declare module '@tanstack/table-core' {
   interface TableMeta<TData extends unknown> {
