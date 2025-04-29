@@ -1,15 +1,12 @@
+'use client';
+
 import {
   SidebarProvider,
   SidebarTrigger,
   SidebarInset
 } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'LoopEAI - 控制台',
-  description: '完善的设备管理、算法部署工具平台'
-};
+import OAuthCompleteProfileModal from '@/components/modal/oauth-complete-profile-modal';
 
 export default function DashboardLayout({
   children
@@ -25,6 +22,9 @@ export default function DashboardLayout({
           {children}
         </SidebarInset>
       </SidebarProvider>
+
+      {/* OAuth 用户信息完善弹窗 */}
+      <OAuthCompleteProfileModal />
     </div>
   );
 }

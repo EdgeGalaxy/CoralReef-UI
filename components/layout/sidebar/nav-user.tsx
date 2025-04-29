@@ -10,11 +10,14 @@ import {
   Loader2,
   AlertTriangle,
   Moon,
-  Sun
+  Sun,
+  User,
+  Shield
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
+import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -149,6 +152,18 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/setting/profile">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>个人资料</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/setting/profile">
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>安全设置</span>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <Sparkles className="mr-2 h-4 w-4" />
                 <span>升级到专业版</span>

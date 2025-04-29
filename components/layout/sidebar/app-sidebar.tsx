@@ -79,6 +79,10 @@ const data = {
       icon: Settings,
       items: [
         {
+          title: '个人资料',
+          url: '/dashboard/setting/profile'
+        },
+        {
           title: '工作空间',
           url: '/dashboard/setting/workspace'
         }

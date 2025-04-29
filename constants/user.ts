@@ -7,6 +7,7 @@ export interface UserProfile {
   is_active: boolean;
   is_superuser: boolean;
   is_verified: boolean;
+  last_login_at?: string;
 }
 
 export interface UserRead {
