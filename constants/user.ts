@@ -24,7 +24,7 @@ export interface UserRead {
 
 export interface UserCreate {
   email: string;
-  password: string;
+  password?: string;
   username: string;
   phone?: string;
 }

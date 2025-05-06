@@ -6,15 +6,11 @@ import type { GitHubProfile } from 'next-auth/providers/github';
 import {
   UserRead,
   PaginationResponse,
-  WorkspaceDetail
+  WorkspaceDetail,
+  UserCreate
 } from '@/constants/user';
 
 interface LoginResponse {
-  access_token: string;
-  token_type: string;
-}
-
-interface OAuthCallbackResponse {
   access_token: string;
   token_type: string;
 }
@@ -33,12 +29,14 @@ declare module 'next-auth' {
     is_active: boolean;
     is_verified: boolean;
     isOAuthLogin?: boolean;
+    oauth_account_id?: string;
   }
 
   interface Session {
     accessToken?: string;
     user: User;
     isOAuthLogin?: boolean;
+    oauth_account_id?: string;
   }
 }
 
@@ -140,15 +138,16 @@ const authConfig = {
   ],
   callbacks: {
     async jwt({ token, trigger, session, user, account }) {
-      // GitHub OAuth 登录后，需要添加标记
-      if (account?.provider === 'github') {
+      if (account?.provider) {
         token.isOAuthLogin = true;
+        token.oauth_account_id = account.providerAccountId;
       }
 
       // 当 session 更新时，更新 token 中的数据
       if (trigger === 'update') {
         token.select_workspace_id = session.user.select_workspace_id;
         token.isOAuthLogin = session.isOAuthLogin;
+        token.oauth_account_id = session.oauth_account_id;
         return token;
       }
 
@@ -160,6 +159,7 @@ const authConfig = {
         token.is_active = user.is_active;
         token.is_verified = user.is_verified;
         token.isOAuthLogin = user.isOAuthLogin;
+        token.oauth_account_id = user.oauth_account_id;
       }
       return token;
     },
@@ -173,21 +173,25 @@ const authConfig = {
       session.user.is_active = token.is_active as boolean;
       session.user.is_verified = token.is_verified as boolean;
       session.isOAuthLogin = token.isOAuthLogin as boolean;
+      session.oauth_account_id = token.oauth_account_id as string | undefined;
       return session;
     },
-    async signIn({ user, account }) {
-      // 如果是GitHub登录，需要调用后端 OAuth 接口
+    async signIn({ user, account, profile }) {
+      // 如果是GitHub登录，需要调用后端接口
       if (account?.provider === 'github' && account.access_token) {
         try {
-          console.log('account.access_token', account);
-          const response = await noAuthApi.get(
-            `auth/oauth/github/callback?access_token=${encodeURIComponent(
-              account.access_token
-            )}`
+          const response = await noAuthApi.post<LoginResponse>(
+            `auth/users/oauth/${account.provider}/callback/${account.providerAccountId}`,
+            {
+              json: {
+                username: profile?.name,
+                email: profile?.email
+              }
+            }
           );
 
           if (response.ok) {
-            const data = (await response.json()) as OAuthCallbackResponse;
+            const data = (await response.json()) as LoginResponse;
             // 更新用户信息
             if (data.access_token) {
               user.access_token = data.access_token;
@@ -216,6 +220,7 @@ const authConfig = {
                 user.is_superuser = userData.is_superuser;
                 user.is_active = userData.is_active;
                 user.is_verified = userData.is_verified;
+                user.oauth_account_id = account.providerAccountId;
 
                 // 设置select_workspace_id
                 const defaultWorkspace = workspacesData.items.find(

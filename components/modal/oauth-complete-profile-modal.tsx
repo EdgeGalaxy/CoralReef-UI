@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { cn } from '@/lib/utils';
 
 import {
   Dialog,
@@ -29,6 +30,34 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
+
+// 添加全局样式
+const globalStyles = `
+  .blur-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(8px);
+    z-index: 40;
+    pointer-events: none;
+  }
+  
+  /* 防止页面滚动 */
+  body.modal-open {
+    overflow: hidden;
+  }
+
+  /* 对话框居中 */
+  .centered-dialog-content {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+  }
+`;
 
 // 验证表单模式
 enum VerificationMode {
@@ -72,10 +101,27 @@ const profileSchema = z
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+interface CheckPasswordResetResponse {
+  need_reset: boolean;
+}
+
+// 优先加载此组件
+export function OAuthCompleteProfileInit() {
+  const { status } = useSession();
+
+  // 在此组件中提前初始化会话
+  if (status === 'loading') {
+    return null;
+  }
+
+  return <OAuthCompleteProfileModal />;
+}
+
 export default function OAuthCompleteProfileModal() {
   const { data: session, update: updateSession, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [needReset, setNeedReset] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const authApi = useAuthApi();
@@ -97,6 +143,29 @@ export default function OAuthCompleteProfileModal() {
       code: ''
     }
   });
+
+  // 添加全局样式并阻止页面滚动
+  useEffect(() => {
+    const styleSheet = document.createElement('style');
+    styleSheet.innerText = globalStyles;
+    document.head.appendChild(styleSheet);
+
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+    }
+
+    return () => {
+      document.head.removeChild(styleSheet);
+      document.body.classList.remove('modal-open');
+    };
+  }, [isOpen]);
+
+  // 检查是否需要重设密码 - 立即执行
+  useEffect(() => {
+    if (status === 'authenticated' && session?.oauth_account_id) {
+      checkPasswordReset();
+    }
+  }, [status, session]);
 
   // 切换是否使用手机验证
   const toggleUsePhone = (value: boolean) => {
@@ -144,12 +213,21 @@ export default function OAuthCompleteProfileModal() {
     });
   };
 
-  // 检查是否是 OAuth 登录
-  useEffect(() => {
-    if (status === 'authenticated' && session?.isOAuthLogin) {
-      setIsOpen(true);
+  // 检查是否需要重设密码
+  const checkPasswordReset = useCallback(async () => {
+    if (status === 'authenticated' && session?.oauth_account_id) {
+      try {
+        const response = await authApi.get(
+          `auth/users/check-password-reset/${session.oauth_account_id}`
+        );
+        const data = (await response.json()) as CheckPasswordResetResponse;
+        setNeedReset(data.need_reset);
+        setIsOpen(data.need_reset && Boolean(session?.isOAuthLogin));
+      } catch (error) {
+        console.error('检查密码重设状态失败:', error);
+      }
     }
-  }, [status, session]);
+  }, [status, authApi, session]);
 
   // 表单提交
   const onSubmit = async (values: ProfileFormValues) => {
@@ -176,14 +254,15 @@ export default function OAuthCompleteProfileModal() {
           toast,
           successTitle: '个人资料已更新',
           errorTitle: '更新失败',
-          onSuccess: () => {
+          onSuccess: async () => {
             // 关闭弹窗
             setIsOpen(false);
 
-            // 更新session中的isOAuthLogin标志
-            updateSession({
+            // 更新session，移除 isOAuthLogin 标记
+            await updateSession({
               ...session,
-              isOAuthLogin: false
+              isOAuthLogin: false,
+              oauth_account_id: undefined
             });
 
             // 跳转到首页
@@ -207,144 +286,155 @@ export default function OAuthCompleteProfileModal() {
     e.preventDefault();
   }, []);
 
+  // 如果正在加载session，显示空白
+  if (status === 'loading') {
+    return null;
+  }
+
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (open === false) {
-          // 阻止关闭
-          setIsOpen(true);
-        }
-      }}
-    >
-      <DialogContent
-        className="sm:max-w-[500px]"
-        style={{ pointerEvents: isLoading ? 'none' : 'auto' }}
-        onPointerDownOutside={preventClose}
-        onEscapeKeyDown={preventClose}
+    <>
+      {isOpen && <div className="blur-background" />}
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (open === false) {
+            // 阻止关闭
+            setIsOpen(true);
+          }
+        }}
       >
-        <DialogHeader>
-          <DialogTitle>完善账户信息</DialogTitle>
-          <DialogDescription>
-            您已使用GitHub成功登录，请设置密码以完成账户设置
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>密码</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="设置账户密码"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>确认密码</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="再次输入密码"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="usePhone"
-                checked={form.getValues('usePhone')}
-                onChange={(e) => toggleUsePhone(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
+        <DialogContent
+          className="centered-dialog-content sm:max-w-[500px]"
+          onPointerDownOutside={preventClose}
+          onEscapeKeyDown={preventClose}
+        >
+          <DialogHeader>
+            <DialogTitle>{needReset ? '重设密码' : '完善账户信息'}</DialogTitle>
+            <DialogDescription>
+              {needReset
+                ? '为了保证账户安全，请重新设置您的密码'
+                : '您已使用GitHub成功登录，请设置密码以完成账户设置'}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>密码</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="设置账户密码"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <label
-                htmlFor="usePhone"
-                className="text-sm font-medium text-gray-700"
-              >
-                添加手机号（选填）
-              </label>
-            </div>
 
-            {form.getValues('usePhone') && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>手机号码</FormLabel>
-                      <FormControl>
-                        <Input placeholder="输入手机号码" {...field} />
-                      </FormControl>
-                      <FormDescription>用于账户安全和通知</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>确认密码</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="再次输入密码"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="usePhone"
+                  checked={form.getValues('usePhone')}
+                  onChange={(e) => toggleUsePhone(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
                 />
+                <label
+                  htmlFor="usePhone"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  添加手机号（选填）
+                </label>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="col-span-2">
-                    <FormField
-                      control={form.control}
-                      name="code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>验证码</FormLabel>
-                          <FormControl>
-                            <Input placeholder="输入验证码" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mb-[2px] w-full"
-                      onClick={handleSendCode}
-                      disabled={codeCountdown > 0}
-                    >
-                      {codeCountdown > 0 ? `${codeCountdown}秒` : '发送验证码'}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+              {form.getValues('usePhone') && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>手机号码</FormLabel>
+                        <FormControl>
+                          <Input placeholder="输入手机号码" {...field} />
+                        </FormControl>
+                        <FormDescription>用于账户安全和通知</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <DialogFooter className="mt-6">
-              <Button
-                type="submit"
-                disabled={
-                  isLoading || (form.getValues('usePhone') && !codeSent)
-                }
-                className="w-full"
-              >
-                {isLoading ? '保存中...' : '完成设置'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="code"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>验证码</FormLabel>
+                            <FormControl>
+                              <Input placeholder="输入验证码" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mb-[2px] w-full"
+                        onClick={handleSendCode}
+                        disabled={codeCountdown > 0}
+                      >
+                        {codeCountdown > 0
+                          ? `${codeCountdown}秒`
+                          : '发送验证码'}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <DialogFooter className="mt-6">
+                <Button
+                  type="submit"
+                  disabled={
+                    isLoading || (form.getValues('usePhone') && !codeSent)
+                  }
+                  className="w-full"
+                >
+                  {isLoading ? '保存中...' : '完成设置'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
