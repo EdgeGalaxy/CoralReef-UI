@@ -141,15 +141,17 @@ const DesignPage = () => {
     }
   }, [workflowId, workflowData, isNewWorkflow]);
 
+  const { data: blocksData } = useAuthSWR<{
+    blocks: BlockDescription[];
+    kinds_connections: KindsConnections;
+  }>('/api/reef/workflows/blocks/describe/all');
+
   useEffect(() => {
-    fetch('/describe.json')
-      .then((response) => response.json())
-      .then((data) => {
-        setAvailableNodes(data.blocks);
-        setKindsConnections(data.kinds_connections);
-      })
-      .catch((error) => console.error('Error loading blocks:', error));
-  }, []);
+    if (blocksData) {
+      setAvailableNodes(blocksData.blocks);
+      setKindsConnections(blocksData.kinds_connections);
+    }
+  }, [blocksData]);
 
   const onConnect = useCallback(
     (params: Connection) => {
