@@ -124,9 +124,7 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium dark:text-white">
-          <span className="font-bold">
-            {originalSchema?.title || props.name}
-          </span>
+          <span className="font-bold">{schema?.title || props.name}</span>
           {required && (
             <span className="ml-1 text-red-500 dark:text-red-400">*</span>
           )}

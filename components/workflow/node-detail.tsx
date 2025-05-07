@@ -422,7 +422,7 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
 
           const schemaValue =
             typeof value === 'object' && value !== null ? (value as any) : null;
-          const title_key = schemaValue
+          const title = schemaValue
             ? schemaValue.cn_title || schemaValue.title || key
             : key;
           const description = schemaValue
@@ -431,10 +431,11 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
 
           if (typeof value === 'object' && value !== null && 'anyOf' in value) {
             const isRoboflowModel = isRoboflowModelField(value);
-            acc[title_key] = {
+            acc[key] = {
               ...value,
               'x-internal-type': 'anyOf-field',
               'x-field-type': isRoboflowModel ? 'roboflow-model' : undefined,
+              title,
               description
             };
           } else if (
@@ -444,14 +445,14 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
           ) {
             acc[key] = {
               type: 'string',
-              title: title_key,
+              title,
               description,
               readOnly: true
             };
           } else {
             acc[key] =
               typeof value === 'object' && value !== null
-                ? { ...value, title: title_key, description }
+                ? { ...value, title, description }
                 : value;
           }
           return acc;

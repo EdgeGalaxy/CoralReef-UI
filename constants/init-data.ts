@@ -13,6 +13,8 @@ export const inputNode: Node = {
       properties: {
         sources: {
           type: 'array',
+          title: 'Sources',
+          cn_title: '输入源',
           items: {
             type: 'object',
             properties: {
@@ -23,7 +25,8 @@ export const inputNode: Node = {
         },
         params: {
           type: 'array',
-          title: '参数列表',
+          title: 'Parameters',
+          cn_title: '参数列表',
           items: {
             type: 'object',
             properties: {
@@ -104,11 +107,15 @@ export const outputNode: Node = {
       properties: {
         params: {
           type: 'array',
+          title: 'Parameters',
+          cn_title: '参数列表',
           items: {
             type: 'object',
             properties: {
-              name: { type: 'string' },
+              name: { type: 'string', title: 'Name', cn_title: '参数名称' },
               value: {
+                title: 'Value',
+                cn_title: '参数值',
                 anyOf: [
                   {
                     kind: [

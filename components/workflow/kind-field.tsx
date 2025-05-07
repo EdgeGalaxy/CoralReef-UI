@@ -108,9 +108,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
           htmlFor={props.id}
           className="text-sm font-medium dark:text-white"
         >
-          <span className="font-bold">
-            {originalSchema?.title || props.name}
-          </span>
+          <span className="font-bold">{schema?.title || props.name}</span>
           {isRequired && (
             <span className="ml-1 text-red-500 dark:text-red-400">*</span>
           )}
