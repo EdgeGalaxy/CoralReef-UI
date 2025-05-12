@@ -2,7 +2,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # 在构建阶段就设置环境变量
-ENV NEXT_PUBLIC_API_BASE_URL=http://coralreef.loopeai.com:8000
+ENV NEXT_PUBLIC_API_BASE_URL=https://coral.loopeai.com
 
 # 复制依赖文件
 COPY package.json package-lock.json ./
@@ -23,7 +23,7 @@ WORKDIR /app
 # 设置生产环境
 ENV NODE_ENV=production
 # NextAuth 所需环境变量
-ENV NEXTAUTH_URL=http://coralreef.loopeai.com
+ENV NEXTAUTH_URL=https://coral.loopeai.com
 ENV NEXTAUTH_SECRET=abcdvwxHINOPUVWXYZ
 
 # 复制必要文件
