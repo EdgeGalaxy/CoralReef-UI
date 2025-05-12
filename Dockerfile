@@ -1,16 +1,18 @@
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+# 只复制 package.json 和 package-lock.json 文件以便更好地利用缓存
+COPY package*.json ./
+RUN npm ci --ignore-scripts
+
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 在构建阶段就设置环境变量
+# 设置环境变量
 ENV NEXT_PUBLIC_API_BASE_URL=https://coral.loopeai.com
 
-# 复制依赖文件
-COPY package.json package-lock.json ./
-
-# 安装依赖
-RUN npm ci --ignore-scripts
-
-# 复制源代码
+# 从deps阶段复制node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 构建应用
