@@ -45,6 +45,11 @@ const data = {
       icon: Workflow
     },
     {
+      title: '工作流模板',
+      url: '/dashboard/workflow-template',
+      icon: Workflow
+    },
+    {
       title: '部署',
       url: '/dashboard/deploy/gateway',
       icon: Server,
