@@ -183,7 +183,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="pt-6">
-        <div className="mb-4 flex justify-center">
+        <div className="mb-4 flex justify-start px-4">
           <Image
             src="/loopeai.svg"
             alt="LoopEAI Logo"

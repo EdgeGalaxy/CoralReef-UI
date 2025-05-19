@@ -17,7 +17,7 @@ export default function DashboardLayout({
     <div className="flex">
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset data-sidebar="sidebar">
           <SidebarTrigger />
           {children}
         </SidebarInset>
