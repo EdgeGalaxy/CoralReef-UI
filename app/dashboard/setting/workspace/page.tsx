@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useAuthApi, useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  useWorkspaces,
-  WorkspaceResponse
-} from '@/components/hooks/use-workspaces';
+import { useWorkspaces } from '@/components/hooks/use-workspaces';
+import { WorkspaceDetail, PaginationResponse } from '@/constants/user';
 import { WorkspaceTable } from '@/components/tables/workspace/client';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
@@ -24,7 +22,7 @@ const breadcrumbItems = [
   { title: '工作空间', link: '/dashboard/setting/workspace' }
 ];
 
-const DEFAULT_WORKSPACE_DATA: WorkspaceResponse = {
+const DEFAULT_WORKSPACE_DATA = {
   total: 0,
   page: 1,
   page_size: 10,
@@ -42,14 +40,15 @@ export default function WorkspaceSettingsPage() {
     getMyWorkspaces,
     deleteWorkspace,
     addWorkspaceUser,
-    removeWorkspaceUser
+    removeWorkspaceUser,
+    updateWorkspace
   } = useWorkspaces(api);
 
   const {
     data: workspaces = DEFAULT_WORKSPACE_DATA,
     error,
     mutate
-  } = useAuthSWR<WorkspaceResponse>(
+  } = useAuthSWR<PaginationResponse<WorkspaceDetail>>(
     `/api/reef/workspaces/me?page=${page}&page_size=${pageSize}&with_users=true`
   );
 
@@ -65,6 +64,28 @@ export default function WorkspaceSettingsPage() {
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
     setPage(1);
+  };
+
+  const handleUpdateWorkspace = async (
+    workspaceId: string,
+    data: {
+      name?: string;
+      description?: string;
+      max_users?: number;
+    }
+  ) => {
+    try {
+      await handleApiRequest(() => updateWorkspace(workspaceId, data), {
+        toast,
+        successTitle: '更新成功',
+        errorTitle: '更新失败',
+        onSuccess: async () => {
+          await mutate();
+        }
+      });
+    } catch (error) {
+      console.error('Failed to update workspace:', error);
+    }
   };
 
   const handleDeleteWorkspace = async (workspaceId: string) => {
@@ -140,6 +161,8 @@ export default function WorkspaceSettingsPage() {
             onPageSizeChange={handlePageSizeChange}
             onManageUsers={handleAddUser}
             onRemoveUser={handleRemoveUser}
+            onDelete={handleDeleteWorkspace}
+            onUpdate={handleUpdateWorkspace}
           />
         </div>
       </div>

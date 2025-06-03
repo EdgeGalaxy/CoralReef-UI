@@ -60,6 +60,7 @@ export interface WorkspaceDetail {
   updated_at: string;
   user_count: number;
   current_user_role: string;
+  max_users: number;
 }
 
 export interface PaginationResponse<T> {

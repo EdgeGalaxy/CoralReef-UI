@@ -1,15 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -26,6 +17,7 @@ import {
 import { columns } from './columns';
 import { Pagination } from '@/components/tables/pagination';
 import { PaginationResponse, WorkspaceDetail } from '@/constants/user';
+import { UserManagementDialog, EditWorkspaceDialog } from './dialogs';
 
 interface WorkspaceTableProps {
   workspaces: PaginationResponse<WorkspaceDetail>;
@@ -41,138 +33,14 @@ interface WorkspaceTableProps {
   ) => void;
   onRemoveUser: (workspaceId: string, userId: string) => void;
   onDelete: (workspaceId: string) => void;
-}
-
-interface UserManagementDialogProps {
-  workspace: WorkspaceDetail | null;
-  isOpen: boolean;
-  onClose: () => void;
-  currentUserId: string;
-  onAddUser: (
+  onUpdate: (
     workspaceId: string,
-    ownerUserId: string,
-    userId: string,
-    role: string
+    data: {
+      name?: string;
+      description?: string;
+      max_users?: number;
+    }
   ) => void;
-  onRemoveUser: (workspaceId: string, userId: string) => void;
-}
-
-function UserManagementDialog({
-  workspace,
-  isOpen,
-  onClose,
-  currentUserId,
-  onAddUser,
-  onRemoveUser
-}: UserManagementDialogProps) {
-  const [userId, setUserId] = useState('');
-  const [isAddingUser, setIsAddingUser] = useState(false);
-  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
-  const [localWorkspace, setLocalWorkspace] = useState<WorkspaceDetail | null>(
-    workspace
-  );
-
-  useEffect(() => {
-    if (workspace) {
-      setLocalWorkspace(workspace);
-    }
-  }, [workspace]);
-
-  const handleAddUser = async () => {
-    if (localWorkspace && userId) {
-      setIsAddingUser(true);
-      try {
-        await onAddUser(localWorkspace.id, currentUserId, userId, 'member');
-        setUserId('');
-      } finally {
-        setIsAddingUser(false);
-      }
-    }
-  };
-
-  const handleRemoveUser = async (workspaceId: string, userId: string) => {
-    setRemovingUserId(userId);
-    try {
-      await onRemoveUser(workspaceId, userId);
-    } finally {
-      setRemovingUserId(null);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="flex h-[90vh] max-h-[800px] w-full max-w-[90vw] flex-col md:max-w-[800px] lg:max-w-[1000px] xl:max-w-[1200px]">
-        <DialogHeader>
-          <DialogTitle>管理工作空间成员</DialogTitle>
-          <DialogDescription>添加或移除工作空间成员</DialogDescription>
-        </DialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="用户ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-            />
-            <Button onClick={handleAddUser} disabled={isAddingUser}>
-              {isAddingUser ? '添加中...' : '添加成员'}
-            </Button>
-          </div>
-          <Table>
-            <TableHeader className="bg-gray-100 shadow-sm">
-              <TableRow>
-                <TableHead className="w-[200px]">用户名</TableHead>
-                <TableHead className="w-[250px]">邮箱</TableHead>
-                <TableHead className="w-[120px]">角色</TableHead>
-                <TableHead className="w-[200px]">加入时间</TableHead>
-                <TableHead className="w-[100px]">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {localWorkspace?.users?.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.join_at}</TableCell>
-                  <TableCell>
-                    <button
-                      onClick={() =>
-                        localWorkspace &&
-                        handleRemoveUser(localWorkspace.id, user.id)
-                      }
-                      disabled={
-                        removingUserId === user.id ||
-                        user.id === localWorkspace?.owner_user_id
-                      }
-                      title={
-                        user.id === localWorkspace?.owner_user_id
-                          ? '创建者不可移除'
-                          : user.id === currentUserId
-                          ? '退出工作空间'
-                          : '移除用户'
-                      }
-                      className={`${
-                        removingUserId === user.id ||
-                        user.id === localWorkspace?.owner_user_id
-                          ? 'cursor-not-allowed text-gray-400'
-                          : 'text-red-500 hover:text-red-700'
-                      }`}
-                    >
-                      {removingUserId === user.id
-                        ? '处理中...'
-                        : user.id === currentUserId
-                        ? '退出'
-                        : '移除'}
-                    </button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 }
 
 export function WorkspaceTable({
@@ -183,11 +51,13 @@ export function WorkspaceTable({
   onPageSizeChange,
   onManageUsers,
   onRemoveUser,
-  onDelete
+  onDelete,
+  onUpdate
 }: WorkspaceTableProps) {
   const [selectedWorkspace, setSelectedWorkspace] =
     useState<WorkspaceDetail | null>(null);
   const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleManageUsers = async (
     workspaceId: string,
@@ -242,6 +112,10 @@ export function WorkspaceTable({
       },
       onDelete: (workspaceId: string) => {
         onDelete(workspaceId);
+      },
+      onUpdate: (workspace: WorkspaceDetail) => {
+        setSelectedWorkspace(workspace);
+        setIsEditDialogOpen(true);
       }
     }
   });
@@ -306,10 +180,23 @@ export function WorkspaceTable({
       <UserManagementDialog
         workspace={selectedWorkspace}
         isOpen={isUserDialogOpen}
-        onClose={() => setIsUserDialogOpen(false)}
+        onClose={() => {
+          setIsUserDialogOpen(false);
+          setSelectedWorkspace(null);
+        }}
         currentUserId={currentUserId}
         onAddUser={handleManageUsers}
         onRemoveUser={handleRemoveUser}
+      />
+
+      <EditWorkspaceDialog
+        workspace={selectedWorkspace}
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setSelectedWorkspace(null);
+        }}
+        onUpdate={onUpdate}
       />
     </div>
   );

@@ -60,10 +60,25 @@ export function useWorkspaces(api: KyInstance) {
     return response;
   };
 
+  const updateWorkspace = async (
+    workspaceId: string,
+    data: {
+      name?: string;
+      description?: string;
+      max_users?: number;
+    }
+  ): Promise<Response> => {
+    const response = await api.put(`api/reef/workspaces/${workspaceId}`, {
+      json: data
+    });
+    return response;
+  };
+
   return {
     getMyWorkspaces,
     deleteWorkspace,
     addWorkspaceUser,
-    removeWorkspaceUser
+    removeWorkspaceUser,
+    updateWorkspace
   };
 }
