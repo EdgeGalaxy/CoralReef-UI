@@ -163,7 +163,7 @@ const DesignPage = () => {
         const sourceNodeName = sourceNode.data.formData.name;
         const targetManifest = targetNode.data.manifest_type_identifier;
 
-        const imageConnections = kindsConnections['image'] || [];
+        const imageConnections = kindsConnections['*'] || [];
         const avaliableImageNodes = availableKindValues['image'] || [];
         let connectNode: PropertyDefinition | undefined = undefined;
         let propertyName: string | undefined = undefined;
@@ -192,24 +192,24 @@ const DesignPage = () => {
             imageConnections.some(
               (conn) =>
                 conn.manifest_type_identifier === sourceManifest &&
-                conn.compatible_element === 'step_output'
+                conn.compatible_element === 'any_data'
             ) &&
             imageConnections.some(
               (conn) =>
                 conn.manifest_type_identifier === targetManifest &&
-                conn.compatible_element === 'step_output'
+                conn.compatible_element === 'any_data'
             );
           connectNode = canConnect
             ? imageConnections.find(
                 (conn) =>
                   conn.manifest_type_identifier === sourceManifest &&
-                  conn.compatible_element === 'step_output'
+                  conn.compatible_element === 'any_data'
               )
             : undefined;
           propertyName = avaliableImageNodes.find(
             (node) =>
               node.manifest_type_identifier === sourceManifest &&
-              node.compatible_element === 'step_output' &&
+              node.compatible_element === 'any_data' &&
               node.property_name.includes(`$steps.${sourceNodeName}.`)
           )?.property_name;
         }
@@ -410,11 +410,21 @@ const DesignPage = () => {
             description: 'Image',
             element: 'any_data'
           });
+          addKindValue(kindValues, '*', image, node, {
+            prefix: '$inputs.',
+            description: 'Image',
+            element: 'any_data'
+          });
         });
         node.data.formData.params.forEach((param: any) => {
           // 根据参数类型添加对应的 kind
           const kindName = param.type || 'string'; // 默认为 string 类型
           addKindValue(kindValues, kindName, param, node, {
+            prefix: '$inputs.',
+            description: 'Parameter',
+            element: 'any_data'
+          });
+          addKindValue(kindValues, '*', param, node, {
             prefix: '$inputs.',
             description: 'Parameter',
             element: 'any_data'
@@ -433,7 +443,12 @@ const DesignPage = () => {
               addKindValue(kindValues, kindName, output, node, {
                 prefix: `$steps.${node.data.formData.name}.`,
                 description: 'Output',
-                element: 'step_output'
+                element: 'any_data'
+              });
+              addKindValue(kindValues, '*', output, node, {
+                prefix: `$steps.${node.data.formData.name}.`,
+                description: 'Output',
+                element: 'any_data'
               });
             }
           });
