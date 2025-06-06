@@ -82,7 +82,7 @@ export default function CreateModelDialog({
         () =>
           api.post(
             `api/reef/workspaces/${workspaceId}/models/public/${values.model_id}`,
-            {}
+            { timeout: 180000 }
           ),
         {
           toast,

@@ -7,8 +7,8 @@ import {
 } from '@/components/ui/sheet';
 import { withTheme } from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
-import { Theme as SemanticUITheme } from '@rjsf/semantic-ui';
-import 'semantic-ui-css/semantic.min.css';
+import { Theme as shadcnTheme } from '@rjsf/shadcn';
+// import 'semantic-ui-css/semantic.min.css';
 import { JSONSchema7 } from 'json-schema';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
@@ -42,7 +42,7 @@ interface ExtendedJSONSchema7 extends JSONSchema7 {
   'x-field-type'?: string;
 }
 
-const Form = withTheme(SemanticUITheme);
+const Form = withTheme(shadcnTheme);
 
 // 自定义模型列表显示组件
 const ModelsArrayField = ({
