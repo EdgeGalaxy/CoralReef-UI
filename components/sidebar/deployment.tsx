@@ -14,6 +14,8 @@ import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
 
+import WebRTCPreview from './components/webrtc-preview';
+
 interface DeploymentDiffResponse {
   workflow_changed: boolean;
   cameras_changed: boolean;
@@ -30,7 +32,7 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
   const { toast } = useToast();
   const [operationType, setOperationType] = React.useState<string | null>(null);
   const [hasUpdate, setHasUpdate] = React.useState<boolean>(false);
-  const is_running = deployment.running_status === OperationStatus.RUNNING;
+  const is_not_found = deployment.running_status === OperationStatus.NOT_FOUND;
   const is_muted = deployment.running_status === OperationStatus.MUTED;
 
   const checkUpdate = React.useCallback(async () => {
@@ -189,7 +191,9 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
           size="sm"
           className="text-xs"
           disabled={
-            !!operationType && operationType !== (is_muted ? 'resume' : 'muted')
+            is_not_found ||
+            (!!operationType &&
+              operationType !== (is_muted ? 'resume' : 'muted'))
           }
           onClick={() =>
             handleOperation(is_muted ? 'resume' : 'muted', async () =>
@@ -223,7 +227,9 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
           size="sm"
           className="text-xs"
           disabled={
-            !hasUpdate || (!!operationType && operationType !== 'update')
+            !hasUpdate ||
+            is_not_found ||
+            (!!operationType && operationType !== 'update')
           }
           onClick={() => handleOperation('update', async () => handleRestart())}
         >
@@ -258,7 +264,7 @@ export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
     {
       value: 'stream',
       label: '数据流',
-      content: <div>数据流内容</div>
+      content: <WebRTCPreview deployment={deployment} />
     },
     {
       value: 'logs',

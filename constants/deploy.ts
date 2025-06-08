@@ -56,6 +56,11 @@ export type DeploymentDataModel = {
   updated_at: string;
 };
 
+export type WebRTCOfferResponse = {
+  type: string;
+  sdp: string;
+};
+
 export enum OperationStatus {
   PENDING = 'pending',
   STOPPED = 'stopped',
@@ -120,7 +125,7 @@ export const STATUS_CONFIG = {
     icon: 'offline'
   },
   [OperationStatus.MUTED]: {
-    text: '静音',
+    text: '已暂停',
     color: 'gray',
     icon: 'muted'
   },
