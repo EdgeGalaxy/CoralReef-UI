@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vs } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
 interface GatewayProps {
   name: string;
@@ -64,7 +64,7 @@ export function CreateGatewayModal({
             <div className="relative mt-1">
               <SyntaxHighlighter
                 language="shell"
-                style={tomorrow}
+                style={vs}
                 className="pr-10 text-sm"
               >
                 {codeSnippet}

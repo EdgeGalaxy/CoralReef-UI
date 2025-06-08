@@ -60,8 +60,11 @@ export enum OperationStatus {
   PENDING = 'pending',
   STOPPED = 'stopped',
   RUNNING = 'running',
-  SUCCESS = 'success',
+  WARNING = 'warning',
   FAILURE = 'failure',
+  MUTED = 'muted',
+  // PAUSED = 'paused',
+  NOT_FOUND = 'not_found',
   TIMEOUT = 'timeout'
 }
 
@@ -101,20 +104,30 @@ export const STATUS_CONFIG = {
     color: 'yellow',
     icon: 'spinner'
   },
-  [OperationStatus.TIMEOUT]: {
-    text: '超时',
+  [OperationStatus.WARNING]: {
+    text: '警告',
     color: 'orange',
     icon: 'offline'
-  },
-  [OperationStatus.SUCCESS]: {
-    text: '成功',
-    color: 'green',
-    icon: 'online'
   },
   [OperationStatus.FAILURE]: {
     text: '失败',
     color: 'red',
     icon: 'offline'
+  },
+  [OperationStatus.NOT_FOUND]: {
+    text: '未找到',
+    color: 'gray',
+    icon: 'offline'
+  },
+  [OperationStatus.MUTED]: {
+    text: '静音',
+    color: 'gray',
+    icon: 'muted'
+  },
+  [OperationStatus.TIMEOUT]: {
+    text: '超时',
+    color: 'gray',
+    icon: 'timeout'
   }
 } as const;
 

@@ -14,6 +14,11 @@ import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
 
+interface DeploymentDiffResponse {
+  workflow_changed: boolean;
+  cameras_changed: boolean;
+}
+
 interface Props {
   deployment: DeploymentDataModel;
   onClose: () => void;
@@ -24,12 +29,32 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
   const api = useAuthApi();
   const { toast } = useToast();
   const [operationType, setOperationType] = React.useState<string | null>(null);
-  const is_disabled = deployment.running_status !== OperationStatus.RUNNING;
+  const [hasUpdate, setHasUpdate] = React.useState<boolean>(false);
+  const is_running = deployment.running_status === OperationStatus.RUNNING;
+  const is_muted = deployment.running_status === OperationStatus.MUTED;
+
+  const checkUpdate = React.useCallback(async () => {
+    try {
+      const response = await api.get(
+        `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}/compare`
+      );
+      const data = (await response.json()) as DeploymentDiffResponse;
+      const needsUpdate =
+        data.workflow_changed || data.cameras_changed || false;
+      setHasUpdate(needsUpdate);
+    } catch (error) {
+      console.error('检查更新失败:', error);
+    }
+  }, [api, deployment.id, deployment.workspace_id]);
+
+  React.useEffect(() => {
+    checkUpdate();
+  }, [checkUpdate]);
 
   const handleOperation = async (
     type: string,
     operation: () => Promise<void>
-  ) => {
+  ): Promise<void> => {
     if (operationType) return;
     setOperationType(type);
     try {
@@ -39,10 +64,40 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
     }
   };
 
+  const handlePause = async (): Promise<void> => {
+    await handleApiRequest(
+      () =>
+        api.post(
+          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}/pause`
+        ),
+      {
+        toast,
+        successTitle: '暂停成功',
+        errorTitle: '暂停失败',
+        onSuccess: onRefresh
+      }
+    );
+  };
+
+  const handleResume = async (): Promise<void> => {
+    await handleApiRequest(
+      () =>
+        api.post(
+          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}/resume`
+        ),
+      {
+        toast,
+        successTitle: '恢复成功',
+        errorTitle: '恢复失败',
+        onSuccess: onRefresh
+      }
+    );
+  };
+
   const handleUpdate = async (
     field: keyof DeploymentDataModel,
     newValue: string
-  ) => {
+  ): Promise<void> => {
     await handleApiRequest(
       () =>
         api.put(
@@ -58,24 +113,40 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
     );
   };
 
-  const handleDelete = () => {
-    return handleOperation('delete', async () => {
-      await handleApiRequest(
-        () =>
-          api.delete(
-            `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}`
-          ),
-        {
-          toast,
-          successTitle: '服务删除成功',
-          errorTitle: '服务删除失败',
-          onSuccess: () => {
-            onRefresh();
-            onClose();
-          }
+  const handleRestart = async (): Promise<void> => {
+    await handleApiRequest(
+      () =>
+        api.post(
+          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}/restart`
+        ),
+      {
+        toast,
+        successTitle: '操作完成',
+        errorTitle: '操作失败',
+        onSuccess: () => {
+          onRefresh();
+          checkUpdate();
         }
-      );
-    });
+      }
+    );
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    await handleApiRequest(
+      () =>
+        api.delete(
+          `api/reef/workspaces/${deployment.workspace_id}/deployments/${deployment.id}`
+        ),
+      {
+        toast,
+        successTitle: '服务删除成功',
+        errorTitle: '服务删除失败',
+        onSuccess: () => {
+          onRefresh();
+          onClose();
+        }
+      }
+    );
   };
 
   const status = getStatusConfig(deployment.running_status);
@@ -118,32 +189,20 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
           size="sm"
           className="text-xs"
           disabled={
-            is_disabled || (!!operationType && operationType !== 'restart')
+            !!operationType && operationType !== (is_muted ? 'resume' : 'muted')
           }
-          onClick={() => handleOperation('restart', async () => onRefresh())}
-        >
-          {operationType === 'restart' ? (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Icons.power className="mr-2 h-4 w-4" />
-          )}
-          重启
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs"
-          disabled={
-            is_disabled || (!!operationType && operationType !== 'stop')
+          onClick={() =>
+            handleOperation(is_muted ? 'resume' : 'muted', async () =>
+              is_muted ? handleResume() : handlePause()
+            )
           }
-          onClick={() => handleOperation('stop', async () => onRefresh())}
         >
-          {operationType === 'stop' ? (
+          {operationType === (is_muted ? 'resume' : 'muted') ? (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Icons.stopped className="mr-2 h-4 w-4" />
           )}
-          停止
+          {is_muted ? '恢复' : '暂停'}
         </Button>
         <Button
           variant="outline"
@@ -158,6 +217,22 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
             <Icons.refreshCw className="mr-2 h-4 w-4" />
           )}
           刷新
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          disabled={
+            !hasUpdate || (!!operationType && operationType !== 'update')
+          }
+          onClick={() => handleOperation('update', async () => handleRestart())}
+        >
+          {operationType === 'update' ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.refreshCw className="mr-2 h-4 w-4" />
+          )}
+          {hasUpdate ? '更新可用' : '已是最新'}
         </Button>
         <Button
           variant="outline"

@@ -44,7 +44,10 @@ import {
   Package,
   Play,
   SaveIcon,
-  LayoutGridIcon
+  LayoutGridIcon,
+  Pause,
+  VolumeXIcon,
+  Clock
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -86,6 +89,9 @@ export const Icons = {
   play: Play,
   save: SaveIcon,
   grid: LayoutGridIcon,
+  muted: VolumeXIcon,
+  paused: Pause,
+  timeout: Clock,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
