@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { Card } from '@/components/ui/card';
+import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
-
 import { DeploymentDataModel, WebRTCOfferResponse } from '@/constants/deploy';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
 
@@ -13,32 +14,35 @@ interface Props {
 export default function WebRTCPreview({ deployment }: Props) {
   const api = useAuthApi();
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamOutput, setStreamOutput] = useState<string[]>(['output_image']);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [streamOutput] = useState<string[]>(['output_image']);
   const videoRef = useRef<HTMLVideoElement>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
 
   // 处理WebRTC连接
   const handleStartStream = async () => {
+    if (isStreaming) {
+      handleStopStream();
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
     try {
-      peerConnection.current = new RTCPeerConnection(); // 使用 current 引用
+      peerConnection.current = new RTCPeerConnection();
 
-      // 2. 添加空的音视频轨道并设置为 recvonly
-      // stream = new MediaStream() is not needed here
       peerConnection.current.addTransceiver('video', {
-        direction: 'recvonly' // 前端只接收视频
+        direction: 'recvonly'
       });
-      // 注意: 不需要 addTransceiver('audio', { direction: 'recvonly' }); 如果你只关心视频
 
-      // 3. 设置视频流处理 (ontrack)
-      // 这是将远程流附加到 <video> 元素的关键
       peerConnection.current.ontrack = (event) => {
-        // 确保 event.streams[0] 是有效的，并且 videoRef.current 存在
         if (
           event.streams &&
           event.streams.length > 0 &&
           event.track.kind === 'video'
         ) {
-          console.log('Received remote stream:', event.streams[0]);
           if (videoRef.current) {
             videoRef.current.srcObject = event.streams[0];
           }
@@ -46,19 +50,11 @@ export default function WebRTCPreview({ deployment }: Props) {
       };
 
       peerConnection.current.onconnectionstatechange = () => {
-        console.log(
-          'Frontend Connection state:',
-          peerConnection.current?.connectionState
-        );
-        console.log(
-          'Frontend ICE Connection state:',
-          peerConnection.current?.iceConnectionState
-        );
         if (
           peerConnection.current?.connectionState === 'failed' ||
           peerConnection.current?.connectionState === 'disconnected'
         ) {
-          console.error('WebRTC connection failed or disconnected');
+          setError('WebRTC 连接失败或断开');
           setIsStreaming(false);
           if (peerConnection.current) {
             peerConnection.current.close();
@@ -66,7 +62,7 @@ export default function WebRTCPreview({ deployment }: Props) {
           }
         }
       };
-      // 6. 创建 offer
+
       const offer = await peerConnection.current.createOffer();
       await peerConnection.current.setLocalDescription(offer);
 
@@ -90,7 +86,7 @@ export default function WebRTCPreview({ deployment }: Props) {
 
       const data = await response.json();
       if (!data || !data.sdp) {
-        throw new Error('Invalid response from server: missing SDP');
+        throw new Error('服务器响应无效：缺少 SDP');
       }
       const answerSdp = data.sdp;
 
@@ -99,10 +95,9 @@ export default function WebRTCPreview({ deployment }: Props) {
         !answerSdp.includes('o=') ||
         !answerSdp.includes('s=')
       ) {
-        throw new Error('Invalid SDP format: missing required fields');
+        throw new Error('无效的 SDP 格式：缺少必需字段');
       }
 
-      // 9. 设置远程描述
       try {
         const answer = new RTCSessionDescription({
           type: 'answer',
@@ -110,21 +105,20 @@ export default function WebRTCPreview({ deployment }: Props) {
         });
 
         await peerConnection.current.setRemoteDescription(answer);
-        setIsStreaming(true); // 更新 UI 状态
+        setIsStreaming(true);
       } catch (error) {
-        console.error('Error setting remote description:', error);
-        throw new Error(
-          'Failed to set remote description: ' + (error as Error).message
-        );
+        throw new Error('设置远程描述失败: ' + (error as Error).message);
       }
     } catch (error) {
-      console.error('Error starting stream:', error);
-      // 清理连接
+      console.error('启动流失败:', error);
+      setError((error as Error).message || '连接失败，请重试');
       if (peerConnection.current) {
         peerConnection.current.close();
         peerConnection.current = null;
       }
       setIsStreaming(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -138,23 +132,72 @@ export default function WebRTCPreview({ deployment }: Props) {
       videoRef.current.srcObject = null;
     }
     setIsStreaming(false);
+    setError(null);
   };
 
-  return (
-    <div>
-      {/* 视频流显示区域 */}
-      <div className="mb-4 aspect-video overflow-hidden rounded-lg bg-black">
+  // 渲染播放器
+  const renderPlayer = () => {
+    if (error) {
+      return (
+        <div className="flex h-[400px] items-center justify-center">
+          <div className="text-center text-red-500">
+            <Icons.warning className="mx-auto mb-2 h-8 w-8" />
+            <p>{error}</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!isStreaming && !isLoading) {
+      return (
+        <div
+          className="flex h-[400px] cursor-pointer items-center justify-center bg-gray-100"
+          onClick={handleStartStream}
+        >
+          <div className="text-center">
+            <Icons.play className="mx-auto mb-2 h-12 w-12" />
+            <p className="text-sm font-medium">点击开始预览</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className="group relative h-[400px] bg-black"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
         <video
           ref={videoRef}
           autoPlay
           playsInline
           className="h-full w-full object-contain"
         />
+        {isHovering && isStreaming && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-12 w-12 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20"
+              onClick={handleStopStream}
+            >
+              <Icons.paused className="h-6 w-6" />
+            </Button>
+          </div>
+        )}
       </div>
-      <div className="flex space-x-4">
-        <Button onClick={handleStartStream}>开始流</Button>
-        <Button onClick={handleStopStream}>停止流</Button>
-      </div>
-    </div>
+    );
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
+          <Icons.spinner className="h-8 w-8 animate-spin text-white" />
+        </div>
+      )}
+      <div className="relative">{renderPlayer()}</div>
+    </Card>
   );
 }

@@ -13,8 +13,10 @@ import { EditableField } from './components/editable-field';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
+import { cn } from '@/lib/utils';
 
 import WebRTCPreview from './components/webrtc-preview';
+import { DeploymentSettings } from '@/components/sidebar/components/deployment-settings';
 
 interface DeploymentDiffResponse {
   workflow_changed: boolean;
@@ -260,6 +262,8 @@ function DeploymentDetail({ deployment, onRefresh, onClose }: Props) {
 }
 
 export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
+  const [isSaving, setIsSaving] = React.useState(false);
+
   const tabConfig = [
     {
       value: 'stream',
@@ -284,23 +288,39 @@ export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
     {
       value: 'settings',
       label: '设置',
-      content: <div>设置内容</div>
+      content: (
+        <DeploymentSettings
+          deployment={deployment}
+          onRefresh={onRefresh}
+          onSavingChange={setIsSaving}
+        />
+      )
     }
   ];
 
   return (
-    <Sidebar
-      title={deployment.name}
-      onClose={onClose}
-      detailContent={
-        <DeploymentDetail
-          deployment={deployment}
-          onRefresh={onRefresh}
-          onClose={onClose}
-        />
-      }
-      tabs={tabConfig}
-      defaultTab="stream"
-    />
+    <div className={cn('relative', isSaving && 'pointer-events-none')}>
+      {isSaving && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
+          <div className="flex flex-col items-center gap-2">
+            <Icons.spinner className="h-8 w-8 animate-spin" />
+            <p className="text-sm text-muted-foreground">正在保存设置...</p>
+          </div>
+        </div>
+      )}
+      <Sidebar
+        title={deployment.name}
+        onClose={onClose}
+        detailContent={
+          <DeploymentDetail
+            deployment={deployment}
+            onRefresh={onRefresh}
+            onClose={onClose}
+          />
+        }
+        tabs={tabConfig}
+        defaultTab="stream"
+      />
+    </div>
   );
 }

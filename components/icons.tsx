@@ -47,7 +47,8 @@ import {
   LayoutGridIcon,
   Pause,
   VolumeXIcon,
-  Clock
+  Clock,
+  PauseCircle
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
