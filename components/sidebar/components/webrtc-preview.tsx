@@ -1,11 +1,18 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { DeploymentDataModel, WebRTCOfferResponse } from '@/constants/deploy';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 interface Props {
   deployment: DeploymentDataModel;
@@ -17,7 +24,20 @@ export default function WebRTCPreview({ deployment }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isHovering, setIsHovering] = useState(false);
-  const [streamOutput] = useState<string[]>(['output_image']);
+
+  // 合并原始视频流选项和工作流输出字段
+  const allOutputFields = useMemo(
+    () => ['origin_image', ...deployment.output_image_fields],
+    [deployment.output_image_fields]
+  );
+  const [selectedOutput, setSelectedOutput] = useState<string>(
+    allOutputFields[0]
+  );
+  const streamOutput = useMemo(
+    () => (selectedOutput === 'origin_image' ? [] : [selectedOutput]),
+    [selectedOutput]
+  );
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
 
@@ -163,19 +183,15 @@ export default function WebRTCPreview({ deployment }: Props) {
     }
 
     return (
-      <div
-        className="group relative h-[400px] bg-black"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
+      <div className="relative h-[400px] bg-black">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           className="h-full w-full object-contain"
         />
-        {isHovering && isStreaming && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
+        {isStreaming && (
+          <div className="absolute bottom-4 right-4">
             <Button
               variant="outline"
               size="icon"
@@ -192,6 +208,30 @@ export default function WebRTCPreview({ deployment }: Props) {
 
   return (
     <Card className="overflow-hidden">
+      <div className="flex items-center gap-4 border-b p-4">
+        <div className="text-sm font-medium">视频流</div>
+        <Select
+          value={selectedOutput}
+          onValueChange={(value) => {
+            setSelectedOutput(value);
+            if (isStreaming) {
+              handleStopStream();
+              setTimeout(handleStartStream, 500);
+            }
+          }}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="选择输出图像" />
+          </SelectTrigger>
+          <SelectContent>
+            {allOutputFields.map((field) => (
+              <SelectItem key={field} value={field}>
+                {field === 'origin_image' ? '原始视频流' : field}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       {isLoading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
           <Icons.spinner className="h-8 w-8 animate-spin text-white" />

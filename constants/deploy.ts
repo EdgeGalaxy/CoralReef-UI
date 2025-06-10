@@ -52,6 +52,7 @@ export type DeploymentDataModel = {
   pipeline_id?: string;
   workspace_id: string;
   running_status: OperationStatus;
+  output_image_fields: string[];
   created_at: string;
   updated_at: string;
 };
