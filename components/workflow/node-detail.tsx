@@ -19,12 +19,12 @@ import {
   skipFormFields
 } from '@/constants/block';
 
-import KindField from './kind-field';
-import AnyOfKindField from './anyof-kind-field';
+import KindField from './custom-fields/kind-field';
+import AnyOfKindField from './custom-fields/anyof-kind-field';
 import ModelSelectorField, {
   isRoboflowModelField
-} from './model-selector-field';
-import ParamTypeField from './param-type-field';
+} from './custom-fields/model-selector-field';
+import ParamTypeField from './custom-fields/param-type-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';

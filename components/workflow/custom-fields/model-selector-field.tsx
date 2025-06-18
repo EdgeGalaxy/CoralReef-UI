@@ -13,7 +13,6 @@ import { ReloadIcon } from '@radix-ui/react-icons';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { PropertyDefinition, NodeData } from '@/constants/block';
 import { useSession } from 'next-auth/react';
-import { useToast } from '@/components/ui/use-toast';
 import { MLModel } from '@/constants/models';
 
 // 检查字段是否为Roboflow模型ID字段
@@ -125,12 +124,12 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium dark:text-white">
+        {/* <Label className="text-sm font-medium dark:text-white">
           <span className="font-bold">{schema?.title || props.name}</span>
           {required && (
             <span className="ml-1 text-red-500 dark:text-red-400">*</span>
           )}
-        </Label>
+        </Label> */}
         {!isKindMode && error && (
           <Button
             variant="ghost"

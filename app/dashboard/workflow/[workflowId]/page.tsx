@@ -92,7 +92,6 @@ const DesignPage = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { isMinimized, toggle: toggleSidebar } = useSidebar();
-  const [flowWidth, setFlowWidth] = useState('calc(100vw - 288px)');
   const [availableNodes, setAvailableNodes] = useState<BlockDescription[]>([]);
   const [kindsConnections, setKindsConnections] = useState<KindsConnections>(
     {}
@@ -114,10 +113,6 @@ const DesignPage = () => {
       description: ''
     }
   });
-
-  useEffect(() => {
-    setFlowWidth(isMinimized ? 'calc(100vw - 72px)' : 'calc(100vw - 288px)');
-  }, [isMinimized]);
 
   useEffect(() => {
     if (isMinimized) {
@@ -662,28 +657,48 @@ const DesignPage = () => {
 
   return (
     <PageContainer scrollable={true}>
-      <div className="space-y-4">
+      <div className="flex-1 space-y-4 p-4 md:p-8 md:pr-4">
         <div className="flex items-center justify-between">
           <Breadcrumbs items={breadcrumbItems} />
-          <Button
-            onClick={handleSave}
-            disabled={isLoading}
-            variant="default"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <Icons.spinner className="h-4 w-4 animate-spin" />
-                保存中...
-              </>
-            ) : (
-              <>
-                <Icons.save className="h-4 w-4" />
-                保存工作流
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSave}
+              disabled={isLoading}
+              variant="default"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <Icons.spinner className="h-4 w-4 animate-spin" />
+                  保存中...
+                </>
+              ) : (
+                <>
+                  <Icons.save className="h-4 w-4" />
+                  保存工作流
+                </>
+              )}
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="default"
+                  className="flex items-center gap-2"
+                  size="sm"
+                >
+                  <Icons.grid className="h-4 w-4" />
+                  节点选择器
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <NodeSelector
+                  nodes={availableNodes as unknown as BlockDescription[]}
+                  onNodeSelect={onNodeSelect}
+                />
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -760,8 +775,8 @@ const DesignPage = () => {
 
         <div
           style={{
-            width: flowWidth,
-            height: 'calc(100vh - 80px)',
+            width: '100%',
+            height: 'calc(100vh - 140px)',
             transition: 'width 0.5s',
             position: 'relative',
             display: 'flex',
@@ -827,24 +842,6 @@ const DesignPage = () => {
             </div>
           </ReactFlowProvider>
 
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="default"
-                className="absolute right-6 top-6 z-10 flex items-center gap-2"
-                size="sm"
-              >
-                <Icons.grid className="h-4 w-4" />
-                节点选择器
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <NodeSelector
-                nodes={availableNodes as unknown as BlockDescription[]}
-                onNodeSelect={onNodeSelect}
-              />
-            </SheetContent>
-          </Sheet>
           {selectedNode && (
             <NodeDetail
               isOpen={!!selectedNode}

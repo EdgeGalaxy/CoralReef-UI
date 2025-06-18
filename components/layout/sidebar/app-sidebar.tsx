@@ -166,7 +166,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} className="w-full md:w-60 lg:w-60">
       <SidebarHeader className="pt-6">
         <div className="mb-4 flex justify-start px-4">
           <Image

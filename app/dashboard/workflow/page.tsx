@@ -50,27 +50,25 @@ const WorkflowListPage = () => {
 
   return (
     <PageContainer scrollable={true}>
-      <div className="space-y-4">
+      <div className="flex-1 space-y-4 p-4 md:p-8">
         <Breadcrumbs items={breadcrumbItems} />
-        <div className="container mx-auto p-4">
-          <div className="flex items-start justify-between">
-            <Heading
-              title={`工作流 (${workflows.length})`}
-              description="管理工作流"
-            />
-            <WorkflowTemplateCreateModal
-              templates={templates}
-              onCreateWorkflow={handleCreateTemplateWorkflow}
-              onCreateNewWorkflow={handleCreateNewWorkflow}
-            />
-          </div>
-          <Separator className="my-4" />
-          <WorkflowTable
-            workflows={workflows}
-            workspaceId={workspaceId}
-            onWorkflowsChange={refreshWorkflows}
+        <div className="flex items-start justify-between">
+          <Heading
+            title={`工作流 (${workflows.length})`}
+            description="管理工作流"
+          />
+          <WorkflowTemplateCreateModal
+            templates={templates}
+            onCreateWorkflow={handleCreateTemplateWorkflow}
+            onCreateNewWorkflow={handleCreateNewWorkflow}
           />
         </div>
+        <Separator className="my-4" />
+        <WorkflowTable
+          workflows={workflows}
+          workspaceId={workspaceId}
+          onWorkflowsChange={refreshWorkflows}
+        />
       </div>
     </PageContainer>
   );
