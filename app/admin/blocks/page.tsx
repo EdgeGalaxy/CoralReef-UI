@@ -7,16 +7,14 @@ import { BlockTranslations } from '@/components/blocks/block-translations';
 import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { useAuthSWR, useAuthApi } from '@/components/hooks/useAuthReq';
-import { useSession } from 'next-auth/react';
-import { useParams } from 'next/navigation';
 import { type BlockTranslation } from '@/lib/blocks';
 import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
 
-import DashboardLoading from '../loading';
-import DashboardError from '../error';
+import DashboardLoading from '@/app/admin/loading';
+import DashboardError from '@/app/admin/error';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },

@@ -67,7 +67,9 @@ const ModelSelectorField: React.FC<ModelSelectorFieldProps> = (props) => {
     error,
     mutate
   } = workspaceId
-    ? useAuthSWR<MLModel[]>(`/api/reef/workspaces/${workspaceId}/models`)
+    ? useAuthSWR<MLModel[]>(
+        `/api/reef/workspaces/${workspaceId}/models?is_public=true`
+      )
     : {
         data: undefined,
         error: undefined,

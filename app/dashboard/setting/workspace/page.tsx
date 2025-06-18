@@ -13,8 +13,8 @@ import PageContainer from '@/components/layout/page-container';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { handleApiRequest } from '@/lib/error-handle';
 
-import DashboardLoading from '../../loading';
-import DashboardError from '../../error';
+import DashboardLoading from '@/app/dashboard/loading';
+import DashboardError from '@/app/dashboard/error';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },

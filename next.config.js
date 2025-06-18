@@ -9,7 +9,16 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true
   },
-  output: 'standalone'
+  output: 'standalone',
+  async redirects() {
+    return [
+      {
+        source: '/admin',
+        destination: '/admin/ml-models',
+        permanent: true
+      }
+    ];
+  }
 };
 
 module.exports = nextConfig;

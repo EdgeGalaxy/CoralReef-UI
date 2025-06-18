@@ -45,11 +45,6 @@ const data = {
       icon: Workflow
     },
     {
-      title: '工作流模板',
-      url: '/dashboard/workflow-template',
-      icon: Workflow
-    },
-    {
       title: '部署',
       url: '/dashboard/deploy/gateway',
       icon: Server,
@@ -67,16 +62,6 @@ const data = {
           url: '/dashboard/deploy/deployment'
         }
       ]
-    },
-    {
-      title: '模型',
-      url: '/dashboard/ml-models',
-      icon: CircuitBoard
-    },
-    {
-      title: '节点',
-      url: '/dashboard/blocks',
-      icon: Blocks
     },
     {
       title: '设置',

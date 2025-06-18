@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -28,16 +28,32 @@ export function Sidebar({
   defaultTab
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0].value);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setIsOpen(true);
+  }, []);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Animation duration
+  };
 
   return (
-    <Card className="fixed right-0 top-0 z-50 flex h-full w-full flex-col shadow-lg sm:w-1/2">
+    <Card
+      className={`fixed right-0 top-0 z-50 flex h-full w-full flex-col shadow-lg transition-transform duration-300 ease-in-out sm:w-1/2 ${
+        isOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 md:p-6">
         <div className="flex flex-col">
           <CardTitle className="text-xl font-bold md:text-2xl">
             {title}
           </CardTitle>
         </div>
-        <Button onClick={onClose} variant="ghost" size="icon">
+        <Button onClick={handleClose} variant="ghost" size="icon">
           <Icons.close />
         </Button>
       </CardHeader>

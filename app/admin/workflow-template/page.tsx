@@ -13,8 +13,8 @@ import SyncWorkflowTemplate from '@/components/modal/sync-workflow-template';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
-import DashboardLoading from '../loading';
-import DashboardError from '../error';
+import DashboardLoading from '@/app/admin/loading';
+import DashboardError from '@/app/admin/error';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },

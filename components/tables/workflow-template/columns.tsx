@@ -5,20 +5,10 @@ import { Eye, EyeOff, Copy, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TemplateResponse } from '@/constants/template';
 
-declare module '@tanstack/table-core' {
-  interface TableMeta<TData extends unknown> {
-    onToggleVisibility?: (template: TemplateResponse) => void;
-    onFork?: (template: TemplateResponse) => void;
-    onDelete?: (template: TemplateResponse) => void;
-  }
-}
-
 export interface WorkflowTemplateTableMeta {
   onToggleVisibility?: (template: TemplateResponse) => void;
   onFork?: (template: TemplateResponse) => void;
   onDelete?: (template: TemplateResponse) => void;
-  onManageUsers?: (workspace: any) => void;
-  onRemoveUser?: (workspaceId: string, userId: string) => void;
 }
 
 export const columns: ColumnDef<TemplateResponse>[] = [

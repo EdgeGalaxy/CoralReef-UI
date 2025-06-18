@@ -13,8 +13,8 @@ import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
-import DashboardLoading from '../loading';
-import DashboardError from '../error';
+import DashboardLoading from '@/app/admin/loading';
+import DashboardError from '@/app/admin/error';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
@@ -62,7 +62,9 @@ export default function ModelsPage() {
           <Separator className="my-4" />
           <ModelTable
             models={models}
-            onSelectModel={(model: MLModel) => setSelectedModel(model)}
+            workspaceId={workspaceId}
+            onSelectModel={setSelectedModel}
+            onModelsChange={handleCreateSuccess}
           />
           {selectedModel && (
             <ModelSidebar

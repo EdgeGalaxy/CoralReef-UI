@@ -8,8 +8,8 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import PageContainer from '@/components/layout/page-container';
 import { Button } from '@/components/ui/button';
 import { UserProfile } from '@/constants/user';
-import DashboardLoading from '../../loading';
-import DashboardError from '../../error';
+import DashboardLoading from '@/app/dashboard/loading';
+import DashboardError from '@/app/dashboard/error';
 import UserProfileForm from '@/components/forms/user-profile-form';
 import ResetPasswordModal from '@/components/modal/reset-password-modal';
 

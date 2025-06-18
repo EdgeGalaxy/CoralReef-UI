@@ -13,8 +13,8 @@ import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 
-import DashboardLoading from '../../loading';
-import DashboardError from '../../error';
+import DashboardLoading from '@/app/dashboard/loading';
+import DashboardError from '@/app/dashboard/error';
 
 const breadcrumbItems = [
   { title: '部署', link: '/dashboard/deploy/gateway' },

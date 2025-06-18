@@ -287,7 +287,7 @@ export function WorkflowTemplateTable({
         setForkingTemplate(template);
         setIsForkModalOpen(true);
       }
-    } as unknown as WorkflowTemplateTableMeta
+    } as WorkflowTemplateTableMeta
   });
 
   return (

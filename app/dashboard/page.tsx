@@ -13,7 +13,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DashboardLoading from './loading';
+import DashboardLoading from '@/app/dashboard/loading';
 
 export default function page() {
   const isLoading = false; // Replace with actual loading state

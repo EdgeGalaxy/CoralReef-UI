@@ -12,8 +12,8 @@ import { useParams } from 'next/navigation';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
 
-import DashboardLoading from '../loading';
-import DashboardError from '../error';
+import DashboardLoading from '@/app/dashboard/loading';
+import DashboardError from '@/app/dashboard/error';
 
 const breadcrumbItems = [
   { title: '首页', link: '/dashboard' },
