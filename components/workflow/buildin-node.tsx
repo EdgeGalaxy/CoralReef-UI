@@ -5,9 +5,10 @@ import {
   ImageIcon,
   SlidersHorizontalIcon,
   PlusIcon,
-  BoxIcon
+  BoxIcon,
+  PlusCircle
 } from 'lucide-react';
-import { Handle, Position } from 'reactflow';
+import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeData } from '@/constants/block';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,11 +46,12 @@ const OutputSpecificComponent: React.FC = () => {
   );
 };
 
-const BuiltInNode: React.FC<{
-  data: NodeData;
-  isConnectable: boolean;
-  selected: boolean;
-}> = ({ data, isConnectable, selected }) => {
+const BuiltInNode: React.FC<NodeProps<NodeData>> = ({
+  data,
+  isConnectable,
+  selected,
+  id
+}) => {
   const { sources = [], params = [] } = data.formData;
   const isInput = data.manifest_type_identifier === 'input';
   const isOutput = data.manifest_type_identifier === 'output';
@@ -67,8 +69,20 @@ const BuiltInNode: React.FC<{
   const nodeColor = getNodeColor(data.manifest_type_identifier);
   const [borderColor, bgColor] = nodeColor.split(' ');
 
+  const handleAddClick = (e: React.MouseEvent, handleId: string) => {
+    e.stopPropagation();
+    const event = new CustomEvent('open-connect-panel', {
+      detail: {
+        nodeId: id,
+        handleId: handleId,
+        domEvent: e
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
   return (
-    <div>
+    <div className="group">
       <Card
         className={`border-2 ${borderColor} rounded-lg dark:bg-sidebar ${
           selected
@@ -129,12 +143,21 @@ const BuiltInNode: React.FC<{
           </div>
         </CardContent>
         {isInput && (
-          <Handle
-            type="source"
-            position={Position.Right}
-            isConnectable={isConnectable}
-            className="dark:border-sidebar-border dark:bg-sidebar-accent"
-          />
+          <>
+            <Handle
+              type="source"
+              position={Position.Right}
+              isConnectable={isConnectable}
+              id="output"
+              className="custom-handle !right-[-5px]"
+            />
+            <button
+              onClick={(e) => handleAddClick(e, 'output')}
+              className="add-node-btn absolute right-[-28px] top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <PlusCircle className="h-4 w-4" />
+            </button>
+          </>
         )}
       </Card>
     </div>

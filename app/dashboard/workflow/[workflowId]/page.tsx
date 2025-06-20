@@ -62,10 +62,23 @@ import { toast } from '@/components/ui/use-toast';
 import { WorkflowCreate, WorkflowResponse } from '@/constants/workflow';
 import { useAuthSWR, useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
+import ConnectNodePanel from '@/components/workflow/connect-node-panel';
+import CustomEdge from '@/components/workflow/custom-edge';
 
 const nodeTypes = {
   customNode: CustomNode,
   builtInNode: BuiltInNode
+};
+
+const edgeTypes = {
+  custom: CustomEdge
+};
+
+const defaultEdgeOptions = {
+  type: 'custom',
+  style: {
+    strokeWidth: 2
+  }
 };
 
 const breadcrumbItems = [
@@ -105,6 +118,58 @@ const DesignPage = () => {
     name: '',
     description: ''
   });
+  const [connectMenu, setConnectMenu] = useState<{
+    position: { x: number; y: number };
+    sourceNodeId: string;
+    sourceHandleId: string | null;
+    connectableManifests: string[];
+  } | null>(null);
+
+  const getConnectableNodeManifests = useCallback(
+    (node: Node): string[] => {
+      if (!node?.data || !kindsConnections) {
+        return [];
+      }
+
+      const connectableManifests = new Set<string>();
+      const outputKindNames = new Set<string>();
+
+      if (node.data.outputs_manifest) {
+        node.data.outputs_manifest.forEach((output: OutputDefinition) => {
+          output.kind.forEach((k: Kind) => {
+            outputKindNames.add(k.name);
+          });
+        });
+      } else if (node.data.manifest_type_identifier === 'input') {
+        // Special handling for input node as it doesn't have outputs_manifest
+        // It provides 'image' and other parameter types as outputs.
+        if (node.data.formData?.sources) {
+          outputKindNames.add('image');
+        }
+        if (node.data.formData?.params) {
+          node.data.formData.params.forEach((param: any) => {
+            if (param.type) {
+              outputKindNames.add(param.type);
+            }
+          });
+        }
+      }
+
+      outputKindNames.forEach((kindName) => {
+        if (kindsConnections[kindName]) {
+          kindsConnections[kindName].forEach((connection) => {
+            connectableManifests.add(connection.manifest_type_identifier);
+          });
+        }
+      });
+
+      // Any node can connect to the output node
+      connectableManifests.add(outputNode.data.manifest_type_identifier);
+
+      return Array.from(connectableManifests);
+    },
+    [kindsConnections]
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -159,7 +224,7 @@ const DesignPage = () => {
         const targetManifest = targetNode.data.manifest_type_identifier;
 
         const imageConnections = kindsConnections['*'] || [];
-        const avaliableImageNodes = availableKindValues['image'] || [];
+        const avaliableImageNodes = availableKindValues['*'] || [];
         let connectNode: PropertyDefinition | undefined = undefined;
         let propertyName: string | undefined = undefined;
 
@@ -250,6 +315,38 @@ const DesignPage = () => {
       );
     }
   }, [selectedNode]);
+
+  const handleOpenConnectPanel = useCallback(
+    (domEvent: React.MouseEvent, nodeId: string, handleId: string | null) => {
+      domEvent.stopPropagation();
+
+      if (!nodeId) return;
+
+      const sourceNode = nodes.find((n) => n.id === nodeId);
+      if (!sourceNode) return;
+
+      const connectableManifests = getConnectableNodeManifests(sourceNode);
+
+      const reactFlowPane = (domEvent.target as HTMLElement).closest(
+        '.react-flow__pane'
+      );
+      if (!reactFlowPane) return;
+
+      const rect = reactFlowPane.getBoundingClientRect();
+      const position = {
+        x: domEvent.clientX - rect.left + 20,
+        y: domEvent.clientY - rect.top
+      };
+
+      setConnectMenu({
+        position,
+        sourceNodeId: nodeId,
+        sourceHandleId: handleId,
+        connectableManifests
+      });
+    },
+    [nodes, getConnectableNodeManifests]
+  );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -655,6 +752,110 @@ const DesignPage = () => {
     };
   }, [setNodes]);
 
+  useEffect(() => {
+    const handleEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { domEvent, nodeId, handleId } = customEvent.detail;
+      handleOpenConnectPanel(domEvent, nodeId, handleId);
+    };
+
+    window.addEventListener('open-connect-panel', handleEvent);
+    return () => {
+      window.removeEventListener('open-connect-panel', handleEvent);
+    };
+  }, [handleOpenConnectPanel]);
+
+  const handleNodeSelectFromPanel = useCallback(
+    (selectedBlock: BlockDescription) => {
+      if (!connectMenu) return;
+
+      const { sourceNodeId, sourceHandleId, position } = connectMenu;
+      const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+      if (!sourceNode) return;
+
+      // 1. Create new node
+      const newNodeId = `${selectedBlock.manifest_type_identifier}-${
+        nodes.length + 1
+      }`;
+      const newNode = {
+        id: newNodeId,
+        type: 'customNode',
+        position: { x: position.x + 350, y: position.y - 50 }, // Place it to the right of the panel
+        data: {
+          ...selectedBlock,
+          label: selectedBlock.human_friendly_block_name,
+          formData: generateFormData(selectedBlock)
+        } as NodeData,
+        style: { width: 200, fontSize: '12px' }
+      };
+
+      // 2. Connect logic (adapted from onConnect)
+      const params = {
+        source: sourceNodeId,
+        sourceHandle: sourceHandleId,
+        target: newNodeId,
+        targetHandle: null // Assume one main input handle for now
+      };
+
+      const sourceManifest = sourceNode.data.manifest_type_identifier;
+      const targetManifest = newNode.data.manifest_type_identifier;
+      const sourceNodeName = sourceNode.data.formData.name;
+
+      const imageConnections = kindsConnections['*'] || [];
+      const avaliableImageNodes = availableKindValues['*'] || [];
+      let connectNodeDef: PropertyDefinition | undefined = undefined;
+      let propertyValue: string | undefined = undefined;
+
+      if (sourceManifest === inputNode.data.manifest_type_identifier) {
+        connectNodeDef = imageConnections.find(
+          (conn) =>
+            conn.manifest_type_identifier === targetManifest &&
+            conn.compatible_element === 'any_data'
+        );
+        if (sourceHandleId) {
+          propertyValue = `$inputs.${sourceHandleId}`;
+        }
+      } else {
+        connectNodeDef = imageConnections.find(
+          (conn) =>
+            conn.manifest_type_identifier === targetManifest &&
+            conn.compatible_element === 'any_data'
+        );
+        if (sourceHandleId) {
+          propertyValue = `$steps.${sourceNodeName}.${sourceHandleId}`;
+        }
+      }
+
+      let finalNewNode = newNode;
+      if (connectNodeDef && propertyValue) {
+        finalNewNode = {
+          ...newNode,
+          data: {
+            ...newNode.data,
+            formData: {
+              ...newNode.data.formData,
+              [connectNodeDef.property_name]: propertyValue
+            }
+          }
+        };
+      }
+
+      setNodes((nds) => nds.concat(finalNewNode));
+      setEdges((eds) => addEdge(params, eds));
+
+      setConnectMenu(null);
+    },
+    [
+      connectMenu,
+      nodes,
+      setNodes,
+      setEdges,
+      generateFormData,
+      kindsConnections,
+      availableKindValues
+    ]
+  );
+
   return (
     <PageContainer scrollable={true}>
       <div className="flex-1 space-y-4 p-4 md:p-8 md:pr-4">
@@ -809,6 +1010,8 @@ const DesignPage = () => {
                 onNodeClick={onNodeClick}
                 onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
                 multiSelectionKeyCode={null} // Disable multi-selection
                 selectionKeyCode={null} // Disable selection
                 translateExtent={reactFlowDefaultConfig.translateExtent}
@@ -838,6 +1041,18 @@ const DesignPage = () => {
                   size={1}
                   className="dark:!bg-sidebar"
                 />
+                {connectMenu && (
+                  <ConnectNodePanel
+                    position={connectMenu.position}
+                    availableNodes={availableNodes.filter((n) =>
+                      connectMenu.connectableManifests.includes(
+                        n.manifest_type_identifier
+                      )
+                    )}
+                    onNodeSelect={handleNodeSelectFromPanel}
+                    onClose={() => setConnectMenu(null)}
+                  />
+                )}
               </ReactFlow>
             </div>
           </ReactFlowProvider>

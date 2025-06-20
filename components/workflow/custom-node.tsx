@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlertIcon } from 'lucide-react';
-import { Handle, Position } from 'reactflow';
+import { ShieldAlertIcon, PlusCircle } from 'lucide-react';
+import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeData } from '@/constants/block';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { skipFormFields } from '@/constants/block';
 import { getNodeColor } from '@/lib/node-utils';
+import './custom-edge.css';
 
-const CustomNode = ({
-  data,
-  selected
-}: {
-  data: NodeData;
-  selected: boolean;
-}) => {
+const CustomNode = ({ data, selected, id }: NodeProps<NodeData>) => {
   const [missRequiredFields, setMissRequiredFields] = useState(false);
   const [missingFieldNames, setMissingFieldNames] = useState<string[]>([]);
+
+  const handleAddClick = (e: React.MouseEvent, handleId: string) => {
+    e.stopPropagation();
+    const event = new CustomEvent('open-connect-panel', {
+      detail: {
+        nodeId: id,
+        handleId: handleId,
+        domEvent: e
+      }
+    });
+    window.dispatchEvent(event);
+  };
 
   useEffect(() => {
     const checkRequiredFields = () => {
@@ -52,7 +59,7 @@ const CustomNode = ({
   const nodeColor = getNodeColor(data.block_schema.block_type);
 
   return (
-    <div>
+    <div className="group">
       <Card
         className={`border-2 ${nodeColor.border} rounded-lg dark:bg-sidebar ${
           missRequiredFields
@@ -70,7 +77,7 @@ const CustomNode = ({
         <Handle
           type="target"
           position={Position.Left}
-          className="dark:border-sidebar-border dark:bg-sidebar-accent"
+          className="!left-[-5px] !h-3 !w-3 dark:border-sidebar-border dark:bg-sidebar-accent"
         />
         <CardHeader
           className={`py-3 ${nodeColor.bg} rounded-t-lg dark:bg-sidebar-accent dark:!bg-opacity-60`}
@@ -109,9 +116,16 @@ const CustomNode = ({
         </CardContent>
         <Handle
           type="source"
+          id="output"
           position={Position.Right}
-          className="dark:border-sidebar-border dark:bg-sidebar-accent"
+          className="custom-handle !right-[-5px]"
         />
+        <button
+          onClick={(e) => handleAddClick(e, 'output')}
+          className="add-node-btn absolute right-[-28px] top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <PlusCircle className="h-4 w-4" />
+        </button>
       </Card>
     </div>
   );

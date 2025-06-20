@@ -1,0 +1,47 @@
+.react-flow__edge-path-animated {
+  stroke-dasharray: 5, 5;
+  stroke-dashoffset: 0;
+  animation: dash-flow 1s linear infinite;
+  stroke-width: 2px;
+}
+
+@keyframes dash-flow {
+  from {
+    stroke-dashoffset: 10;
+  }
+}
+
+.custom-handle {
+  width: 10px;
+  height: 10px;
+  background-color: #90cdf4;
+  border: 1px solid #4299e1;
+  border-radius: 50%;
+  cursor: crosshair !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.custom-handle:hover {
+  transform: scale(1.5);
+  background-color: #4299e1;
+}
+
+.add-node-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.add-node-btn:hover {
+  transform: scale(1.1);
+  border-color: #4299e1;
+  color: #4299e1;
+}
