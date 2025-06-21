@@ -23,6 +23,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
   });
 
   const edgeStyle = {
+    fill: 'none',
     stroke: '#5a67d8',
     ...style
   };

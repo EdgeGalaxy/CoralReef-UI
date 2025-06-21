@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import ReactFlow, {
   ReactFlowProvider,
@@ -12,7 +12,9 @@ import ReactFlow, {
   useEdgesState,
   Node,
   Connection,
-  Edge
+  Edge,
+  ReactFlowInstance,
+  XYPosition
 } from 'reactflow';
 import {
   Dialog,
@@ -65,6 +67,22 @@ import { handleApiRequest } from '@/lib/error-handle';
 import ConnectNodePanel from '@/components/workflow/connect-node-panel';
 import CustomEdge from '@/components/workflow/custom-edge';
 
+interface HandleBound {
+  id: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  position: string;
+}
+
+interface NodeWithBounds extends Node {
+  handleBounds?: {
+    source?: HandleBound[];
+    target?: HandleBound[];
+  };
+}
+
 const nodeTypes = {
   customNode: CustomNode,
   builtInNode: BuiltInNode
@@ -102,10 +120,13 @@ const DesignPage = () => {
   const workspaceId =
     (params?.workspaceId as string) || session.data?.user.select_workspace_id;
 
+  const rfWrapperRef = useRef<HTMLDivElement>(null);
+  const animationFrameRef = useRef<number>();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { isMinimized, toggle: toggleSidebar } = useSidebar();
   const [availableNodes, setAvailableNodes] = useState<BlockDescription[]>([]);
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [kindsConnections, setKindsConnections] = useState<KindsConnections>(
     {}
   );
@@ -119,10 +140,14 @@ const DesignPage = () => {
     description: ''
   });
   const [connectMenu, setConnectMenu] = useState<{
-    position: { x: number; y: number };
+    position: XYPosition;
     sourceNodeId: string;
     sourceHandleId: string | null;
     connectableManifests: string[];
+  } | null>(null);
+  const [dragState, setDragState] = useState<{
+    startNodePos: XYPosition;
+    startPanelPos: XYPosition;
   } | null>(null);
 
   const getConnectableNodeManifests = useCallback(
@@ -327,12 +352,10 @@ const DesignPage = () => {
 
       const connectableManifests = getConnectableNodeManifests(sourceNode);
 
-      const reactFlowPane = (domEvent.target as HTMLElement).closest(
-        '.react-flow__pane'
-      );
-      if (!reactFlowPane) return;
+      const reactFlowWrapper = rfWrapperRef.current;
+      if (!reactFlowWrapper) return;
 
-      const rect = reactFlowPane.getBoundingClientRect();
+      const rect = reactFlowWrapper.getBoundingClientRect();
       const position = {
         x: domEvent.clientX - rect.left + 20,
         y: domEvent.clientY - rect.top
@@ -423,8 +446,9 @@ const DesignPage = () => {
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
       setSelectedNode(node);
+      setConnectMenu(null);
     },
-    [setNodes]
+    [setSelectedNode]
   );
 
   // Add this new function to handle key presses
@@ -614,8 +638,46 @@ const DesignPage = () => {
     [selectedNode, setNodes, updateAvailableKindValues]
   );
 
+  const onNodeDragStart = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      if (connectMenu && node.id === connectMenu.sourceNodeId) {
+        setDragState({
+          startNodePos: node.position,
+          startPanelPos: connectMenu.position
+        });
+      }
+    },
+    [connectMenu]
+  );
+
+  const onNodeDrag = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      if (!dragState || !connectMenu || !rfInstance) {
+        return;
+      }
+
+      const zoom = rfInstance.getZoom();
+
+      const delta = {
+        x: (node.position.x - dragState.startNodePos.x) * zoom,
+        y: (node.position.y - dragState.startNodePos.y) * zoom
+      };
+
+      const newPosition = {
+        x: dragState.startPanelPos.x + delta.x,
+        y: dragState.startPanelPos.y + delta.y
+      };
+
+      setConnectMenu((menu) =>
+        menu ? { ...menu, position: newPosition } : null
+      );
+    },
+    [dragState, connectMenu, rfInstance]
+  );
+
   const onNodeDragStop = useCallback(
     (event: React.MouseEvent, node: Node) => {
+      setDragState(null);
       if (node.type === 'builtInNode') {
         // 允许内置节点在更大范围内移动，包括负坐标区域，但有合理限制
         const newNodes = nodes.map((n) => {
@@ -641,6 +703,8 @@ const DesignPage = () => {
     },
     [nodes, setNodes]
   );
+
+  const onInit = (instance: ReactFlowInstance) => setRfInstance(instance);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -749,6 +813,9 @@ const DesignPage = () => {
         'workflow:update_input_models',
         handleUpdateInputModels as EventListener
       );
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [setNodes]);
 
@@ -769,7 +836,7 @@ const DesignPage = () => {
     (selectedBlock: BlockDescription) => {
       if (!connectMenu) return;
 
-      const { sourceNodeId, sourceHandleId, position } = connectMenu;
+      const { sourceNodeId, sourceHandleId } = connectMenu;
       const sourceNode = nodes.find((n) => n.id === sourceNodeId);
       if (!sourceNode) return;
 
@@ -777,16 +844,38 @@ const DesignPage = () => {
       const newNodeId = `${selectedBlock.manifest_type_identifier}-${
         nodes.length + 1
       }`;
+      const newNodeWidth = 200;
+      let newNodePosition = {
+        x: sourceNode.position.x + (sourceNode.width || 200) + 150,
+        y: sourceNode.position.y
+      };
+
+      if (rfInstance && rfWrapperRef.current) {
+        const { x: viewX, zoom } = rfInstance.getViewport();
+        const { width: wrapperWidth } =
+          rfWrapperRef.current.getBoundingClientRect();
+
+        // Check if the new node would be off-screen to the right
+        const viewportRightEdge = viewX + wrapperWidth / zoom;
+        if (newNodePosition.x + newNodeWidth > viewportRightEdge) {
+          // If so, place it below the source node
+          newNodePosition = {
+            x: sourceNode.position.x,
+            y: sourceNode.position.y + (sourceNode.height || 100) + 50
+          };
+        }
+      }
+
       const newNode = {
         id: newNodeId,
         type: 'customNode',
-        position: { x: position.x + 350, y: position.y - 50 }, // Place it to the right of the panel
+        position: newNodePosition,
         data: {
           ...selectedBlock,
           label: selectedBlock.human_friendly_block_name,
           formData: generateFormData(selectedBlock)
         } as NodeData,
-        style: { width: 200, fontSize: '12px' }
+        style: { width: newNodeWidth, fontSize: '12px' }
       };
 
       // 2. Connect logic (adapted from onConnect)
@@ -802,7 +891,6 @@ const DesignPage = () => {
       const sourceNodeName = sourceNode.data.formData.name;
 
       const imageConnections = kindsConnections['*'] || [];
-      const avaliableImageNodes = availableKindValues['*'] || [];
       let connectNodeDef: PropertyDefinition | undefined = undefined;
       let propertyValue: string | undefined = undefined;
 
@@ -852,7 +940,8 @@ const DesignPage = () => {
       setEdges,
       generateFormData,
       kindsConnections,
-      availableKindValues
+      availableKindValues,
+      rfInstance
     ]
   );
 
@@ -986,6 +1075,7 @@ const DesignPage = () => {
         >
           <ReactFlowProvider>
             <div
+              ref={rfWrapperRef}
               className="react-flow-wrapper dark:border-sidebar-border"
               style={{
                 width: '100%',
@@ -1008,7 +1098,11 @@ const DesignPage = () => {
                 onDragOver={onDragOver}
                 onDrop={onDrop}
                 onNodeClick={onNodeClick}
+                onNodeDragStart={onNodeDragStart}
                 onNodeDragStop={onNodeDragStop}
+                onNodeDrag={onNodeDrag}
+                onInit={onInit}
+                onPaneClick={() => setConnectMenu(null)}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 defaultEdgeOptions={defaultEdgeOptions}
