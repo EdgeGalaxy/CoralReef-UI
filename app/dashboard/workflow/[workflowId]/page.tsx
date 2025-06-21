@@ -552,7 +552,6 @@ const DesignPage = () => {
           });
         });
       }
-      console.log('avaliableKinds', kindValues);
       setAvailableKindValues(kindValues);
     });
   }, [nodes]);

@@ -161,6 +161,106 @@ interface NodeDetailProps {
   onDeleteNode: () => void;
 }
 
+const CustomFieldTemplate = (props: FieldTemplateProps) => {
+  const {
+    id,
+    children,
+    classNames,
+    style,
+    displayLabel,
+    hidden,
+    label,
+    required,
+    rawErrors = [],
+    errors,
+    help,
+    rawDescription,
+    schema
+  } = props;
+
+  if (hidden) {
+    return <div style={{ display: 'none' }}>{children}</div>;
+  }
+
+  return (
+    <div className={`${classNames} mb-4`} style={style}>
+      {displayLabel && (label || schema.title) && (
+        <div className="mb-2 flex items-center">
+          <Label
+            htmlFor={id}
+            className={rawErrors.length > 0 ? 'text-destructive' : ''}
+          >
+            {label || schema.title}
+            {required && <span className="text-destructive"> *</span>}
+          </Label>
+          {rawDescription && (
+            <TooltipProvider>
+              <Tooltip delayDuration={500}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="ml-2"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <InfoIcon className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-sm border-gray-300 bg-gray-50 text-gray-900 dark:border-sidebar-border dark:bg-sidebar-accent dark:text-white">
+                  <p>{rawDescription}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      )}
+      {children}
+      {errors}
+      {help}
+    </div>
+  );
+};
+
+const CustomObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
+  const { properties, schema } = props;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const requiredFieldsList = schema.required || [];
+
+  const requiredFields = properties.filter((prop) =>
+    requiredFieldsList.includes(prop.name)
+  );
+  const optionalFields = properties.filter(
+    (prop) => !requiredFieldsList.includes(prop.name)
+  );
+
+  return (
+    <div>
+      {requiredFields.map((prop) => prop.content)}
+
+      {optionalFields.length > 0 && (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+            >
+              <ChevronRight
+                className={`mr-1 h-4 w-4 transition-transform duration-200 ${
+                  isOpen ? 'rotate-90' : ''
+                }`}
+              />
+              高级选项
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 space-y-4 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
+            {optionalFields.map((prop) => prop.content)}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+};
+
 const NodeDetail: React.FC<NodeDetailProps> = React.memo(
   ({
     isOpen,
@@ -170,329 +270,10 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
     availableKindValues,
     onDeleteNode
   }) => {
-    const CustomFieldTemplate = (props: FieldTemplateProps) => {
-      const {
-        id,
-        children,
-        classNames,
-        style,
-        displayLabel,
-        hidden,
-        label,
-        required,
-        rawErrors = [],
-        errors,
-        help,
-        rawDescription,
-        schema
-      } = props;
-
-      if (hidden) {
-        return <div style={{ display: 'none' }}>{children}</div>;
-      }
-
-      return (
-        <div className={`${classNames} mb-4`} style={style}>
-          {displayLabel && (label || schema.title) && (
-            <div className="mb-2 flex items-center">
-              <Label
-                htmlFor={id}
-                className={rawErrors.length > 0 ? 'text-destructive' : ''}
-              >
-                {label || schema.title}
-                {required && <span className="text-destructive"> *</span>}
-              </Label>
-              {rawDescription && (
-                <TooltipProvider>
-                  <Tooltip delayDuration={500}>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="ml-2"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <InfoIcon className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-sm border-gray-300 bg-gray-50 text-gray-900 dark:border-sidebar-border dark:bg-sidebar-accent dark:text-white">
-                      <p>{rawDescription}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-          )}
-          {children}
-          {errors}
-          {help}
-        </div>
-      );
-    };
-
-    const CustomObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
-      const { properties, schema } = props;
-      const [isOpen, setIsOpen] = useState(false);
-
-      const requiredFieldsList = schema.required || [];
-
-      const requiredFields = properties.filter((prop) =>
-        requiredFieldsList.includes(prop.name)
-      );
-      const optionalFields = properties.filter(
-        (prop) => !requiredFieldsList.includes(prop.name)
-      );
-
-      return (
-        <div>
-          {requiredFields.map((prop) => prop.content)}
-
-          {optionalFields.length > 0 && (
-            <Collapsible
-              open={isOpen}
-              onOpenChange={setIsOpen}
-              className="mt-4"
-            >
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-                >
-                  <ChevronRight
-                    className={`mr-1 h-4 w-4 transition-transform duration-200 ${
-                      isOpen ? 'rotate-90' : ''
-                    }`}
-                  />
-                  高级选项
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2 space-y-4 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
-                {optionalFields.map((prop) => prop.content)}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-        </div>
-      );
-    };
-
-    // 为深色模式添加自定义样式
-    useEffect(() => {
-      if (isOpen) {
-        // 为深色模式添加CSS覆盖样式
-        const style = document.createElement('style');
-        style.id = 'form-dark-mode-styles';
-        style.innerHTML = `
-          /* 字段标签样式 */
-          .dark .ui.form .field > label,
-          .dark .ui.form .fields .field > label,
-          .dark .ui.form .field > .label,
-          .dark label,
-          .dark .ui.form label,
-          .dark .ui.header,
-          .dark .ui.dividing.header,
-          .dark .field > label,
-          .dark .ui.form .inline.field > label,
-          .dark .ui.form .inline.field > p,
-          .dark .ui.form .grouped.field > label,
-          .dark .ui.checkbox label,
-          .dark .ui.form .field > .selection.dropdown > .text {
-            color: #ffffff !important;
-            font-weight: 500 !important;
-            text-shadow: 0 0 1px rgba(0, 0, 0, 0.2) !important;
-          }
-
-          /* 必填字段的星号 */
-          .dark .ui.form .required.field > label:after {
-            color: #ff6b6b !important;
-            text-shadow: 0 0 2px rgba(255, 0, 0, 0.4) !important;
-          }
-
-          /* 输入框、文本域和下拉框样式 - 使用反差色 */
-          .dark .ui.form input[type="text"],
-          .dark .ui.form input[type="number"],
-          .dark .ui.form input[type="password"],
-          .dark .ui.form input[type="email"],
-          .dark .ui.form input[type="url"],
-          .dark .ui.form input[type="date"],
-          .dark .ui.form input[type="datetime-local"],
-          .dark .ui.form input[type="tel"],
-          .dark .ui.form input[type="time"],
-          .dark .ui.form input[type="file"],
-          .dark .ui.form textarea,
-          .dark .ui.input input {
-            background-color: #f3f4f6 !important;
-            color: #111827 !important;
-            border-color: #9ca3af !important;
-            font-weight: 500 !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-          }
-
-          /* 下拉框样式 */
-          .dark .ui.selection.dropdown {
-            background-color: #f3f4f6 !important;
-            color: #111827 !important;
-            border-color: #9ca3af !important;
-          }
-
-          .dark .ui.dropdown .menu > .item {
-            background-color: #f3f4f6 !important;
-            color: #111827 !important;
-            border-color: #9ca3af !important;
-          }
-
-          /* 表单元素聚焦状态 */
-          .dark .ui.form input:focus,
-          .dark .ui.form textarea:focus,
-          .dark .ui.selection.dropdown:focus,
-          .dark .ui.dropdown.active {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
-          }
-
-          /* 占位符文本颜色 */
-          .dark .ui.form input::placeholder,
-          .dark .ui.form textarea::placeholder {
-            color: #6b7280 !important;
-          }
-
-          /* 下拉菜单 */
-          .dark .ui.selection.dropdown .menu,
-          .dark .ui.dropdown .menu {
-            background-color: #f3f4f6 !important;
-            border-color: #9ca3af !important;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
-          }
-          
-          .dark .ui.selection.dropdown .menu > .item,
-          .dark .ui.dropdown .menu > .item {
-            color: #111827 !important;
-            border-color: #9ca3af !important;
-          }
-          
-          .dark .ui.selection.dropdown .menu > .item:hover,
-          .dark .ui.dropdown .menu > .item:hover {
-            background-color: #e5e7eb !important;
-            color: #000000 !important;
-          }
-
-          /* 其他UI元素 */
-          .dark .ui.segment,
-          .dark .ui.segments .segment {
-            background-color: var(--sidebar) !important;
-            color: #ffffff !important;
-            border-color: var(--sidebar-border) !important;
-          }
-
-          /* 数组项的背景 */
-          .dark .array-item {
-            background-color: var(--sidebar) !important;
-            border-color: var(--sidebar-border) !important;
-          }
-
-          /* 文字颜色 */
-          .dark .ui.form .field .text,
-          .dark .ui.form .fields .field .text,
-          .dark .ui.form .field .text label,
-          .dark span,
-          .dark div,
-          .dark p,
-          .dark h1, .dark h2, .dark h3, .dark h4, .dark h5 {
-            color: #ffffff !important;
-          }
-
-          /* 表单内文字颜色例外 */
-          .dark .ui.form input,
-          .dark .ui.form textarea,
-          .dark .ui.dropdown,
-          .dark .ui.dropdown .text,
-          .dark .ui.dropdown .menu > .item {
-            color: #111827 !important;
-          }
-
-          /* 可读字段样式 */
-          .dark .ui.form .read-only.field {
-            background-color: #e2e8f0 !important;
-            color: #1f2937 !important;
-          }
-
-          /* 表单描述文本 */
-          .dark .ui.form .field .description {
-            color: #cbd5e1 !important;
-            font-style: italic !important;
-          }
-
-          /* 按钮样式 */
-          .dark .ui.button:not(.primary) {
-            background-color: var(--sidebar-accent) !important;
-            color: #ffffff !important;
-            border-color: var(--sidebar-border) !important;
-            font-weight: 500 !important;
-          }
-
-          .dark .ui.button:hover:not(.primary) {
-            background-color: var(--sidebar-accent) !important;
-            filter: brightness(1.1) !important;
-          }
-
-          .dark .ui.primary.button {
-            background-color: var(--primary) !important;
-            color: #ffffff !important;
-            font-weight: 500 !important;
-          }
-
-          .dark .ui.primary.button:hover {
-            background-color: var(--primary) !important;
-            filter: brightness(1.1) !important;
-          }
-
-          /* 增强表单字段高亮显示 */
-          .dark .ui.form .field.error .input,
-          .dark .ui.form .field.error label,
-          .dark .ui.form .fields.error .field .input,
-          .dark .ui.form .fields.error .field label {
-            color: #ff8787 !important;
-          }
-
-          .dark .ui.form .field.error input,
-          .dark .ui.form .field.error textarea,
-          .dark .ui.form .fields.error .field input {
-            background-color: #fef2f2 !important;
-            border-color: #ff8787 !important;
-            color: #7f1d1d !important;
-          }
-
-          /* 提高选中项和活动项的对比度 */
-          .dark .ui.selection.active.dropdown,
-          .dark .ui.selection.active.dropdown .menu {
-            border-color: #3b82f6 !important;
-          }
-
-          .dark .ui.selection.dropdown .menu > .active.item {
-            background-color: #dbeafe !important;
-            color: #1e40af !important;
-            font-weight: 700 !important;
-          }
-
-          /* 下拉菜单中的选中文本颜色 */
-          .dark .ui.selection.dropdown > .text {
-            color: #111827 !important;
-          }
-        `;
-        document.head.appendChild(style);
-
-        return () => {
-          const existingStyle = document.getElementById(
-            'form-dark-mode-styles'
-          );
-          if (existingStyle) {
-            existingStyle.remove();
-          }
-        };
-      }
-    }, [isOpen]);
-
     const customFields = {
       AnyOfField: React.useCallback(
         (props: any) => {
+          console.log('anyof-kind-field props', props);
           // 检查是否为Roboflow模型字段
           if (props.schema['x-field-type'] === 'roboflow-model') {
             return (
@@ -649,6 +430,7 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
 
     const handleFormChange = useCallback(
       (e: any) => {
+        console.log('handleFormChange', e.formData);
         onFormChange(e.formData);
       },
       [onFormChange]

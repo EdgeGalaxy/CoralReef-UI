@@ -10,6 +10,7 @@ export const inputNode: Node = {
     block_schema: {
       block_type: 'buildin',
       type: 'object',
+      required: ['sources'],
       properties: {
         sources: {
           type: 'array',
