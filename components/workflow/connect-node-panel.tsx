@@ -123,7 +123,7 @@ const ConnectNodePanel: React.FC<ConnectNodePanelProps> = ({
         zIndex: 1000,
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
-      className="flex h-auto max-h-[50vh] w-80 flex-col overflow-y-auto rounded-lg border bg-popover shadow-md dark:border-sidebar-border"
+      className="h-[50vh] w-80 rounded-lg border bg-popover shadow-md dark:border-sidebar-border"
     >
       <NodeSelector nodes={availableNodes} onNodeSelect={onNodeSelect} />
     </div>

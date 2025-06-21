@@ -3,7 +3,7 @@ import { Node, Edge } from 'reactflow';
 export const inputNode: Node = {
   id: 'input-node',
   type: 'builtInNode',
-  position: { x: 50, y: 50 },
+  position: { x: 50, y: 200 },
   data: {
     human_friendly_block_name: 'Input',
     manifest_type_identifier: 'input',
@@ -97,7 +97,7 @@ export const inputNode: Node = {
 export const outputNode: Node = {
   id: 'output-node',
   type: 'builtInNode',
-  position: { x: 300, y: 50 },
+  position: { x: 650, y: 200 },
   data: {
     human_friendly_block_name: 'Output',
     manifest_type_identifier: 'output',
@@ -172,11 +172,31 @@ export const outputNode: Node = {
   }
 };
 
+const mockNode: Node = {
+  id: 'mock-node-1',
+  type: 'mockNode',
+  position: { x: 350, y: 200 },
+  data: { label: 'Add a new node' }
+};
+
 export const buildInNodes: Node[] = [inputNode, outputNode];
 
-export const initialNodes: Node[] = [inputNode, outputNode];
+export const initialNodes: Node[] = [inputNode, mockNode, outputNode];
 
-export const initialEdges: Edge[] = [];
+export const initialEdges: Edge[] = [
+  {
+    id: 'e-input-mock',
+    source: 'input-node',
+    target: 'mock-node-1',
+    type: 'custom'
+  },
+  {
+    id: 'e-mock-output',
+    source: 'mock-node-1',
+    target: 'output-node',
+    type: 'custom'
+  }
+];
 
 // ReactFlow 默认配置
 export const reactFlowDefaultConfig = {

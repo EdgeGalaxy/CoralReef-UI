@@ -152,17 +152,6 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
 
   return (
     <div className="space-y-2">
-      {/* <div className="flex items-center justify-between">
-        <Label
-          htmlFor={props.id}
-          className="text-sm font-medium dark:text-white"
-        >
-          <span className="font-bold">{schema?.title || props.name}</span>
-          {isRequired && (
-            <span className="ml-1 text-red-500 dark:text-red-400">*</span>
-          )}
-        </Label>
-      </div> */}
       <div className="flex items-center space-x-2">
         {isKindMode ? (
           <Select

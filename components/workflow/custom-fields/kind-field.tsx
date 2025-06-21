@@ -103,7 +103,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
 
   return (
     <div className="space-y-2">
-      {/* <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <Label
           htmlFor={props.id}
           className="text-sm font-medium dark:text-white"
@@ -113,7 +113,7 @@ const KindField: React.FC<KindFieldProps> = (props) => {
             <span className="ml-1 text-red-500 dark:text-red-400">*</span>
           )}
         </Label>
-      </div> */}
+      </div>
       <div className="flex items-center space-x-2">
         <Select
           onValueChange={handleSelectChange}

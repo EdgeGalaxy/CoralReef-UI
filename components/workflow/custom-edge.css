@@ -45,3 +45,34 @@
   border-color: #4299e1;
   color: #4299e1;
 }
+
+.edgebutton-wrapper {
+  visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.react-flow__edge:hover .edgebutton-wrapper {
+  visibility: visible;
+}
+
+.edgebutton {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+  transition: all 0.2s ease-in-out;
+}
+
+.edgebutton:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #dc2626;
+}

@@ -66,6 +66,7 @@ import { useAuthSWR, useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 import ConnectNodePanel from '@/components/workflow/connect-node-panel';
 import CustomEdge from '@/components/workflow/custom-edge';
+import MockNode from '@/components/workflow/mock-node';
 
 interface HandleBound {
   id: string | null;
@@ -85,7 +86,8 @@ interface NodeWithBounds extends Node {
 
 const nodeTypes = {
   customNode: CustomNode,
-  builtInNode: BuiltInNode
+  builtInNode: BuiltInNode,
+  mockNode: MockNode
 };
 
 const edgeTypes = {
@@ -224,7 +226,7 @@ const DesignPage = () => {
       setNodes(workflowData.data.nodes);
       setEdges(workflowData.data.edges);
     }
-  }, [workflowId, workflowData, isNewWorkflow]);
+  }, [isNewWorkflow, workflowData, setNodes, setEdges]);
 
   const { data: blocksData } = useAuthSWR<{
     blocks: BlockDescription[];
@@ -243,90 +245,70 @@ const DesignPage = () => {
       const sourceNode = nodes.find((node) => node.id === params.source);
       const targetNode = nodes.find((node) => node.id === params.target);
 
-      if (sourceNode && targetNode) {
-        const sourceManifest = sourceNode.data.manifest_type_identifier;
-        const sourceNodeName = sourceNode.data.formData.name;
-        const targetManifest = targetNode.data.manifest_type_identifier;
+      if (!sourceNode || !targetNode) return;
 
-        const imageConnections = kindsConnections['*'] || [];
-        const avaliableImageNodes = availableKindValues['*'] || [];
-        let connectNode: PropertyDefinition | undefined = undefined;
-        let propertyName: string | undefined = undefined;
+      const connectableManifests = getConnectableNodeManifests(sourceNode);
+      const targetManifest = targetNode.data.manifest_type_identifier;
 
-        // 判断两个节点是否可连接，且连接时应该更新那个图片字段
+      if (!connectableManifests.includes(targetManifest)) {
+        toast({
+          title: '连接错误',
+          description: '两个节点不可相连',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // Connection is allowed.
+      setEdges((eds) => addEdge(params, eds));
+
+      // Do not update formData for the output node
+      if (targetManifest === outputNode.data.manifest_type_identifier) {
+        return;
+      }
+
+      // Update formData of targetNode
+      const sourceManifest = sourceNode.data.manifest_type_identifier;
+      const sourceNodeName = sourceNode.data.formData.name;
+      const sourceHandleId = params.sourceHandle;
+
+      const imageConnections = kindsConnections['*'] || [];
+      const connectNodeDef: PropertyDefinition | undefined =
+        imageConnections.find(
+          (conn) =>
+            conn.manifest_type_identifier === targetManifest &&
+            conn.compatible_element === 'any_data'
+        );
+
+      let propertyValue: string | undefined = undefined;
+      if (sourceHandleId) {
         if (sourceManifest === inputNode.data.manifest_type_identifier) {
-          connectNode = imageConnections.find(
-            (conn) =>
-              conn.manifest_type_identifier === targetManifest &&
-              conn.compatible_element === 'any_data'
-          );
-          propertyName = avaliableImageNodes.find(
-            (node) =>
-              node.manifest_type_identifier === sourceManifest &&
-              node.compatible_element === 'any_data'
-          )?.property_name;
-        } else if (
-          targetManifest === outputNode.data.manifest_type_identifier
-        ) {
-          connectNode =
-            sourceManifest !== inputNode.data.manifest_type_identifier
-              ? targetManifest
-              : undefined;
+          propertyValue = `$inputs.${sourceHandleId}`;
         } else {
-          const canConnect =
-            imageConnections.some(
-              (conn) =>
-                conn.manifest_type_identifier === sourceManifest &&
-                conn.compatible_element === 'any_data'
-            ) &&
-            imageConnections.some(
-              (conn) =>
-                conn.manifest_type_identifier === targetManifest &&
-                conn.compatible_element === 'any_data'
-            );
-          connectNode = canConnect
-            ? imageConnections.find(
-                (conn) =>
-                  conn.manifest_type_identifier === sourceManifest &&
-                  conn.compatible_element === 'any_data'
-              )
-            : undefined;
-          propertyName = avaliableImageNodes.find(
-            (node) =>
-              node.manifest_type_identifier === sourceManifest &&
-              node.compatible_element === 'any_data' &&
-              node.property_name.includes(`$steps.${sourceNodeName}.`)
-          )?.property_name;
-        }
-
-        // Check if both nodes are in the 'image' key of kindsConnections
-        if (connectNode) {
-          setEdges((eds: Edge[]) => addEdge(params, eds));
-          if (propertyName) {
-            setNodes((nds: Node[]) =>
-              nds.map((node) =>
-                node.id === targetNode.id
-                  ? {
-                      ...node,
-                      data: {
-                        ...node.data,
-                        formData: {
-                          ...node.data.formData,
-                          [connectNode.property_name]: propertyName
-                        }
-                      }
-                    }
-                  : node
-              )
-            );
-          }
-        } else {
-          console.log('Connection not allowed: Incompatible node types');
-          // Optionally, you can show a notification to the user here
+          propertyValue = `$steps.${sourceNodeName}.${sourceHandleId}`;
         }
       }
+
+      if (connectNodeDef && propertyValue) {
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === targetNode.id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    formData: {
+                      ...node.data.formData,
+                      [connectNodeDef.property_name]: propertyValue
+                    }
+                  }
+                }
+              : node
+          )
+        );
+      }
     },
-    [setEdges, nodes, kindsConnections]
+    [nodes, setEdges, getConnectableNodeManifests, kindsConnections]
   );
 
   const onDeleteNode = useCallback(() => {
@@ -820,17 +802,51 @@ const DesignPage = () => {
   }, [setNodes]);
 
   useEffect(() => {
-    const handleEvent = (e: Event) => {
+    const handleDeleteEdge = (e: Event) => {
+      const { id } = (e as CustomEvent).detail;
+      setEdges((eds) => eds.filter((edge) => edge.id !== id));
+    };
+    window.addEventListener('delete-edge', handleDeleteEdge);
+    return () => {
+      window.removeEventListener('delete-edge', handleDeleteEdge);
+    };
+  }, [setEdges]);
+
+  useEffect(() => {
+    const handleMockNodeEvent = (e: Event) => {
       const customEvent = e as CustomEvent;
-      const { domEvent, nodeId, handleId } = customEvent.detail;
-      handleOpenConnectPanel(domEvent, nodeId, handleId);
+      const { nodeId, domEvent } = customEvent.detail;
+      const mockNode = nodes.find((n) => n.id === nodeId);
+      if (!mockNode) return;
+
+      const connectableManifests = kindsConnections['roboflow_model_id']?.map(
+        (c) => c.manifest_type_identifier
+      );
+
+      const reactFlowWrapper = rfWrapperRef.current;
+      if (!reactFlowWrapper) return;
+      const rect = reactFlowWrapper.getBoundingClientRect();
+      const position = {
+        x: domEvent.clientX - rect.left + 20,
+        y: domEvent.clientY - rect.top
+      };
+
+      setConnectMenu({
+        position,
+        sourceNodeId: nodeId, // This will be the mock node's ID
+        sourceHandleId: null,
+        connectableManifests: connectableManifests || []
+      });
     };
 
-    window.addEventListener('open-connect-panel', handleEvent);
+    window.addEventListener('open-mock-replace-panel', handleMockNodeEvent);
     return () => {
-      window.removeEventListener('open-connect-panel', handleEvent);
+      window.removeEventListener(
+        'open-mock-replace-panel',
+        handleMockNodeEvent
+      );
     };
-  }, [handleOpenConnectPanel]);
+  }, [nodes, kindsConnections]);
 
   const handleNodeSelectFromPanel = useCallback(
     (selectedBlock: BlockDescription) => {
@@ -944,6 +960,72 @@ const DesignPage = () => {
       rfInstance
     ]
   );
+
+  const handleReplaceMockNode = useCallback(
+    (selectedBlock: BlockDescription) => {
+      if (!connectMenu || !connectMenu.sourceNodeId.startsWith('mock-node'))
+        return;
+
+      const mockNodeId = connectMenu.sourceNodeId;
+      const mockNode = nodes.find((n) => n.id === mockNodeId);
+      if (!mockNode) return;
+
+      const incomingEdge = edges.find((e) => e.target === mockNodeId);
+      const outgoingEdge = edges.find((e) => e.source === mockNodeId);
+
+      // 1. Create the new node
+      const newNodeId = `${selectedBlock.manifest_type_identifier}-${
+        nodes.length + 1
+      }`;
+      const newNode = {
+        id: newNodeId,
+        type: 'customNode',
+        position: mockNode.position,
+        data: {
+          ...selectedBlock,
+          label: selectedBlock.human_friendly_block_name,
+          formData: generateFormData(selectedBlock)
+        } as NodeData,
+        style: { width: 200, fontSize: '12px' }
+      };
+
+      // 2. Prepare new edges
+      const newEdges: Edge[] = [];
+      if (incomingEdge) {
+        newEdges.push({ ...incomingEdge, target: newNodeId });
+      }
+      if (outgoingEdge) {
+        newEdges.push({ ...outgoingEdge, source: newNodeId });
+      }
+
+      // 3. Update state
+      setNodes((nds) => nds.filter((n) => n.id !== mockNodeId).concat(newNode));
+      setEdges((eds) =>
+        eds
+          .filter((e) => e.source !== mockNodeId && e.target !== mockNodeId)
+          .concat(newEdges)
+      );
+      setConnectMenu(null);
+    },
+    [connectMenu, nodes, edges, generateFormData]
+  );
+
+  useEffect(() => {
+    const handleOpenConnectPanelEvent = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { domEvent, nodeId, handleId } = customEvent.detail;
+      handleOpenConnectPanel(domEvent, nodeId, handleId);
+    };
+
+    window.addEventListener('open-connect-panel', handleOpenConnectPanelEvent);
+
+    return () => {
+      window.removeEventListener(
+        'open-connect-panel',
+        handleOpenConnectPanelEvent
+      );
+    };
+  }, [handleOpenConnectPanel]);
 
   return (
     <PageContainer scrollable={true}>
@@ -1143,7 +1225,11 @@ const DesignPage = () => {
                         n.manifest_type_identifier
                       )
                     )}
-                    onNodeSelect={handleNodeSelectFromPanel}
+                    onNodeSelect={
+                      connectMenu.sourceNodeId.startsWith('mock-node')
+                        ? handleReplaceMockNode
+                        : handleNodeSelectFromPanel
+                    }
                     onClose={() => setConnectMenu(null)}
                   />
                 )}

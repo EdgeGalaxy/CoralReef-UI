@@ -5,6 +5,7 @@ import {
   CardTitle,
   CardDescription
 } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Collapsible,
   CollapsibleContent,
@@ -51,60 +52,62 @@ const NodeSelector: React.FC<NodeSelectorProps> = ({ nodes, onNodeSelect }) => {
   };
 
   return (
-    <div>
-      <div className="p-4">
+    <div className="flex h-full flex-col">
+      <div className="sticky top-0 z-10 border-b bg-popover p-4 dark:border-gray-700">
         <Input
           type="text"
-          placeholder="Search nodes..."
+          placeholder="搜索节点..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="dark:text-white dark:placeholder:text-gray-400"
+          className="w-full dark:text-white dark:placeholder:text-gray-400"
         />
       </div>
-      <div className="p-4 pt-0">
-        {Object.entries(groupedNodes).map(([type, nodeList]) => (
-          <Collapsible
-            key={type}
-            open={openSections[type] ?? false}
-            onOpenChange={() => toggleSection(type)}
-          >
-            <CollapsibleTrigger className="mb-2 flex w-full items-center text-lg font-semibold dark:text-white">
-              {openSections[type] ? (
-                <ChevronDown className="mr-2" />
-              ) : (
-                <ChevronRight className="mr-2" />
-              )}
-              {type}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              {nodeList.map((node) => {
-                const nodeColor = getNodeColor(node.block_schema.block_type);
-                return (
-                  <Card
-                    key={node.manifest_type_identifier}
-                    className={`mb-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-sidebar-accent ${nodeColor.border} group dark:border-sidebar-border`}
-                    onClick={() => onNodeSelect(node)}
-                  >
-                    <CardHeader
-                      className={`p-3 ${nodeColor.bg} dark:bg-sidebar-accent/30`}
+      <ScrollArea className="h-[calc(100%-4rem)]">
+        <div className="p-4 pt-2">
+          {Object.entries(groupedNodes).map(([type, nodeList]) => (
+            <Collapsible
+              key={type}
+              open={openSections[type] ?? false}
+              onOpenChange={() => toggleSection(type)}
+            >
+              <CollapsibleTrigger className="mb-2 flex w-full items-center text-lg font-semibold dark:text-white">
+                {openSections[type] ? (
+                  <ChevronDown className="mr-2" />
+                ) : (
+                  <ChevronRight className="mr-2" />
+                )}
+                {type}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                {nodeList.map((node) => {
+                  const nodeColor = getNodeColor(node.block_schema.block_type);
+                  return (
+                    <Card
+                      key={node.manifest_type_identifier}
+                      className={`mb-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-sidebar-accent ${nodeColor.border} group dark:border-sidebar-border`}
+                      onClick={() => onNodeSelect(node)}
                     >
-                      <div className="flex items-center space-x-2 truncate font-normal">
-                        <span className="node-icon">{nodeColor.icon}</span>
-                        <span className="truncate">
-                          {node.human_friendly_block_name}
-                        </span>
-                      </div>
-                      <CardDescription className="text-xs">
-                        {node.block_schema.short_description}
-                      </CardDescription>
-                    </CardHeader>
-                  </Card>
-                );
-              })}
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
-      </div>
+                      <CardHeader
+                        className={`p-3 ${nodeColor.bg} dark:bg-sidebar-accent/30`}
+                      >
+                        <div className="flex items-center space-x-2 truncate font-normal">
+                          <span className="node-icon">{nodeColor.icon}</span>
+                          <span className="truncate">
+                            {node.human_friendly_block_name}
+                          </span>
+                        </div>
+                        <CardDescription className="text-xs">
+                          {node.block_schema.short_description}
+                        </CardDescription>
+                      </CardHeader>
+                    </Card>
+                  );
+                })}
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 };

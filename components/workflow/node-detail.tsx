@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -36,6 +36,21 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+import { InfoIcon } from 'lucide-react';
+import { FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils';
+import { FormLabel, FormControl, FormItem } from '@/components/ui/form';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
+import { ChevronRight } from 'lucide-react';
 
 interface ExtendedJSONSchema7 extends JSONSchema7 {
   'x-internal-type'?: string;
@@ -155,6 +170,110 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
     availableKindValues,
     onDeleteNode
   }) => {
+    const CustomFieldTemplate = (props: FieldTemplateProps) => {
+      const {
+        id,
+        children,
+        classNames,
+        style,
+        displayLabel,
+        hidden,
+        label,
+        required,
+        rawErrors = [],
+        errors,
+        help,
+        rawDescription,
+        schema
+      } = props;
+
+      if (hidden) {
+        return <div style={{ display: 'none' }}>{children}</div>;
+      }
+
+      return (
+        <div className={`${classNames} mb-4`} style={style}>
+          {displayLabel && (label || schema.title) && (
+            <div className="mb-2 flex items-center">
+              <Label
+                htmlFor={id}
+                className={rawErrors.length > 0 ? 'text-destructive' : ''}
+              >
+                {label || schema.title}
+                {required && <span className="text-destructive"> *</span>}
+              </Label>
+              {rawDescription && (
+                <TooltipProvider>
+                  <Tooltip delayDuration={500}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="ml-2"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <InfoIcon className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm border-gray-300 bg-gray-50 text-gray-900 dark:border-sidebar-border dark:bg-sidebar-accent dark:text-white">
+                      <p>{rawDescription}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          )}
+          {children}
+          {errors}
+          {help}
+        </div>
+      );
+    };
+
+    const CustomObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
+      const { properties, schema } = props;
+      const [isOpen, setIsOpen] = useState(false);
+
+      const requiredFieldsList = schema.required || [];
+
+      const requiredFields = properties.filter((prop) =>
+        requiredFieldsList.includes(prop.name)
+      );
+      const optionalFields = properties.filter(
+        (prop) => !requiredFieldsList.includes(prop.name)
+      );
+
+      return (
+        <div>
+          {requiredFields.map((prop) => prop.content)}
+
+          {optionalFields.length > 0 && (
+            <Collapsible
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              className="mt-4"
+            >
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                >
+                  <ChevronRight
+                    className={`mr-1 h-4 w-4 transition-transform duration-200 ${
+                      isOpen ? 'rotate-90' : ''
+                    }`}
+                  />
+                  高级选项
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-2 space-y-4 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
+                {optionalFields.map((prop) => prop.content)}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
+        </div>
+      );
+    };
+
     // 为深色模式添加自定义样式
     useEffect(() => {
       if (isOpen) {
@@ -588,6 +707,10 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
                 formData={filteredFormData}
                 onChange={handleFormChange}
                 fields={customFields}
+                templates={{
+                  FieldTemplate: CustomFieldTemplate,
+                  ObjectFieldTemplate: CustomObjectFieldTemplate
+                }}
                 className="form-dark-mode"
               />
             </div>

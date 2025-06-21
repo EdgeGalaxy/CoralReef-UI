@@ -95,7 +95,7 @@ const BuiltInNode: React.FC<NodeProps<NodeData>> = ({
             type="target"
             position={Position.Left}
             isConnectable={isConnectable}
-            className="dark:border-sidebar-border dark:bg-sidebar-accent"
+            className="custom-handle !left-[-5px]"
           />
         )}
         <CardHeader
