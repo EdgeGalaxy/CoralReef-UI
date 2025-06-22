@@ -87,10 +87,6 @@ function SourceDetail({ source, onRefresh, onClose }: Props) {
           onUpdate={(newValue) => handleUpdate('name', newValue)}
         />
         <div className="flex flex-col">
-          <span className="text-sm text-muted-foreground">数据源名</span>
-          <span className="font-medium">{source.name}</span>
-        </div>
-        <div className="flex flex-col">
           <span className="text-sm text-muted-foreground">数据源类型</span>
           <span className="font-medium">{source.type}</span>
         </div>

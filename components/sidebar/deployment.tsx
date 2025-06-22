@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 
 import WebRTCPreview from './components/webrtc-preview';
 import { DeploymentSettings } from '@/components/sidebar/components/deployment-settings';
+import { EventLog } from './components/event-log';
 
 interface DeploymentDiffResponse {
   workflow_changed: boolean;
@@ -283,7 +284,12 @@ export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
     {
       value: 'events',
       label: '操作日志',
-      content: <div>操作日志内容</div>
+      content: (
+        <EventLog
+          workspaceId={deployment.workspace_id}
+          deploymentId={deployment.id}
+        />
+      )
     },
     {
       value: 'settings',

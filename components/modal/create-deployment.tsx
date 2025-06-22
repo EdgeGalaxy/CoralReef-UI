@@ -229,6 +229,14 @@ export function CreateDeploymentModal({
   };
 
   const handleSubmit = async () => {
+    if (!deploymentConfig.name?.trim()) {
+      toast({
+        variant: 'destructive',
+        title: '请输入部署名称'
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       await handleApiRequest(
@@ -372,10 +380,21 @@ export function CreateDeploymentModal({
           <DialogTitle className="text-lg font-bold">创建服务</DialogTitle>
           <div className="mt-4 flex gap-4">
             <div className="flex-1">
+              <div className="mb-2 flex items-center text-sm font-medium">
+                部署名称
+                <span className="ml-1 text-destructive">*</span>
+              </div>
               <EditableField
                 value={deploymentConfig.name}
                 label="部署名称"
                 onUpdate={async (newValue) => {
+                  if (!newValue?.trim()) {
+                    toast({
+                      variant: 'destructive',
+                      title: '部署名称不能为空'
+                    });
+                    return;
+                  }
                   setDeploymentConfig((prev) => ({ ...prev, name: newValue }));
                 }}
               />

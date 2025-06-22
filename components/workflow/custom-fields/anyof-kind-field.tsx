@@ -11,7 +11,6 @@ import { FieldProps, RJSFSchema } from '@rjsf/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link1Icon } from '@radix-ui/react-icons';
-import { Label } from '@/components/ui/label';
 
 import { outputNode } from '@/constants/init-data';
 import { NodeData, PropertyDefinition, Kind } from '@/constants/block';
@@ -184,6 +183,7 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
             id={props.id}
             value={inputValue}
             onChange={handleInputChange}
+            onBlur={handleInputChange}
             className="w-full dark:border-gray-400 dark:bg-white dark:text-gray-900 dark:placeholder-gray-500 dark:focus:border-blue-500 dark:focus:ring-2 dark:focus:ring-blue-400 dark:focus:ring-opacity-20"
             placeholder="输入一个值"
             required={isRequired}

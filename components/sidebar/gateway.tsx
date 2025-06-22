@@ -12,6 +12,7 @@ import { DeploymentTable } from '../tables/deployment/client';
 import { SourceTable } from '../tables/source/client';
 import { handleApiRequest } from '@/lib/error-handle';
 import React from 'react';
+import { EventLog } from './components/event-log';
 
 interface Props {
   gateway: Gateway;
@@ -198,7 +199,9 @@ export function GatewaySidebar({ gateway, onClose, onRefresh }: Props) {
     {
       value: 'events',
       label: '操作日志',
-      content: <div>操作日志内容</div>
+      content: (
+        <EventLog workspaceId={gateway.workspace_id} gatewayId={gateway.id} />
+      )
     },
     {
       value: 'hardware',

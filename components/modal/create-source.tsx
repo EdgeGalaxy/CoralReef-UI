@@ -35,29 +35,55 @@ import { handleApiRequest } from '@/lib/error-handle';
 import { RefreshCw } from 'lucide-react';
 import { FileUpload } from '@/components/model-file-upload';
 
-const formSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  description: z.string(),
-  type: z.nativeEnum(CameraType),
-  path: z.string().superRefine((val, ctx) => {
-    const type = ctx.path[0];
-    if (type === CameraType.RTSP && !val.startsWith('rtsp://')) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'RTSP地址必须以rtsp://开头'
-      });
-    } else if (type === CameraType.USB) {
-      const num = parseInt(val);
-      if (isNaN(num) || num < 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'USB设备编号必须是非负整数'
-        });
+const formSchema = z
+  .object({
+    name: z.string().min(1, '相机名称不能为空'),
+    description: z.string(),
+    type: z.nativeEnum(CameraType, {
+      errorMap: () => ({ message: '请选择相机类型' })
+    }),
+    path: z.string().min(1, '设备编号/相机路径不能为空'),
+    gateway_id: z.string()
+  })
+  .refine(
+    (data) => {
+      if (data.type === CameraType.RTSP && !data.path.startsWith('rtsp://')) {
+        return false;
       }
+      return true;
+    },
+    {
+      message: 'RTSP地址必须以rtsp://开头',
+      path: ['path']
     }
-  }),
-  gateway_id: z.string().optional()
-});
+  )
+  .refine(
+    (data) => {
+      if (data.type === CameraType.USB) {
+        const num = parseInt(data.path);
+        if (isNaN(num) || num < 0) {
+          return false;
+        }
+      }
+      return true;
+    },
+    {
+      message: 'USB设备编号必须是非负整数',
+      path: ['path']
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.type === CameraType.USB && !data.gateway_id) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'USB设备必须选择网关',
+      path: ['gateway_id']
+    }
+  );
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -176,7 +202,10 @@ export default function CreateSourceDialog({
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>相机名称</FormLabel>
+                    <FormLabel>
+                      相机名称
+                      <span className="ml-1 text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="输入相机名称" {...field} />
                     </FormControl>
@@ -202,7 +231,10 @@ export default function CreateSourceDialog({
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>相机类型</FormLabel>
+                    <FormLabel>
+                      相机类型
+                      <span className="ml-1 text-destructive">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -233,6 +265,7 @@ export default function CreateSourceDialog({
                       {form.watch('type') === CameraType.USB
                         ? '设备编号'
                         : '相机路径'}
+                      <span className="ml-1 text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       {form.watch('type') === CameraType.FILE ? (
@@ -300,11 +333,22 @@ export default function CreateSourceDialog({
                 name="gateway_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>网关</FormLabel>
+                    <FormLabel>
+                      网关
+                      {form.watch('type') === CameraType.USB && (
+                        <span className="ml-1 text-destructive">*</span>
+                      )}
+                    </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="选择网关（可选）" />
+                          <SelectValue
+                            placeholder={
+                              form.watch('type') === CameraType.USB
+                                ? '选择网关'
+                                : '选择网关（可选）'
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
