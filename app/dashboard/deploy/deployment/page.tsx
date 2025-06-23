@@ -50,7 +50,7 @@ export default function DeploymentPage() {
 
   return (
     <PageContainer scrollable={true}>
-      <div className="space-y-4">
+      <div className="flex-1 space-y-4 p-4 md:p-8">
         <Breadcrumbs items={breadcrumbItems} />
         <div className="container mx-auto p-4">
           <div className="flex items-start justify-between">

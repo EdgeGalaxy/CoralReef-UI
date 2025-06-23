@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { useSession } from 'next-auth/react';
 import { fetcher, createApi, noAuthApi } from '@/lib/utils';
 
-export function useAuthSWR<T>(url: string) {
+export function useAuthSWR<T>(url: string | null) {
   const { data: session } = useSession();
   const token = session?.accessToken;
 
