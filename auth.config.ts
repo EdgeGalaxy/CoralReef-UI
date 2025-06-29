@@ -166,9 +166,9 @@ const authConfig = {
     async session({ session, token }) {
       session.accessToken = token.accessToken as string;
       session.user.id = token.id as string;
-      session.user.select_workspace_id = token.select_workspace_id as
-        | string
-        | undefined;
+      session.user.select_workspace_id =
+        session.user.select_workspace_id ||
+        (token.select_workspace_id as string | undefined);
       session.user.is_superuser = token.is_superuser as boolean;
       session.user.is_active = token.is_active as boolean;
       session.user.is_verified = token.is_verified as boolean;

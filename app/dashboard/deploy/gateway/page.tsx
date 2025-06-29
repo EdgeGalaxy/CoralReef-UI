@@ -16,6 +16,12 @@ import { useParams } from 'next/navigation';
 import DashboardLoading from '@/app/dashboard/loading';
 import DashboardError from '@/app/dashboard/error';
 
+interface GatewayCommand {
+  name: string;
+  description: string;
+  code_snippet: string;
+}
+
 const breadcrumbItems = [
   { title: '部署', link: '/dashboard/deploy/gateway' },
   { title: '网关', link: '/dashboard/deploy/gateway' }
@@ -34,10 +40,14 @@ export default function GatewayPage() {
     mutate
   } = useAuthSWR<Gateway[]>(`/api/reef/workspaces/${workspaceId}/gateways`);
 
-  const createGatewayMock = {
+  const { data: gatewayCommand } = useAuthSWR<GatewayCommand>(
+    `/api/reef/workspaces/${workspaceId}/gateways/install-command`
+  );
+
+  const createGatewayCommand: GatewayCommand = gatewayCommand || {
     name: '新建网关',
     description: '在设备上执行以下命令',
-    codeSnippet: `curl -s https://reef.oss-cn-hangzhou.aliyuncs.com/setup/init-bash/setup-client.sh | bash -s ${workspaceId}`
+    code_snippet: `curl -s https://loopeai.oss-cn-shanghai.aliyuncs.com/setup/init-bash/setup-client.sh | bash -s ${workspaceId}`
   };
 
   const handleCreateSuccess = async () => {
@@ -59,7 +69,11 @@ export default function GatewayPage() {
               title={`网关 (${gateways.length})`}
               description="管理网关设备"
             />
-            <CreateGatewayModal {...createGatewayMock} />
+            <CreateGatewayModal
+              name={createGatewayCommand.name}
+              description={createGatewayCommand.description}
+              codeSnippet={createGatewayCommand.code_snippet}
+            />
           </div>
           <Separator className="my-4" />
           <GatewayTable

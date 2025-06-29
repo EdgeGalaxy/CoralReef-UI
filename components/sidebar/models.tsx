@@ -9,6 +9,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuthApi } from '@/components/hooks/useAuthReq';
 import { handleApiRequest } from '@/lib/error-handle';
 import React from 'react';
+import { ModelDetail as ModelDetailView } from '@/components/sidebar/components/model-detail';
+import { Badge } from '@/components/ui/badge';
+import { Eye, EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Props {
   model: MLModel;
@@ -96,7 +100,23 @@ function ModelDetail({ model, onRefresh, onClose }: Props) {
           </span>
         </div>
       </div>
-      <div className="mb-6 flex space-x-4">
+      <div className="mb-6 flex items-center space-x-4">
+        <Badge
+          variant="outline"
+          className={cn(
+            'flex items-center gap-1 font-normal',
+            model.is_public
+              ? 'border-green-500 text-green-500'
+              : 'border-orange-500 text-orange-500'
+          )}
+        >
+          {model.is_public ? (
+            <Eye className="h-3 w-3" />
+          ) : (
+            <EyeOff className="h-3 w-3" />
+          )}
+          {model.is_public ? '公开' : '私密'}
+        </Badge>
         <Button
           variant="outline"
           size="sm"
@@ -135,7 +155,13 @@ export function ModelSidebar({ model, onRefresh, onClose }: Props) {
     {
       value: 'details',
       label: '详情',
-      content: <div>模型详情内容</div>
+      content: (
+        <ModelDetailView
+          model={model}
+          onRefresh={onRefresh}
+          onClose={onClose}
+        />
+      )
     },
     {
       value: 'settings',

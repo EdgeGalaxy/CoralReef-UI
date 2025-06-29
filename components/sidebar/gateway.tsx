@@ -202,17 +202,17 @@ export function GatewaySidebar({ gateway, onClose, onRefresh }: Props) {
       content: (
         <EventLog workspaceId={gateway.workspace_id} gatewayId={gateway.id} />
       )
-    },
-    {
-      value: 'hardware',
-      label: '硬件信息',
-      content: <div>硬件信息内容</div>
-    },
-    {
-      value: 'settings',
-      label: '设置',
-      content: <div>设置内容</div>
     }
+    // {
+    //   value: 'hardware',
+    //   label: '硬件信息',
+    //   content: <div>硬件信息内容</div>
+    // },
+    // {
+    //   value: 'settings',
+    //   label: '设置',
+    //   content: <div>设置内容</div>
+    // }
   ];
 
   return (

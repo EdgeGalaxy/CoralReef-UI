@@ -48,7 +48,8 @@ import {
   Pause,
   VolumeXIcon,
   Clock,
-  PauseCircle
+  PauseCircle,
+  Download
 } from 'lucide-react';
 
 export type Icon = LucideIcon;
@@ -117,5 +118,6 @@ export const Icons = {
   refreshCw: RefreshCw,
   trash2: Trash2,
   stopped: MinusCircle,
-  power: Power
+  power: Power,
+  download: Download
 };
