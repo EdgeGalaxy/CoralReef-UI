@@ -51,7 +51,13 @@ export default function WebRTCPreview({ deployment }: Props) {
     setIsLoading(true);
     setError(null);
     try {
-      peerConnection.current = new RTCPeerConnection();
+      peerConnection.current = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: 'stun:stun.aliyuncs.com:3478'
+          }
+        ]
+      });
 
       peerConnection.current.addTransceiver('video', {
         direction: 'recvonly'
