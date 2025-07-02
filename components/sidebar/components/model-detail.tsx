@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuthApi } from '@/components/hooks/useAuthReq';
 
 interface ModelDetailProps {
   model: MLModel;
@@ -30,6 +31,7 @@ interface ModelDetailProps {
 export function ModelDetail({ model, onRefresh }: ModelDetailProps) {
   const [isConverting, setIsConverting] = useState(false);
   const { toast } = useToast();
+  const api = useAuthApi();
 
   const handleDownload = (url: string) => {
     window.open(url, '_blank');
@@ -38,16 +40,9 @@ export function ModelDetail({ model, onRefresh }: ModelDetailProps) {
   const handleConvertToRKNN = async () => {
     try {
       setIsConverting(true);
-      const response = await fetch(
-        `/api/workspaces/${model.workspace_id}/models/${model.id}/convert`,
-        {
-          method: 'POST'
-        }
+      await api.post(
+        `api/reef/workspaces/${model.workspace_id}/models/${model.id}/convert`
       );
-
-      if (!response.ok) {
-        throw new Error('转换失败');
-      }
 
       toast({
         title: '成功',

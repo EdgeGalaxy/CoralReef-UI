@@ -41,7 +41,7 @@ export default function GatewayPage() {
   } = useAuthSWR<Gateway[]>(`/api/reef/workspaces/${workspaceId}/gateways`);
 
   const { data: gatewayCommand } = useAuthSWR<GatewayCommand>(
-    `/api/reef/workspaces/${workspaceId}/gateways/install-command`
+    `/api/reef/workspaces/${workspaceId}/gateways/install/command`
   );
 
   const createGatewayCommand: GatewayCommand = gatewayCommand || {
