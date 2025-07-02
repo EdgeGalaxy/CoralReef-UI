@@ -69,6 +69,7 @@ export default function ModelsPage() {
           {selectedModel && (
             <ModelSidebar
               model={selectedModel}
+              workspaceId={workspaceId}
               onRefresh={handleCreateSuccess}
               onClose={() => setSelectedModel(null)}
             />

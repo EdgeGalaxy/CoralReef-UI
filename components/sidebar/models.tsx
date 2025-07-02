@@ -16,11 +16,12 @@ import { cn } from '@/lib/utils';
 
 interface Props {
   model: MLModel;
+  workspaceId: string;
   onRefresh: () => void;
   onClose: () => void;
 }
 
-function ModelDetail({ model, onRefresh, onClose }: Props) {
+function ModelDetail({ model, workspaceId, onRefresh, onClose }: Props) {
   const api = useAuthApi();
   const { toast } = useToast();
   const [operationType, setOperationType] = React.useState<string | null>(null);
@@ -41,14 +42,11 @@ function ModelDetail({ model, onRefresh, onClose }: Props) {
   const handleUpdate = async (field: keyof MLModel, newValue: string) => {
     await handleApiRequest(
       () =>
-        api.put(
-          `api/reef/workspaces/${model.workspace_id}/models/${model.id}`,
-          {
-            json: {
-              [field]: newValue
-            }
+        api.put(`api/reef/workspaces/${workspaceId}/models/${model.id}`, {
+          json: {
+            [field]: newValue
           }
-        ),
+        }),
       {
         toast,
         successTitle: '模型更新成功',
@@ -150,7 +148,12 @@ function ModelDetail({ model, onRefresh, onClose }: Props) {
   );
 }
 
-export function ModelSidebar({ model, onRefresh, onClose }: Props) {
+export function ModelSidebar({
+  model,
+  workspaceId,
+  onRefresh,
+  onClose
+}: Props) {
   const tabConfig = [
     {
       value: 'details',
@@ -175,7 +178,12 @@ export function ModelSidebar({ model, onRefresh, onClose }: Props) {
       title={model.name}
       onClose={onClose}
       detailContent={
-        <ModelDetail model={model} onRefresh={onRefresh} onClose={onClose} />
+        <ModelDetail
+          model={model}
+          workspaceId={workspaceId}
+          onRefresh={onRefresh}
+          onClose={onClose}
+        />
       }
       tabs={tabConfig}
       defaultTab="details"
