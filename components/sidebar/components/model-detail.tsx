@@ -24,11 +24,16 @@ import { useAuthApi } from '@/components/hooks/useAuthReq';
 
 interface ModelDetailProps {
   model: MLModel;
+  workspaceId: string;
   onRefresh?: () => void;
   onClose?: () => void;
 }
 
-export function ModelDetail({ model, onRefresh }: ModelDetailProps) {
+export function ModelDetail({
+  model,
+  workspaceId,
+  onRefresh
+}: ModelDetailProps) {
   const [isConverting, setIsConverting] = useState(false);
   const { toast } = useToast();
   const api = useAuthApi();
@@ -41,7 +46,7 @@ export function ModelDetail({ model, onRefresh }: ModelDetailProps) {
     try {
       setIsConverting(true);
       await api.post(
-        `api/reef/workspaces/${model.workspace_id}/models/${model.id}/convert`
+        `api/reef/workspaces/${workspaceId}/models/${model.id}/convert`
       );
 
       toast({

@@ -161,6 +161,7 @@ export function ModelSidebar({
       content: (
         <ModelDetailView
           model={model}
+          workspaceId={workspaceId}
           onRefresh={onRefresh}
           onClose={onClose}
         />

@@ -83,13 +83,6 @@ export function DeploymentSettings({
     );
   };
 
-  const handleParameterChange = (key: string, value: string) => {
-    setParameters({
-      ...parameters,
-      [key]: value
-    });
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
     onSavingChange?.(true);
