@@ -18,18 +18,6 @@ interface PreviewProps {
   source: SourceDataModel;
 }
 
-// 类型定义，用于后面的类型断言
-interface ReactPlayerProps {
-  url: string;
-  playing?: boolean;
-  controls?: boolean;
-  width?: string;
-  height?: string;
-  config?: any;
-  onReady?: () => void;
-  onError?: (err: any) => void;
-}
-
 export function Preview({ source }: PreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

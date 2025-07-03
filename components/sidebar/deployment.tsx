@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import WebRTCPreview from './components/webrtc-preview';
 import { DeploymentSettings } from '@/components/sidebar/components/deployment-settings';
 import { EventLog } from './components/event-log';
+import { PipelineMetricsChart } from './components/pipeline-metrics-chart';
 
 interface DeploymentDiffResponse {
   workflow_changed: boolean;
@@ -279,7 +280,12 @@ export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
     {
       value: 'metrics',
       label: '指标',
-      content: <div>指标内容</div>
+      content: (
+        <PipelineMetricsChart
+          workspaceId={deployment.workspace_id}
+          deploymentId={deployment.id}
+        />
+      )
     },
     {
       value: 'events',
