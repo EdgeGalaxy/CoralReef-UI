@@ -151,6 +151,13 @@ const DesignPage = () => {
     startNodePos: XYPosition;
     startPanelPos: XYPosition;
   } | null>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+
+  // 为边线添加选中状态
+  const edgesWithSelection = edges.map((edge) => ({
+    ...edge,
+    selected: edge.id === selectedEdgeId
+  }));
 
   const getConnectableNodeManifests = useCallback(
     (node: Node): string[] => {
@@ -436,12 +443,16 @@ const DesignPage = () => {
   // Add this new function to handle key presses
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (
-        event.key === 'Delete' &&
-        selectedNode &&
-        selectedNode.type !== 'builtInNode'
-      ) {
-        onDeleteNode();
+      if (event.key === 'Delete') {
+        if (selectedNode && selectedNode.type !== 'builtInNode') {
+          onDeleteNode();
+        } else if (selectedEdgeId) {
+          // 删除选中的边线
+          const deleteEvent = new CustomEvent('delete-edge', {
+            detail: { id: selectedEdgeId }
+          });
+          window.dispatchEvent(deleteEvent);
+        }
       }
       if (
         (event.ctrlKey || event.metaKey) &&
@@ -453,7 +464,7 @@ const DesignPage = () => {
         console.log('Copy operation prevented for non-built-in node');
       }
     },
-    [selectedNode, onDeleteNode]
+    [selectedNode, selectedEdgeId, onDeleteNode]
   );
 
   // Add useEffect to handle key events
@@ -803,13 +814,91 @@ const DesignPage = () => {
   useEffect(() => {
     const handleDeleteEdge = (e: Event) => {
       const { id } = (e as CustomEvent).detail;
+
+      // 找到要删除的边线
+      const edgeToDelete = edges.find((edge) => edge.id === id);
+      if (!edgeToDelete) return;
+
+      // 删除边线
       setEdges((eds) => eds.filter((edge) => edge.id !== id));
+
+      // 如果删除的是当前选中的边线，清除选中状态
+      if (selectedEdgeId === id) {
+        setSelectedEdgeId(null);
+      }
+
+      // 找到目标节点并清理其formData中的连接数据
+      const targetNode = nodes.find((node) => node.id === edgeToDelete.target);
+      if (
+        targetNode &&
+        targetNode.data.manifest_type_identifier !==
+          outputNode.data.manifest_type_identifier
+      ) {
+        const sourceNode = nodes.find(
+          (node) => node.id === edgeToDelete.source
+        );
+        if (sourceNode) {
+          const sourceManifest = sourceNode.data.manifest_type_identifier;
+          const sourceNodeName = sourceNode.data.formData.name;
+          const sourceHandleId = edgeToDelete.sourceHandle;
+
+          // 构建要清理的属性值
+          let propertyValueToRemove: string | undefined = undefined;
+          if (sourceHandleId) {
+            if (sourceManifest === inputNode.data.manifest_type_identifier) {
+              propertyValueToRemove = `$inputs.${sourceHandleId}`;
+            } else {
+              propertyValueToRemove = `$steps.${sourceNodeName}.${sourceHandleId}`;
+            }
+          }
+
+          // 清理目标节点formData中匹配的属性
+          if (propertyValueToRemove) {
+            setNodes((nds) =>
+              nds.map((node) =>
+                node.id === targetNode.id
+                  ? {
+                      ...node,
+                      data: {
+                        ...node.data,
+                        formData: Object.fromEntries(
+                          Object.entries(node.data.formData).map(
+                            ([key, value]) => [
+                              key,
+                              value === propertyValueToRemove ? null : value
+                            ]
+                          )
+                        )
+                      }
+                    }
+                  : node
+              )
+            );
+          }
+        }
+      }
+
+      // 显示删除成功提示
+      toast({
+        title: '连接已删除',
+        description: '节点间的连接已成功移除',
+        variant: 'default'
+      });
     };
+
+    const handleSelectEdge = (e: Event) => {
+      const { id, selected } = (e as CustomEvent).detail;
+      setSelectedEdgeId(selected ? id : null);
+    };
+
     window.addEventListener('delete-edge', handleDeleteEdge);
+    window.addEventListener('select-edge', handleSelectEdge);
+
     return () => {
       window.removeEventListener('delete-edge', handleDeleteEdge);
+      window.removeEventListener('select-edge', handleSelectEdge);
     };
-  }, [setEdges]);
+  }, [setEdges, edges, nodes, setNodes, selectedEdgeId]);
 
   useEffect(() => {
     const handleMockNodeEvent = (e: Event) => {
@@ -1172,7 +1261,7 @@ const DesignPage = () => {
             >
               <ReactFlow
                 nodes={nodes}
-                edges={edges}
+                edges={edgesWithSelection}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
@@ -1183,7 +1272,13 @@ const DesignPage = () => {
                 onNodeDragStop={onNodeDragStop}
                 onNodeDrag={onNodeDrag}
                 onInit={onInit}
-                onPaneClick={() => setConnectMenu(null)}
+                onPaneClick={() => {
+                  setConnectMenu(null);
+                  setSelectedNode(null);
+                  setSelectedEdgeId(null);
+                  // 触发全局取消选中事件
+                  window.dispatchEvent(new CustomEvent('deselect-all-edges'));
+                }}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 defaultEdgeOptions={defaultEdgeOptions}

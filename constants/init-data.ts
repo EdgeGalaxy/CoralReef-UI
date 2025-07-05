@@ -211,8 +211,8 @@ export const reactFlowDefaultConfig = {
     [-1000, -1000] as [number, number],
     [2000, 2000] as [number, number]
   ] as [[number, number], [number, number]],
-  // 网格配置
-  snapToGrid: true,
+  // 网格配置 - 关闭snapToGrid以提高性能
+  snapToGrid: false,
   snapGrid: [20, 20] as [number, number],
   nodesDraggable: true
 };
