@@ -380,10 +380,6 @@ export function CreateDeploymentModal({
           <DialogTitle className="text-lg font-bold">创建服务</DialogTitle>
           <div className="mt-4 flex gap-4">
             <div className="flex-1">
-              <div className="mb-2 flex items-center text-sm font-medium">
-                部署名称
-                <span className="ml-1 text-destructive">*</span>
-              </div>
               <EditableField
                 value={deploymentConfig.name}
                 label="部署名称"

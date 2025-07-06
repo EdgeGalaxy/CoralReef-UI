@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { SourceDataModel } from '@/constants/deploy';
 import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
+import { Badge } from '@/components/ui/badge';
+import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import dynamic from 'next/dynamic';
 
 // 动态导入库（需要先安装）
@@ -18,11 +20,26 @@ interface PreviewProps {
   source: SourceDataModel;
 }
 
+// 定义视频信息类型
+interface VideoInfo {
+  width: number | null;
+  height: number | null;
+  fps: number | null;
+  total_frames: number | null;
+}
+
 export function Preview({ source }: PreviewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // 获取视频信息
+  const { data: videoInfo, error: videoInfoError } = useAuthSWR<VideoInfo>(
+    source.workspace_id && source.id
+      ? `/api/reef/workspaces/${source.workspace_id}/cameras/${source.id}/video-info`
+      : null
+  );
 
   // 获取视频 URL（异步处理）
   React.useEffect(() => {
@@ -168,6 +185,52 @@ export function Preview({ source }: PreviewProps) {
       )}
 
       <div className="relative">{renderPlayer()}</div>
+
+      {/* 视频信息显示 */}
+      {videoInfo && (
+        <div className="border-t p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-700">视频信息</h3>
+            <Badge variant="outline" className="text-xs">
+              {source.type?.toUpperCase()}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {videoInfo.width && videoInfo.height && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">分辨率</span>
+                <span className="font-medium">
+                  {videoInfo.width}×{videoInfo.height}
+                </span>
+              </div>
+            )}
+            {videoInfo.fps && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">帧率</span>
+                <span className="font-medium">
+                  {videoInfo.fps.toFixed(1)} fps
+                </span>
+              </div>
+            )}
+            {videoInfo.total_frames && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">总帧数</span>
+                <span className="font-medium">
+                  {videoInfo.total_frames.toLocaleString()}
+                </span>
+              </div>
+            )}
+            {videoInfo.total_frames && videoInfo.fps && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">时长</span>
+                <span className="font-medium">
+                  {Math.round(videoInfo.total_frames / videoInfo.fps)}秒
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
