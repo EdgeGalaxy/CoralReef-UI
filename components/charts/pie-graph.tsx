@@ -14,10 +14,21 @@ interface GatewayStatusChartProps {
   data: { status: string; count: number }[];
 }
 
+// 网关状态翻译映射，对应 gateways.py 中的 GatewayStatus 枚举
+const gatewayStatusTranslations: Record<string, string> = {
+  online: '在线',
+  offline: '离线',
+  deleted: '已删除'
+};
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const GatewayStatusChart = ({ data }: GatewayStatusChartProps) => {
-  const chartData = data.map((d) => ({ name: d.status, value: d.count }));
+  const chartData = data.map((d) => ({
+    name: gatewayStatusTranslations[d.status] || d.status, // 使用中文翻译，如果没有翻译则使用原状态
+    value: d.count,
+    originalStatus: d.status // 保留原始状态用于其他用途
+  }));
 
   return (
     <Card>
@@ -43,7 +54,10 @@ const GatewayStatusChart = ({ data }: GatewayStatusChartProps) => {
                 />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip
+              formatter={(value, name) => [value, '数量']}
+              labelFormatter={(label) => `状态: ${label}`}
+            />
             <Legend />
           </PieChart>
         </ResponsiveContainer>

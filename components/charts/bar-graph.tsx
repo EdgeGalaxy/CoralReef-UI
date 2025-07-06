@@ -17,8 +17,25 @@ interface DeploymentStatusChartProps {
   data: { status: string; count: number }[];
 }
 
+// 状态翻译映射，对应 deployments.py 中的 OperationStatus 枚举
+const statusTranslations: Record<string, string> = {
+  pending: '等待中',
+  running: '运行中',
+  warning: '警告',
+  failure: '失败',
+  muted: '静音',
+  stopped: '已停止',
+  not_found: '未找到',
+  timeout: '超时'
+};
+
 const DeploymentStatusChart = ({ data }: DeploymentStatusChartProps) => {
-  const chartData = data.map((d) => ({ name: d.status, total: d.count }));
+  const chartData = data.map((d) => ({
+    name: statusTranslations[d.status] || d.status, // 使用中文翻译，如果没有翻译则使用原状态
+    total: d.count,
+    originalStatus: d.status // 保留原始状态用于其他用途
+  }));
+
   return (
     <Card>
       <CardHeader>
@@ -41,7 +58,10 @@ const DeploymentStatusChart = ({ data }: DeploymentStatusChartProps) => {
               axisLine={false}
               tickFormatter={(value) => `${value}`}
             />
-            <Tooltip />
+            <Tooltip
+              formatter={(value, name) => [value, '数量']}
+              labelFormatter={(label) => `状态: ${label}`}
+            />
             <Legend />
             <Bar
               dataKey="total"
