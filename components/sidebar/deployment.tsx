@@ -272,11 +272,11 @@ export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
       label: '数据流',
       content: <WebRTCPreview deployment={deployment} />
     },
-    {
-      value: 'logs',
-      label: '服务日志',
-      content: <div>日志内容</div>
-    },
+    // {
+    //   value: 'logs',
+    //   label: '服务日志',
+    //   content: <div>日志内容</div>
+    // },
     {
       value: 'metrics',
       label: '指标',

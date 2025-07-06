@@ -53,6 +53,7 @@ export type DeploymentDataModel = {
   workspace_id: string;
   running_status: OperationStatus;
   output_image_fields: string[];
+  max_fps?: number;
   created_at: string;
   updated_at: string;
 };
@@ -92,6 +93,7 @@ export type DeploymentCreate = {
   workflow: Workflow | undefined;
   cameras: SourceDataModel[];
   parameters: Record<string, any>;
+  max_fps: number | undefined;
 };
 
 export const STATUS_CONFIG = {

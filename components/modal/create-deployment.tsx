@@ -33,7 +33,6 @@ import { handleApiRequest } from '@/lib/error-handle';
 import { GatewayStepSelectedItem } from './steps/gateway-step';
 import { CameraStepSelectedItem } from './steps/camera-step';
 import { WorkflowStepSelectedItem } from './steps/workflow-step';
-import { EditableField } from '@/components/sidebar/components/editable-field';
 
 enum DeploymentStep {
   GATEWAY = 1,
@@ -55,12 +54,13 @@ export function CreateDeploymentModal({
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [deploymentConfig, setDeploymentConfig] = useState<DeploymentCreate>({
-    name: 'default',
-    description: 'default',
+    name: '',
+    description: '',
     gateway: undefined,
     workflow: undefined,
     cameras: [],
-    parameters: {}
+    parameters: {},
+    max_fps: undefined
   });
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isFocused, setIsFocused] = useState(false);
@@ -223,7 +223,8 @@ export function CreateDeploymentModal({
       gateway: undefined,
       workflow: undefined,
       cameras: [],
-      parameters: {}
+      parameters: {},
+      max_fps: undefined
     });
     setCurrentStep(DeploymentStep.GATEWAY);
   };
@@ -248,7 +249,8 @@ export function CreateDeploymentModal({
               gateway_id: deploymentConfig.gateway?.id,
               workflow_id: deploymentConfig.workflow?.id,
               camera_ids: deploymentConfig.cameras?.map((c) => c.id),
-              parameters: deploymentConfig.parameters
+              parameters: deploymentConfig.parameters,
+              max_fps: deploymentConfig.max_fps
             }
           }),
         {
@@ -380,32 +382,74 @@ export function CreateDeploymentModal({
           <DialogTitle className="text-lg font-bold">创建服务</DialogTitle>
           <div className="mt-4 flex gap-4">
             <div className="flex-1">
-              <EditableField
-                value={deploymentConfig.name}
-                label="部署名称"
-                onUpdate={async (newValue) => {
-                  if (!newValue?.trim()) {
-                    toast({
-                      variant: 'destructive',
-                      title: '部署名称不能为空'
-                    });
-                    return;
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  部署名称 <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={deploymentConfig.name}
+                  onChange={(e) => {
+                    setDeploymentConfig((prev) => ({
+                      ...prev,
+                      name: e.target.value
+                    }));
+                  }}
+                  placeholder="请输入部署名称"
+                  className={
+                    !deploymentConfig.name.trim()
+                      ? 'border-red-300 focus:border-red-500'
+                      : ''
                   }
-                  setDeploymentConfig((prev) => ({ ...prev, name: newValue }));
-                }}
-              />
+                />
+                {!deploymentConfig.name.trim() && (
+                  <p className="text-sm text-red-500">部署名称不能为空</p>
+                )}
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  最大处理帧率 (FPS)
+                </label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={deploymentConfig.max_fps || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const numValue = value ? parseInt(value, 10) : undefined;
+                    if (
+                      numValue !== undefined &&
+                      (numValue < 1 || numValue > 60)
+                    ) {
+                      return;
+                    }
+                    setDeploymentConfig((prev) => ({
+                      ...prev,
+                      max_fps: numValue
+                    }));
+                  }}
+                  placeholder="最大帧率, 默认为空"
+                />
+              </div>
             </div>
             <div className="flex-[2]">
-              <EditableField
-                value={deploymentConfig.description}
-                label="部署描述"
-                onUpdate={async (newValue) => {
-                  setDeploymentConfig((prev) => ({
-                    ...prev,
-                    description: newValue
-                  }));
-                }}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  部署描述
+                </label>
+                <Input
+                  value={deploymentConfig.description}
+                  onChange={(e) => {
+                    setDeploymentConfig((prev) => ({
+                      ...prev,
+                      description: e.target.value
+                    }));
+                  }}
+                  placeholder="请输入部署描述（可选）"
+                />
+              </div>
             </div>
           </div>
         </DialogHeader>

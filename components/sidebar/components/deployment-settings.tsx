@@ -52,6 +52,7 @@ export function DeploymentSettings({
   const [parameters, setParameters] = useState<Record<string, any>>(
     deployment.parameters || {}
   );
+  const [maxFps, setMaxFps] = useState<number | undefined>(deployment.max_fps);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -92,7 +93,8 @@ export function DeploymentSettings({
         {
           json: {
             camera_ids: Object.keys(cameras),
-            parameters: parameters
+            parameters: parameters,
+            max_fps: maxFps
           }
         }
       );
@@ -185,6 +187,36 @@ export function DeploymentSettings({
             </div>
           </Card>
         </div>
+      </div>
+
+      {/* 最大帧率设置 */}
+      <div>
+        <h3 className="mb-4 text-lg font-medium">性能设置</h3>
+        <Card className="p-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">最大处理帧率 (FPS)</Label>
+            <div className="col-span-3">
+              <Input
+                type="number"
+                min="1"
+                max="60"
+                value={maxFps || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = value ? parseInt(value, 10) : undefined;
+                  if (
+                    numValue !== undefined &&
+                    (numValue < 1 || numValue > 60)
+                  ) {
+                    return;
+                  }
+                  setMaxFps(numValue);
+                }}
+                placeholder="最大帧率, 默认为空"
+              />
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* 参数设置 */}
