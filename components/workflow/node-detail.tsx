@@ -8,7 +8,6 @@ import {
 import { withTheme } from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import { Theme as shadcnTheme } from '@rjsf/shadcn';
-// import 'semantic-ui-css/semantic.min.css';
 import { JSONSchema7 } from 'json-schema';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import { useSession } from 'next-auth/react';
@@ -220,8 +219,10 @@ const CustomFieldTemplate = (props: FieldTemplateProps) => {
   );
 };
 
-const CustomObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
-  const { properties, schema } = props;
+const CustomObjectFieldTemplate = (
+  props: ObjectFieldTemplateProps & { nodeData?: NodeData }
+) => {
+  const { properties, schema, nodeData } = props;
   const [isOpen, setIsOpen] = useState(false);
 
   const requiredFieldsList = schema.required || [];
@@ -232,6 +233,15 @@ const CustomObjectFieldTemplate = (props: ObjectFieldTemplateProps) => {
   const optionalFields = properties.filter(
     (prop) => !requiredFieldsList.includes(prop.name)
   );
+
+  // 如果是 input 或 output 节点，直接显示所有字段，不使用高级选项
+  const isInputOrOutput =
+    nodeData?.manifest_type_identifier === 'input' ||
+    nodeData?.manifest_type_identifier === 'output';
+
+  if (isInputOrOutput) {
+    return <div>{properties.map((prop) => prop.content)}</div>;
+  }
 
   return (
     <div>
@@ -491,7 +501,9 @@ const NodeDetail: React.FC<NodeDetailProps> = React.memo(
                 fields={customFields}
                 templates={{
                   FieldTemplate: CustomFieldTemplate,
-                  ObjectFieldTemplate: CustomObjectFieldTemplate
+                  ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
+                    <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
+                  )
                 }}
                 className="form-dark-mode"
               />

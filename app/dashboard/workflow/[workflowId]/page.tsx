@@ -219,6 +219,12 @@ const DesignPage = () => {
     }
   }, [isMinimized, toggleSidebar]);
 
+  // 确保页面初始化时不选中任何节点
+  useEffect(() => {
+    setSelectedNode(null);
+    setSelectedEdgeId(null);
+  }, []);
+
   const { data: workflowData } = useAuthSWR<WorkflowResponse>(
     !isNewWorkflow
       ? `/api/reef/workspaces/${workspaceId}/workflows/${workflowId}`
@@ -227,12 +233,27 @@ const DesignPage = () => {
 
   useEffect(() => {
     if (isNewWorkflow) {
-      setNodes(initialNodes);
+      // 确保初始节点没有选中状态
+      const nodesWithoutSelection = initialNodes.map((node) => ({
+        ...node,
+        selected: false
+      }));
+      setNodes(nodesWithoutSelection);
       setEdges(initialEdges);
     } else if (workflowData) {
-      setNodes(workflowData.data.nodes);
+      // 确保加载的节点没有选中状态
+      const nodesWithoutSelection = workflowData.data.nodes.map(
+        (node: Node) => ({
+          ...node,
+          selected: false
+        })
+      );
+      setNodes(nodesWithoutSelection);
       setEdges(workflowData.data.edges);
     }
+    // 确保页面加载时不选中任何节点
+    setSelectedNode(null);
+    setSelectedEdgeId(null);
   }, [isNewWorkflow, workflowData, setNodes, setEdges]);
 
   const { data: blocksData } = useAuthSWR<{
@@ -432,13 +453,18 @@ const DesignPage = () => {
     [nodes, setNodes]
   );
 
-  const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      setSelectedNode(node);
-      setConnectMenu(null);
-    },
-    [setSelectedNode]
-  );
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    // 确保点击时清除所有节点的选中状态，只选中当前点击的节点
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        selected: n.id === node.id
+      }))
+    );
+    setSelectedNode(node);
+    setConnectMenu(null);
+    setSelectedEdgeId(null);
+  }, []);
 
   // Add this new function to handle key presses
   const onKeyDown = useCallback(
@@ -696,7 +722,12 @@ const DesignPage = () => {
     [nodes, setNodes]
   );
 
-  const onInit = (instance: ReactFlowInstance) => setRfInstance(instance);
+  const onInit = (instance: ReactFlowInstance) => {
+    setRfInstance(instance);
+    // 确保初始化后不选中任何节点
+    setSelectedNode(null);
+    setSelectedEdgeId(null);
+  };
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -1276,6 +1307,13 @@ const DesignPage = () => {
                   setConnectMenu(null);
                   setSelectedNode(null);
                   setSelectedEdgeId(null);
+                  // 清除所有节点的选中状态
+                  setNodes((nds) =>
+                    nds.map((n) => ({
+                      ...n,
+                      selected: false
+                    }))
+                  );
                   // 触发全局取消选中事件
                   window.dispatchEvent(new CustomEvent('deselect-all-edges'));
                 }}
@@ -1284,6 +1322,10 @@ const DesignPage = () => {
                 defaultEdgeOptions={defaultEdgeOptions}
                 multiSelectionKeyCode={null} // Disable multi-selection
                 selectionKeyCode={null} // Disable selection
+                nodesConnectable={true}
+                nodesDraggable={true}
+                elementsSelectable={false} // 禁用元素选中
+                selectNodesOnDrag={false} // 禁用拖拽时选中节点
                 translateExtent={reactFlowDefaultConfig.translateExtent}
                 minZoom={reactFlowDefaultConfig.minZoom}
                 maxZoom={reactFlowDefaultConfig.maxZoom}
