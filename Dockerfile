@@ -1,18 +1,14 @@
-# 第一阶段：安装依赖
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 安装 libc6-compat 用于兼容性
-RUN apk add --no-cache libc6-compat
-
-# 只复制 package.json 和 package-lock.json 文件以便更好地利用缓存
-COPY package*.json ./
-
-# 安装所有依赖（包括开发依赖）
-RUN npm ci --ignore-scripts
-
-# 设置环境变量
+# 在构建阶段就设置环境变量
 ENV NEXT_PUBLIC_API_BASE_URL=https://coral.loopeai.com
+
+# 复制依赖文件
+COPY package.json package-lock.json ./
+
+# 安装依赖
+RUN npm ci --ignore-scripts
 
 # 复制源代码
 COPY . .
@@ -20,11 +16,21 @@ COPY . .
 # 构建应用
 RUN npm run build
 
+# Production Stage
+FROM node:20-alpine AS runner
+WORKDIR /app
+
 # 设置生产环境
 ENV NODE_ENV=production
 # NextAuth 所需环境变量
 ENV NEXTAUTH_URL=https://coral.loopeai.com
 ENV NEXTAUTH_SECRET=abcdvwxHINOPUVWXYZ
+
+# 复制必要文件
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next/server ./.next/server
 
 EXPOSE 3000
 
