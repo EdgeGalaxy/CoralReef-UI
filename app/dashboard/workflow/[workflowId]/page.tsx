@@ -10,11 +10,11 @@ import ReactFlow, {
   Background,
   useNodesState,
   useEdgesState,
-  Node,
-  Connection,
-  Edge,
-  ReactFlowInstance,
-  XYPosition
+  type Node as RFNode,
+  type Connection,
+  type Edge as RFEdge,
+  type ReactFlowInstance,
+  type XYPosition
 } from 'reactflow';
 import {
   Dialog,
@@ -77,7 +77,7 @@ interface HandleBound {
   position: string;
 }
 
-interface NodeWithBounds extends Node {
+interface NodeWithBounds extends RFNode<NodeData> {
   handleBounds?: {
     source?: HandleBound[];
     target?: HandleBound[];
@@ -124,15 +124,15 @@ const DesignPage = () => {
 
   const rfWrapperRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeWithBounds>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<RFEdge>([]);
   const { isMinimized, toggle: toggleSidebar } = useSidebar();
   const [availableNodes, setAvailableNodes] = useState<BlockDescription[]>([]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
   const [kindsConnections, setKindsConnections] = useState<KindsConnections>(
     {}
   );
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNode, setSelectedNode] = useState<NodeWithBounds | null>(null);
   const [availableKindValues, setAvailableKindValues] = useState<
     Record<string, PropertyDefinition[]>
   >({});
@@ -160,7 +160,7 @@ const DesignPage = () => {
   }));
 
   const getConnectableNodeManifests = useCallback(
-    (node: Node): string[] => {
+    (node: NodeWithBounds): string[] => {
       if (!node?.data || !kindsConnections) {
         return [];
       }
@@ -243,7 +243,7 @@ const DesignPage = () => {
     } else if (workflowData) {
       // 确保加载的节点没有选中状态
       const nodesWithoutSelection = workflowData.data.nodes.map(
-        (node: Node) => ({
+        (node: NodeWithBounds) => ({
           ...node,
           selected: false
         })
@@ -393,14 +393,14 @@ const DesignPage = () => {
       const type = event.dataTransfer.getData('application/reactflow');
       const position = { x: event.clientX, y: event.clientY };
 
-      const newNode: Node = {
+      const newNode: NodeWithBounds = {
         id: `${type}-${nodes.length + 1}`,
         type,
         position,
         data: { label: `${type} node` }
       };
 
-      setNodes((nds: Node[]) => nds.concat(newNode));
+      setNodes((nds: NodeWithBounds[]) => nds.concat(newNode));
     },
     [nodes, setNodes]
   );
@@ -453,7 +453,7 @@ const DesignPage = () => {
     [nodes, setNodes]
   );
 
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((event: React.MouseEvent, node: NodeWithBounds) => {
     // 确保点击时清除所有节点的选中状态，只选中当前点击的节点
     setNodes((nds) =>
       nds.map((n) => ({
@@ -505,7 +505,7 @@ const DesignPage = () => {
     kindValues: Record<string, PropertyDefinition[]>,
     kindName: string,
     item: any,
-    node: Node,
+    node: NodeWithBounds,
     config: {
       prefix: string;
       description: string;
@@ -533,7 +533,7 @@ const DesignPage = () => {
 
   const updateAvailableKindValues = useCallback(() => {
     const kindValues: Record<string, PropertyDefinition[]> = {};
-    nodes.forEach((node: Node) => {
+    nodes.forEach((node: NodeWithBounds) => {
       if (
         node.type === 'builtInNode' &&
         node.data.manifest_type_identifier === 'input'
@@ -656,7 +656,7 @@ const DesignPage = () => {
             ...selectedNode.data,
             formData: mergedFormData
           }
-        } as Node;
+        } as NodeWithBounds;
 
         // 更新 nodes 列表中的节点数据
         setNodes((nds) =>
@@ -673,7 +673,7 @@ const DesignPage = () => {
   );
 
   const onNodeDragStart = useCallback(
-    (_: React.MouseEvent, node: Node) => {
+    (_: React.MouseEvent, node: NodeWithBounds) => {
       if (connectMenu && node.id === connectMenu.sourceNodeId) {
         setDragState({
           startNodePos: node.position,
@@ -685,7 +685,7 @@ const DesignPage = () => {
   );
 
   const onNodeDrag = useCallback(
-    (_: React.MouseEvent, node: Node) => {
+    (_: React.MouseEvent, node: NodeWithBounds) => {
       if (!dragState || !connectMenu || !rfInstance) {
         return;
       }
@@ -710,7 +710,7 @@ const DesignPage = () => {
   );
 
   const onNodeDragStop = useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: React.MouseEvent, node: NodeWithBounds) => {
       setDragState(null);
       if (node.type === 'builtInNode') {
         // 允许内置节点在更大范围内移动，包括负坐标区域，但有合理限制
@@ -1125,7 +1125,7 @@ const DesignPage = () => {
       };
 
       // 2. Prepare new edges
-      const newEdges: Edge[] = [];
+      const newEdges: RFEdge[] = [];
       if (incomingEdge) {
         newEdges.push({ ...incomingEdge, target: newNodeId });
       }
