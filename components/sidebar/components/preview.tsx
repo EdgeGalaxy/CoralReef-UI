@@ -7,6 +7,7 @@ import { Icons } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { useAuthSWR } from '@/components/hooks/useAuthReq';
 import dynamic from 'next/dynamic';
+import { fetchWithAuth } from '@/lib/utils';
 
 // 动态导入库（需要先安装）
 const ReactPlayer = dynamic(
@@ -80,10 +81,11 @@ export function Preview({ source }: PreviewProps) {
         }/api/reef/stream?url=${encodeURIComponent(sourcePath)}?type=usb`;
       case 'file':
         try {
-          // 通过 API 接口获取签名URL
-          const response = await fetch(
+          // 通过 API 接口获取签名URL，使用统一的401错误处理
+          const response = await fetchWithAuth(
             `/api/tokenUrl?key=${encodeURIComponent(sourcePath)}`
           );
+
           if (!response.ok) {
             throw new Error('获取签名URL失败');
           }

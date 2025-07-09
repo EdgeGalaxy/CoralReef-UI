@@ -16,6 +16,32 @@ export const getSelectWorkspaceId: () => string = () => {
   return '';
 };
 
+// 处理401错误的统一函数
+export const handle401Error = () => {
+  if (typeof window !== 'undefined') {
+    // 清除本地存储
+    localStorage.clear();
+    // 跳转到登录页面
+    window.location.href = '/signin';
+  }
+};
+
+// 带有401错误处理的fetch包装函数
+export const fetchWithAuth = async (
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> => {
+  const response = await fetch(input, init);
+
+  // 检查401响应状态
+  if (response.status === 401) {
+    handle401Error();
+    throw new Error('Unauthorized');
+  }
+
+  return response;
+};
+
 export const noAuthApi = ky.create({
   prefixUrl: getApiUrl(''),
   headers: {
@@ -33,6 +59,14 @@ export function createApi(token: string) {
             request.headers.set('Authorization', `Bearer ${token}`);
           }
         }
+      ],
+      afterResponse: [
+        (_request, _options, response) => {
+          // 检查401响应状态
+          if (response.status === 401) {
+            handle401Error();
+          }
+        }
       ]
     },
     retry: 0,
@@ -45,7 +79,7 @@ export function createApi(token: string) {
 
 export const fetcher = async <T>(url: string, token: string): Promise<T> => {
   const fullUrl = getApiUrl(url);
-  const response = await fetch(fullUrl, {
+  const response = await fetchWithAuth(fullUrl, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
