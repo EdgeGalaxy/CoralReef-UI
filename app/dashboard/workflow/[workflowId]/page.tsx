@@ -643,17 +643,33 @@ const DesignPage = () => {
           _formData = formData;
         }
 
+        // 合并新旧 formData，避免在折叠高级选项或隐藏字段时丢失未更改的字段值
+        const mergedFormData = {
+          ...selectedNode.data.formData,
+          ..._formData
+        };
+
+        // 生成更新后的节点对象，供 setNodes 和 setSelectedNode 同步使用
+        const updatedNode = {
+          ...selectedNode,
+          data: {
+            ...selectedNode.data,
+            formData: mergedFormData
+          }
+        } as Node;
+
+        // 更新 nodes 列表中的节点数据
         setNodes((nds) =>
-          nds.map((node) =>
-            node.id === selectedNode.id
-              ? { ...node, data: { ...node.data, formData: _formData } }
-              : node
-          )
+          nds.map((node) => (node.id === selectedNode.id ? updatedNode : node))
         );
+
+        // 同步更新当前选中的节点，确保 NodeDetail 能及时收到变更并重新渲染
+        setSelectedNode(updatedNode);
+
         updateAvailableKindValues();
       }
     },
-    [selectedNode, setNodes, updateAvailableKindValues]
+    [selectedNode, setNodes, setSelectedNode, updateAvailableKindValues]
   );
 
   const onNodeDragStart = useCallback(
