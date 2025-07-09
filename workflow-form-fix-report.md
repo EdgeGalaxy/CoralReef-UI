@@ -22,10 +22,10 @@
 
 ### 3. 表单数据同步延迟
 
-- `anyof-kind-field.tsx` 中的 `Input` 组件同时绑定了 `onChange` 和 `onBlur` 事件
-- 这可能导致数据更新的时机不一致
+- 最初移除 `onBlur` 事件后，每次按键都会触发 `onChange`
+- 这可能导致输入卡顿和频繁的表单重新渲染
 
-## 解决方案
+## 解决方案（已实施）
 
 ### 1. 使用 ID 而非直接引用管理选中节点
 
@@ -50,30 +50,39 @@ const selectedNode = useMemo(() => {
 - 移除 `React.memo` 包装，确保组件能正确响应数据变化
 - 这样当 `nodeData` prop 更新时，组件会重新渲染
 
-### 3. 优化表单字段更新逻辑
+### 3. 采用纯 Blur 策略（最终方案）
 
 在 `components/workflow/custom-fields/anyof-kind-field.tsx` 中：
 
-- 移除 `Input` 组件的 `onBlur` 事件处理
-- 确保 `onChange` 事件立即触发数据更新
+- 使用纯 `onBlur` 策略，避免输入卡顿
+- 只在用户完成输入并移开焦点时才触发数据更新
+- Select 组件仍然立即触发，因为是明确的用户选择操作
 
 ```typescript
 const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const newValue = e.target.value;
   setInputValue(newValue);
-  // 立即触发 onChange，不等待 blur 事件
-  onChange(newValue);
+  // 不立即触发 onChange，等待 blur 事件
+};
+
+const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const newValue = e.target.value;
+  // 只有值真正改变时才触发 onChange
+  if (newValue !== formData) {
+    onChange(newValue);
+  }
 };
 ```
 
 ## 修复后的效果
 
-1. **实时数据同步**：表单字段的更新会立即反映在节点数据中
+1. **实时数据同步**：表单字段的更新会在失去焦点时立即生效
 2. **状态持久化**：折叠/展开高级选项不会导致数据丢失
 3. **数据一致性**：关闭并重新打开 NodeDetail 组件时，会显示最新的节点数据
+4. **输入流畅性**：输入时不会有任何卡顿，体验流畅
 
 ## 注意事项
 
-1. 移除 `React.memo` 可能会带来轻微的性能影响，但在这种场景下，数据的正确性比性能优化更重要
-2. 使用 ID 管理选中状态是一种更可靠的模式，避免了引用过时的问题
-3. 后续如果需要性能优化，可以考虑使用更细粒度的优化策略，如 `React.useMemo` 或 `React.useCallback`
+1. **数据保存时机**：用户需要切换焦点（点击其他字段或按 Tab 键）才能保存输入的数据
+2. **用户习惯**：这符合大多数表单的使用习惯，用户通常在完成输入后会自然地切换到下一个字段
+3. **Select 组件**：下拉选择仍然是立即生效的，因为这是明确的用户选择操作

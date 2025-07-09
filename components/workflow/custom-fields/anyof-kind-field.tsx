@@ -15,28 +15,12 @@ import { Link1Icon } from '@radix-ui/react-icons';
 import { outputNode } from '@/constants/init-data';
 import { NodeData, PropertyDefinition, Kind } from '@/constants/block';
 
-// 添加防抖 hook
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
 interface KindFieldProps extends FieldProps {
   nodeData: NodeData;
   availableKindValues: Record<string, PropertyDefinition[]>;
 }
 
+// 使用纯 onBlur 策略，确保输入流畅不卡顿
 const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   const {
     onChange,
@@ -53,20 +37,6 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   );
   const [isKindMode, setIsKindMode] = useState(allKindOptions);
   const [inputValue, setInputValue] = useState(formData || '');
-  const [hasBlurred, setHasBlurred] = useState(false);
-
-  // 使用防抖值
-  const debouncedInputValue = useDebounce(inputValue, 300);
-
-  // 监听防抖值的变化，只在防抖值改变时才触发 onChange
-  useEffect(() => {
-    // 如果已经通过 blur 更新了，就不需要通过防抖更新
-    if (debouncedInputValue !== formData && !isKindMode && !hasBlurred) {
-      onChange(debouncedInputValue);
-    }
-    // 重置 blur 标志
-    setHasBlurred(false);
-  }, [debouncedInputValue, formData, onChange, isKindMode, hasBlurred]);
 
   useEffect(() => {
     setInputValue(formData || '');
@@ -78,21 +48,20 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-    // 不再立即触发 onChange，而是等待防抖
+    // 不立即触发 onChange，等待 blur 事件
   };
 
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    // 如果值有变化，立即触发 onChange
+    // 只有值真正改变时才触发 onChange
     if (newValue !== formData) {
-      setHasBlurred(true);
       onChange(newValue);
     }
   };
 
   const handleSelectChange = (selectedValue: string) => {
     setInputValue(selectedValue);
-    // Select 选择时立即触发 onChange，因为不需要防抖
+    // Select 选择时立即触发，因为是明确的用户操作
     onChange(selectedValue);
   };
 
