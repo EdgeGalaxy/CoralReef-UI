@@ -20,6 +20,7 @@ interface KindFieldProps extends FieldProps {
   availableKindValues: Record<string, PropertyDefinition[]>;
 }
 
+// 使用纯 onBlur 策略，确保输入流畅不卡顿
 const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   const {
     onChange,
@@ -45,12 +46,22 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    onChange(e.target.value);
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    // 不立即触发 onChange，等待 blur 事件
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    // 只有值真正改变时才触发 onChange
+    if (newValue !== formData) {
+      onChange(newValue);
+    }
   };
 
   const handleSelectChange = (selectedValue: string) => {
     setInputValue(selectedValue);
+    // Select 选择时立即触发，因为是明确的用户操作
     onChange(selectedValue);
   };
 
@@ -183,7 +194,7 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
             id={props.id}
             value={inputValue}
             onChange={handleInputChange}
-            onBlur={handleInputChange}
+            onBlur={handleInputBlur}
             className="w-full dark:border-gray-400 dark:bg-white dark:text-gray-900 dark:placeholder-gray-500 dark:focus:border-blue-500 dark:focus:ring-2 dark:focus:ring-blue-400 dark:focus:ring-opacity-20"
             placeholder="输入一个值"
             required={isRequired}

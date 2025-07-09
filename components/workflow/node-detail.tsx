@@ -271,257 +271,255 @@ const CustomObjectFieldTemplate = (
   );
 };
 
-const NodeDetail: React.FC<NodeDetailProps> = React.memo(
-  ({
-    isOpen,
-    onClose,
-    nodeData,
-    onFormChange,
-    availableKindValues,
-    onDeleteNode
-  }) => {
-    const customFields = {
-      AnyOfField: React.useCallback(
-        (props: any) => {
-          console.log('anyof-kind-field props', props);
-          // 检查是否为Roboflow模型字段
-          if (props.schema['x-field-type'] === 'roboflow-model') {
-            return (
-              <ModelSelectorField
-                {...props}
-                nodeData={nodeData}
-                availableKindValues={availableKindValues}
-              />
-            );
-          }
-
+const NodeDetail: React.FC<NodeDetailProps> = ({
+  isOpen,
+  onClose,
+  nodeData,
+  onFormChange,
+  availableKindValues,
+  onDeleteNode
+}) => {
+  const customFields = {
+    AnyOfField: React.useCallback(
+      (props: any) => {
+        console.log('anyof-kind-field props', props);
+        // 检查是否为Roboflow模型字段
+        if (props.schema['x-field-type'] === 'roboflow-model') {
           return (
-            <AnyOfKindField
-              {...props}
-              availableKindValues={availableKindValues}
-              nodeData={nodeData}
-            />
-          );
-        },
-        [availableKindValues, nodeData]
-      ),
-      KindField: React.useCallback(
-        (props: any) => {
-          return (
-            <KindField
+            <ModelSelectorField
               {...props}
               nodeData={nodeData}
               availableKindValues={availableKindValues}
             />
           );
-        },
-        [availableKindValues, nodeData]
-      ),
-      ParamTypeField: React.useCallback((props: any) => {
-        return <ParamTypeField {...props} />;
-      }, [])
-    };
+        }
 
-    const newSchema = {
-      ...nodeData.block_schema,
-      properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
-        (acc, [key, value]) => {
-          if (skipFormFields.includes(key)) {
-            return acc;
-          }
-
-          const schemaValue =
-            typeof value === 'object' && value !== null ? (value as any) : null;
-          const title = schemaValue
-            ? schemaValue.cn_title || schemaValue.title || key
-            : key;
-          const description = schemaValue
-            ? schemaValue.cn_description || schemaValue.description
-            : undefined;
-
-          if (typeof value === 'object' && value !== null && 'anyOf' in value) {
-            const isRoboflowModel = isRoboflowModelField(value);
-            acc[key] = {
-              ...value,
-              'x-internal-type': 'anyOf-field',
-              'x-field-type': isRoboflowModel ? 'roboflow-model' : undefined,
-              title,
-              description
-            };
-          } else if (
-            typeof value === 'object' &&
-            value !== null &&
-            (key === 'name' || key === 'type')
-          ) {
-            acc[key] = {
-              type: 'string',
-              title,
-              description,
-              readOnly: true
-            };
-          } else {
-            acc[key] =
-              typeof value === 'object' && value !== null
-                ? { ...value, title, description }
-                : value;
-          }
-          return acc;
-        },
-        {} as Record<string, any>
-      )
-    };
-
-    const uiSchema = {
-      ...Object.keys(nodeData.block_schema.properties || {}).reduce(
-        (acc, key) => {
-          const property = nodeData.block_schema.properties?.[
-            key
-          ] as ExtendedJSONSchema7;
-          if (
-            property !== null &&
-            property['x-internal-type'] === 'anyOf-field'
-          ) {
-            acc[key] = {
-              'ui:field': 'AnyOfField',
-              'ui:options': {
-                originalSchema: property
-              }
-            };
-          } else if (property !== null && 'kind' in property) {
-            acc[key] = {
-              'ui:field': 'KindField',
-              'ui:options': {
-                originalSchema: property
-              }
-            };
-          }
-          return acc;
-        },
-        {} as Record<string, any>
-      ),
-      'ui:submitButtonOptions': {
-        norender: true
+        return (
+          <AnyOfKindField
+            {...props}
+            availableKindValues={availableKindValues}
+            nodeData={nodeData}
+          />
+        );
       },
-      'ui:title': '',
-      'ui:classNames': 'form-dark-mode',
-      ...(nodeData.manifest_type_identifier === 'input'
-        ? {
-            sources: {
-              'ui:options': {
-                addable: false,
-                orderable: false,
-                removable: false
-              },
-              items: {
-                'ui:widget': 'readonly',
-                'ui:readonly': true,
-                'ui:order': ['name']
-              }
+      [availableKindValues, nodeData]
+    ),
+    KindField: React.useCallback(
+      (props: any) => {
+        return (
+          <KindField
+            {...props}
+            nodeData={nodeData}
+            availableKindValues={availableKindValues}
+          />
+        );
+      },
+      [availableKindValues, nodeData]
+    ),
+    ParamTypeField: React.useCallback((props: any) => {
+      return <ParamTypeField {...props} />;
+    }, [])
+  };
+
+  const newSchema = {
+    ...nodeData.block_schema,
+    properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
+      (acc, [key, value]) => {
+        if (skipFormFields.includes(key)) {
+          return acc;
+        }
+
+        const schemaValue =
+          typeof value === 'object' && value !== null ? (value as any) : null;
+        const title = schemaValue
+          ? schemaValue.cn_title || schemaValue.title || key
+          : key;
+        const description = schemaValue
+          ? schemaValue.cn_description || schemaValue.description
+          : undefined;
+
+        if (typeof value === 'object' && value !== null && 'anyOf' in value) {
+          const isRoboflowModel = isRoboflowModelField(value);
+          acc[key] = {
+            ...value,
+            'x-internal-type': 'anyOf-field',
+            'x-field-type': isRoboflowModel ? 'roboflow-model' : undefined,
+            title,
+            description
+          };
+        } else if (
+          typeof value === 'object' &&
+          value !== null &&
+          (key === 'name' || key === 'type')
+        ) {
+          acc[key] = {
+            type: 'string',
+            title,
+            description,
+            readOnly: true
+          };
+        } else {
+          acc[key] =
+            typeof value === 'object' && value !== null
+              ? { ...value, title, description }
+              : value;
+        }
+        return acc;
+      },
+      {} as Record<string, any>
+    )
+  };
+
+  const uiSchema = {
+    ...Object.keys(nodeData.block_schema.properties || {}).reduce(
+      (acc, key) => {
+        const property = nodeData.block_schema.properties?.[
+          key
+        ] as ExtendedJSONSchema7;
+        if (
+          property !== null &&
+          property['x-internal-type'] === 'anyOf-field'
+        ) {
+          acc[key] = {
+            'ui:field': 'AnyOfField',
+            'ui:options': {
+              originalSchema: property
+            }
+          };
+        } else if (property !== null && 'kind' in property) {
+          acc[key] = {
+            'ui:field': 'KindField',
+            'ui:options': {
+              originalSchema: property
+            }
+          };
+        }
+        return acc;
+      },
+      {} as Record<string, any>
+    ),
+    'ui:submitButtonOptions': {
+      norender: true
+    },
+    'ui:title': '',
+    'ui:classNames': 'form-dark-mode',
+    ...(nodeData.manifest_type_identifier === 'input'
+      ? {
+          sources: {
+            'ui:options': {
+              addable: false,
+              orderable: false,
+              removable: false
             },
-            params: {
-              'ui:options': {
-                addable: true,
-                orderable: true,
-                removable: true
-              },
-              items: {
-                'ui:field': 'ParamTypeField'
-              }
+            items: {
+              'ui:widget': 'readonly',
+              'ui:readonly': true,
+              'ui:order': ['name']
+            }
+          },
+          params: {
+            'ui:options': {
+              addable: true,
+              orderable: true,
+              removable: true
+            },
+            items: {
+              'ui:field': 'ParamTypeField'
             }
           }
-        : {})
-    };
+        }
+      : {})
+  };
 
-    const filteredFormData = Object.fromEntries(
-      Object.entries(nodeData.formData).filter(
-        ([key]) => !skipFormFields.includes(key)
-      )
-    );
+  const filteredFormData = Object.fromEntries(
+    Object.entries(nodeData.formData).filter(
+      ([key]) => !skipFormFields.includes(key)
+    )
+  );
 
-    const handleFormChange = useCallback(
-      (e: any) => {
-        console.log('handleFormChange', e.formData);
-        onFormChange(e.formData);
-      },
-      [onFormChange]
-    );
+  const handleFormChange = useCallback(
+    (e: any) => {
+      console.log('handleFormChange', e.formData);
+      onFormChange(e.formData);
+    },
+    [onFormChange]
+  );
 
-    // 在组件加载后应用额外的深色模式类
-    useEffect(() => {
-      // 启用深色模式检测
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (
-            mutation.type === 'attributes' &&
-            mutation.attributeName === 'class'
-          ) {
-            const isDarkMode =
-              document.documentElement.classList.contains('dark');
-            const formElements = document.querySelectorAll(
-              '.ui.form .field label'
-            );
+  // 在组件加载后应用额外的深色模式类
+  useEffect(() => {
+    // 启用深色模式检测
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'class'
+        ) {
+          const isDarkMode =
+            document.documentElement.classList.contains('dark');
+          const formElements = document.querySelectorAll(
+            '.ui.form .field label'
+          );
 
-            formElements.forEach((el) => {
-              if (isDarkMode) {
-                el.classList.add('dark-mode-label');
-              } else {
-                el.classList.remove('dark-mode-label');
-              }
-            });
-          }
-        });
+          formElements.forEach((el) => {
+            if (isDarkMode) {
+              el.classList.add('dark-mode-label');
+            } else {
+              el.classList.remove('dark-mode-label');
+            }
+          });
+        }
       });
+    });
 
-      observer.observe(document.documentElement, { attributes: true });
+    observer.observe(document.documentElement, { attributes: true });
 
-      return () => {
-        observer.disconnect();
-      };
-    }, []);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
-    return (
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent
-          side="right"
-          className="flex w-[600px] flex-col dark:border-sidebar-border dark:bg-sidebar dark:text-white sm:w-[800px]"
-        >
-          <SheetHeader>
-            <SheetTitle className="font-bold dark:text-white">
-              {nodeData.human_friendly_block_name}
-            </SheetTitle>
-          </SheetHeader>
-          <div className="flex-grow overflow-y-auto">
-            <div className="form-container dark:text-white">
-              <Form
-                schema={newSchema}
-                uiSchema={uiSchema}
-                validator={validator}
-                formData={filteredFormData}
-                onChange={handleFormChange}
-                fields={customFields}
-                templates={{
-                  FieldTemplate: CustomFieldTemplate,
-                  ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
-                    <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
-                  )
-                }}
-                className="form-dark-mode"
-              />
-            </div>
-            {nodeData.block_schema.block_type !== 'buildin' && (
-              <Button
-                variant="destructive"
-                onClick={onDeleteNode}
-                className="mt-4 w-full"
-              >
-                删除节点
-              </Button>
-            )}
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent
+        side="right"
+        className="flex w-[600px] flex-col dark:border-sidebar-border dark:bg-sidebar dark:text-white sm:w-[800px]"
+      >
+        <SheetHeader>
+          <SheetTitle className="font-bold dark:text-white">
+            {nodeData.human_friendly_block_name}
+          </SheetTitle>
+        </SheetHeader>
+        <div className="flex-grow overflow-y-auto">
+          <div className="form-container dark:text-white">
+            <Form
+              schema={newSchema}
+              uiSchema={uiSchema}
+              validator={validator}
+              formData={filteredFormData}
+              onChange={handleFormChange}
+              fields={customFields}
+              templates={{
+                FieldTemplate: CustomFieldTemplate,
+                ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
+                  <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
+                )
+              }}
+              className="form-dark-mode"
+            />
           </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-);
+          {nodeData.block_schema.block_type !== 'buildin' && (
+            <Button
+              variant="destructive"
+              onClick={onDeleteNode}
+              className="mt-4 w-full"
+            >
+              删除节点
+            </Button>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+};
 
 export default NodeDetail;
