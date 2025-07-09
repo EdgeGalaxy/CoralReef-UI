@@ -130,8 +130,90 @@ const DesignPage = () => {
 
   const rfWrapperRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number>();
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChangeOriginal] = useNodesState([]);
+
+  // 自定义的 onNodesChange 来拦截删除操作
+  const onNodesChange = useCallback(
+    (changes: any[]) => {
+      // 检查是否有尝试删除 input 或 output 节点的操作
+      let hasProtectedNodeDeletion = false;
+
+      // 过滤掉对 input 和 output 节点的删除操作
+      const filteredChanges = changes.filter((change) => {
+        if (change.type === 'remove') {
+          const nodeToRemove = nodes.find((node) => node.id === change.id);
+          if (nodeToRemove) {
+            const isInputOrOutputNode =
+              nodeToRemove.data.manifest_type_identifier === 'input' ||
+              nodeToRemove.data.manifest_type_identifier === 'output';
+
+            // 如果是 input 或 output 节点，则不允许删除
+            if (isInputOrOutputNode) {
+              hasProtectedNodeDeletion = true;
+              // 阻止删除操作，同时防止删除相关的边线
+              return false;
+            }
+          }
+        }
+        return true;
+      });
+
+      // 如果有尝试删除受保护的节点，显示提示信息
+      if (hasProtectedNodeDeletion) {
+        toast({
+          title: '无法删除节点',
+          description: 'Input 和 Output 节点是工作流的必要组件，不能被删除',
+          variant: 'destructive'
+        });
+      }
+
+      // 只有当确实有变化需要处理时才调用原始函数
+      if (filteredChanges.length > 0) {
+        onNodesChangeOriginal(filteredChanges);
+      }
+    },
+    [nodes, onNodesChangeOriginal]
+  );
+  const [edges, setEdges, onEdgesChangeOriginal] = useEdgesState([]);
+
+  // 自定义的 onEdgesChange 来拦截删除操作
+  const onEdgesChange = useCallback(
+    (changes: any[]) => {
+      // 过滤掉连接到 input 和 output 节点的边线删除操作
+      const filteredChanges = changes.filter((change) => {
+        if (change.type === 'remove') {
+          const edgeToRemove = edges.find((edge) => edge.id === change.id);
+          if (edgeToRemove) {
+            // 检查边线是否连接到 input 或 output 节点
+            const sourceNode = nodes.find(
+              (node) => node.id === edgeToRemove.source
+            );
+            const targetNode = nodes.find(
+              (node) => node.id === edgeToRemove.target
+            );
+
+            const isConnectedToInputOrOutput =
+              (sourceNode &&
+                (sourceNode.data.manifest_type_identifier === 'input' ||
+                  sourceNode.data.manifest_type_identifier === 'output')) ||
+              (targetNode &&
+                (targetNode.data.manifest_type_identifier === 'input' ||
+                  targetNode.data.manifest_type_identifier === 'output'));
+
+            // 如果边线连接到 input 或 output 节点，且这是由于尝试删除节点引起的，则不允许删除
+            return !isConnectedToInputOrOutput;
+          }
+        }
+        return true;
+      });
+
+      // 只有当确实有变化需要处理时才调用原始函数
+      if (filteredChanges.length > 0) {
+        onEdgesChangeOriginal(filteredChanges);
+      }
+    },
+    [edges, nodes, onEdgesChangeOriginal]
+  );
   const { isMinimized, toggle: toggleSidebar } = useSidebar();
   const [availableNodes, setAvailableNodes] = useState<BlockDescription[]>([]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -353,13 +435,21 @@ const DesignPage = () => {
 
   const onDeleteNode = useCallback(() => {
     if (selectedNode && selectedNode.type !== 'builtInNode') {
-      setSelectedNodeId(null);
-      setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
-      setEdges((eds) =>
-        eds.filter(
-          (e) => e.source !== selectedNode.id && e.target !== selectedNode.id
-        )
-      );
+      // 检查是否为 input 或 output 内置节点，如果是则不允许删除
+      const isInputOrOutputNode =
+        selectedNode.data.manifest_type_identifier === 'input' ||
+        selectedNode.data.manifest_type_identifier === 'output';
+
+      if (!isInputOrOutputNode) {
+        setSelectedNodeId(null);
+        setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
+        setEdges((eds) =>
+          eds.filter(
+            (e) => e.source !== selectedNode.id && e.target !== selectedNode.id
+          )
+        );
+      }
+      // 提示信息现在由 onNodesChange 处理
     }
   }, [selectedNode]);
 
@@ -482,8 +572,16 @@ const DesignPage = () => {
   const onKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (event.key === 'Delete') {
-        if (selectedNode && selectedNode.type !== 'builtInNode') {
-          onDeleteNode();
+        if (selectedNode) {
+          // 检查是否为 input 或 output 内置节点，如果是则不允许删除
+          const isInputOrOutputNode =
+            selectedNode.data.manifest_type_identifier === 'input' ||
+            selectedNode.data.manifest_type_identifier === 'output';
+
+          if (!isInputOrOutputNode && selectedNode.type !== 'builtInNode') {
+            onDeleteNode();
+          }
+          // 提示信息现在由 onNodesChange 处理
         } else if (selectedEdgeId) {
           // 删除选中的边线
           const deleteEvent = new CustomEvent('delete-edge', {
@@ -1395,7 +1493,11 @@ const DesignPage = () => {
               onFormChange={onFormChange}
               availableKindValues={availableKindValues}
               onDeleteNode={
-                selectedNode.type !== 'builtInNode' ? onDeleteNode : () => {}
+                selectedNode.type !== 'builtInNode' &&
+                selectedNode.data.manifest_type_identifier !== 'input' &&
+                selectedNode.data.manifest_type_identifier !== 'output'
+                  ? onDeleteNode
+                  : () => {}
               }
             />
           )}

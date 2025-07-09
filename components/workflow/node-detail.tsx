@@ -44,12 +44,6 @@ import {
 import { InfoIcon } from 'lucide-react';
 import { FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils';
 import { FormLabel, FormControl, FormItem } from '@/components/ui/form';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '@/components/ui/collapsible';
-import { ChevronRight } from 'lucide-react';
 
 interface ExtendedJSONSchema7 extends JSONSchema7 {
   'x-internal-type'?: string;
@@ -215,58 +209,6 @@ const CustomFieldTemplate = (props: FieldTemplateProps) => {
       {children}
       {errors}
       {help}
-    </div>
-  );
-};
-
-const CustomObjectFieldTemplate = (
-  props: ObjectFieldTemplateProps & { nodeData?: NodeData }
-) => {
-  const { properties, schema, nodeData } = props;
-  const [isOpen, setIsOpen] = useState(false);
-
-  const requiredFieldsList = schema.required || [];
-
-  const requiredFields = properties.filter((prop) =>
-    requiredFieldsList.includes(prop.name)
-  );
-  const optionalFields = properties.filter(
-    (prop) => !requiredFieldsList.includes(prop.name)
-  );
-
-  // 如果是 input 或 output 节点，直接显示所有字段，不使用高级选项
-  const isInputOrOutput =
-    nodeData?.manifest_type_identifier === 'input' ||
-    nodeData?.manifest_type_identifier === 'output';
-
-  if (isInputOrOutput) {
-    return <div>{properties.map((prop) => prop.content)}</div>;
-  }
-
-  return (
-    <div>
-      {requiredFields.map((prop) => prop.content)}
-
-      {optionalFields.length > 0 && (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="flex items-center text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-            >
-              <ChevronRight
-                className={`mr-1 h-4 w-4 transition-transform duration-200 ${
-                  isOpen ? 'rotate-90' : ''
-                }`}
-              />
-              高级选项
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2 space-y-4 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
-            {optionalFields.map((prop) => prop.content)}
-          </CollapsibleContent>
-        </Collapsible>
-      )}
     </div>
   );
 };
@@ -499,23 +441,22 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
               onChange={handleFormChange}
               fields={customFields}
               templates={{
-                FieldTemplate: CustomFieldTemplate,
-                ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
-                  <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
-                )
+                FieldTemplate: CustomFieldTemplate
               }}
               className="form-dark-mode"
             />
           </div>
-          {nodeData.block_schema.block_type !== 'buildin' && (
-            <Button
-              variant="destructive"
-              onClick={onDeleteNode}
-              className="mt-4 w-full"
-            >
-              删除节点
-            </Button>
-          )}
+          {nodeData.block_schema.block_type !== 'buildin' &&
+            nodeData.manifest_type_identifier !== 'input' &&
+            nodeData.manifest_type_identifier !== 'output' && (
+              <Button
+                variant="destructive"
+                onClick={onDeleteNode}
+                className="mt-4 w-full"
+              >
+                删除节点
+              </Button>
+            )}
         </div>
       </SheetContent>
     </Sheet>
