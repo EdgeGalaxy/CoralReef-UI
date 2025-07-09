@@ -45,12 +45,15 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   }, [formData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    onChange(e.target.value);
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    // 立即触发 onChange，不等待 blur 事件
+    onChange(newValue);
   };
 
   const handleSelectChange = (selectedValue: string) => {
     setInputValue(selectedValue);
+    // 立即触发 onChange
     onChange(selectedValue);
   };
 
@@ -183,7 +186,6 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
             id={props.id}
             value={inputValue}
             onChange={handleInputChange}
-            onBlur={handleInputChange}
             className="w-full dark:border-gray-400 dark:bg-white dark:text-gray-900 dark:placeholder-gray-500 dark:focus:border-blue-500 dark:focus:ring-2 dark:focus:ring-blue-400 dark:focus:ring-opacity-20"
             placeholder="输入一个值"
             required={isRequired}

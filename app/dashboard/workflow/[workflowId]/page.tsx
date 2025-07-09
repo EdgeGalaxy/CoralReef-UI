@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo
+} from 'react';
 import { useParams } from 'next/navigation';
 import ReactFlow, {
   ReactFlowProvider,
@@ -132,7 +138,7 @@ const DesignPage = () => {
   const [kindsConnections, setKindsConnections] = useState<KindsConnections>(
     {}
   );
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [availableKindValues, setAvailableKindValues] = useState<
     Record<string, PropertyDefinition[]>
   >({});
@@ -158,6 +164,12 @@ const DesignPage = () => {
     ...edge,
     selected: edge.id === selectedEdgeId
   }));
+
+  // 添加一个计算属性来获取当前选中的节点
+  const selectedNode = useMemo(() => {
+    if (!selectedNodeId) return null;
+    return nodes.find((node) => node.id === selectedNodeId) || null;
+  }, [selectedNodeId, nodes]);
 
   const getConnectableNodeManifests = useCallback(
     (node: Node): string[] => {
@@ -221,7 +233,7 @@ const DesignPage = () => {
 
   // 确保页面初始化时不选中任何节点
   useEffect(() => {
-    setSelectedNode(null);
+    setSelectedNodeId(null);
     setSelectedEdgeId(null);
   }, []);
 
@@ -252,7 +264,7 @@ const DesignPage = () => {
       setEdges(workflowData.data.edges);
     }
     // 确保页面加载时不选中任何节点
-    setSelectedNode(null);
+    setSelectedNodeId(null);
     setSelectedEdgeId(null);
   }, [isNewWorkflow, workflowData, setNodes, setEdges]);
 
@@ -341,7 +353,7 @@ const DesignPage = () => {
 
   const onDeleteNode = useCallback(() => {
     if (selectedNode && selectedNode.type !== 'builtInNode') {
-      setSelectedNode(null);
+      setSelectedNodeId(null);
       setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
       setEdges((eds) =>
         eds.filter(
@@ -461,7 +473,7 @@ const DesignPage = () => {
         selected: n.id === node.id
       }))
     );
-    setSelectedNode(node);
+    setSelectedNodeId(node.id);
     setConnectMenu(null);
     setSelectedEdgeId(null);
   }, []);
@@ -725,7 +737,7 @@ const DesignPage = () => {
   const onInit = (instance: ReactFlowInstance) => {
     setRfInstance(instance);
     // 确保初始化后不选中任何节点
-    setSelectedNode(null);
+    setSelectedNodeId(null);
     setSelectedEdgeId(null);
   };
 
@@ -1305,7 +1317,7 @@ const DesignPage = () => {
                 onInit={onInit}
                 onPaneClick={() => {
                   setConnectMenu(null);
-                  setSelectedNode(null);
+                  setSelectedNodeId(null);
                   setSelectedEdgeId(null);
                   // 清除所有节点的选中状态
                   setNodes((nds) =>
@@ -1377,7 +1389,7 @@ const DesignPage = () => {
             <NodeDetail
               isOpen={!!selectedNode}
               onClose={() => {
-                setSelectedNode(null);
+                setSelectedNodeId(null);
               }}
               nodeData={selectedNode.data}
               onFormChange={onFormChange}
