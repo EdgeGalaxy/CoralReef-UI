@@ -154,7 +154,7 @@ const DesignPage = () => {
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
 
   // 为边线添加选中状态
-  const edgesWithSelection = edges.map((edge) => ({
+  const edgesWithSelection: RFEdge[] = edges.map((edge: RFEdge) => ({
     ...edge,
     selected: edge.id === selectedEdgeId
   }));
