@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import ReactFlow, {
   ReactFlowProvider,
   addEdge,
@@ -114,6 +114,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const DesignPage = () => {
+  const router = useRouter();
   const params = useParams();
   const workflowId = params?.workflowId as string;
   const isNewWorkflow = workflowId === 'new';
@@ -797,7 +798,7 @@ const DesignPage = () => {
           successTitle: '工作流保存成功',
           errorTitle: '工作流保存失败',
           onSuccess: () => {
-            window.location.href = `/dashboard/workflow`;
+            router.push('/dashboard/workflow');
           }
         }
       );
