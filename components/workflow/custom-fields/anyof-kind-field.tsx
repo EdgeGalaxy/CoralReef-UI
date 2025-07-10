@@ -14,6 +14,7 @@ import { Link1Icon } from '@radix-ui/react-icons';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { outputNode } from '@/constants/init-data';
 import { NodeData, PropertyDefinition, Kind } from '@/constants/block';
@@ -357,6 +358,54 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
 
       case 'string':
       default:
+        // 检查是否有 enum 选项
+        const enumOptions =
+          typeof inputSchema === 'object' && 'enum' in inputSchema
+            ? inputSchema.enum
+            : null;
+
+        if (enumOptions && Array.isArray(enumOptions)) {
+          // 有 enum 选项时使用 Select 组件
+          return (
+            <Select
+              onValueChange={(value) => {
+                setInputValue(value);
+                onChange(value);
+              }}
+              value={inputValue || ''}
+            >
+              <SelectTrigger className={commonClassName}>
+                <SelectValue
+                  placeholder={
+                    defaultInputValue ? `${defaultInputValue}` : '选择一个选项'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent sideOffset={4}>
+                <ScrollArea
+                  className="h-60"
+                  onWheel={(e) => {
+                    e.preventDefault();
+                    const scrollArea = e.currentTarget.querySelector(
+                      '[data-radix-scroll-area-viewport]'
+                    );
+                    if (scrollArea) {
+                      scrollArea.scrollTop += e.deltaY;
+                    }
+                  }}
+                >
+                  {enumOptions.map((option: any) => (
+                    <SelectItem key={option} value={String(option)}>
+                      {String(option)}
+                    </SelectItem>
+                  ))}
+                </ScrollArea>
+              </SelectContent>
+            </Select>
+          );
+        }
+
+        // 没有 enum 选项时使用普通输入框
         return (
           <Input
             id={props.id}

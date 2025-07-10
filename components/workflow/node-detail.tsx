@@ -115,10 +115,37 @@ const CustomFieldTemplate = (props: FieldTemplateProps) => {
 };
 
 const CustomObjectFieldTemplate = (
-  props: ObjectFieldTemplateProps & { nodeData?: NodeData }
+  props: ObjectFieldTemplateProps & {
+    nodeData?: NodeData;
+    /** 来自父组件的初始展开状态 */
+    initialOpen?: boolean;
+    /** 当展开状态变化时回调给父组件 */
+    onOpenChangeExternal?: (open: boolean) => void;
+  }
 ) => {
-  const { properties, schema, nodeData } = props;
-  const [isOpen, setIsOpen] = useState(false);
+  const {
+    properties,
+    schema,
+    nodeData,
+    initialOpen = false,
+    onOpenChangeExternal
+  } = props;
+
+  const [isOpen, setIsOpen] = useState<boolean>(initialOpen);
+
+  // 当外部状态发生变化时，同步内部状态
+  useEffect(() => {
+    setIsOpen(initialOpen);
+  }, [initialOpen]);
+
+  // 统一处理展开状态的更改
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setIsOpen(open);
+      onOpenChangeExternal?.(open);
+    },
+    [onOpenChangeExternal]
+  );
 
   const requiredFieldsList = schema.required || [];
 
@@ -143,7 +170,11 @@ const CustomObjectFieldTemplate = (
       {requiredFields.map((prop) => prop.content)}
 
       {optionalFields.length > 0 && (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+        <Collapsible
+          open={isOpen}
+          onOpenChange={handleOpenChange}
+          className="mt-4"
+        >
           <CollapsibleTrigger asChild>
             <button
               type="button"
@@ -275,17 +306,6 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
             title,
             description
           };
-        } else if (
-          typeof value === 'object' &&
-          value !== null &&
-          (key === 'name' || key === 'type')
-        ) {
-          acc[key] = {
-            type: 'string',
-            title,
-            description,
-            readOnly: true
-          };
         } else {
           acc[key] =
             typeof value === 'object' && value !== null
@@ -326,6 +346,14 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
       },
       {} as Record<string, any>
     ),
+    // 隐藏 type 字段但保留在表单数据中
+    type: {
+      'ui:widget': 'hidden'
+    },
+    // name 字段置灰（只读）
+    name: {
+      'ui:readonly': true
+    },
     'ui:submitButtonOptions': {
       norender: true
     },
@@ -427,9 +455,7 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
               fields={customFields}
               templates={{
                 FieldTemplate: CustomFieldTemplate,
-                ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
-                  <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
-                )
+                ObjectFieldTemplate: ObjectFieldTemplateWrapper
               }}
               className="form-dark-mode"
             />
