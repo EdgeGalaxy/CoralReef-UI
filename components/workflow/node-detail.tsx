@@ -26,15 +26,6 @@ import ModelSelectorField, {
 import ParamTypeField from './custom-fields/param-type-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { BoxIcon } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
@@ -43,7 +34,6 @@ import {
 } from '@/components/ui/tooltip';
 import { InfoIcon } from 'lucide-react';
 import { FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils';
-import { FormLabel, FormControl, FormItem } from '@/components/ui/form';
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,99 +47,6 @@ interface ExtendedJSONSchema7 extends JSONSchema7 {
 }
 
 const Form = withTheme(shadcnTheme);
-
-// 自定义模型列表显示组件
-const ModelsArrayField = ({
-  models,
-  nodeData,
-  onFormChange
-}: {
-  models: any[];
-  nodeData: NodeData;
-  onFormChange: (formData: any) => void;
-}) => {
-  const session = useSession();
-  const workspaceId = session.data?.user.select_workspace_id;
-  const { data: availableModels } = useAuthSWR<any[]>(
-    `/api/reef/workspaces/${workspaceId}/models`
-  );
-
-  const handleAddModel = useCallback(
-    (modelId: string) => {
-      if (!availableModels) return;
-
-      const selectedModel = availableModels.find((m) => m.id === modelId);
-      if (!selectedModel) return;
-
-      const newModel = {
-        id: selectedModel.id,
-        name: selectedModel.name,
-        version: selectedModel.version
-      };
-
-      const newModels = [...(models || []), newModel];
-      onFormChange({
-        ...nodeData.formData,
-        models: newModels
-      });
-    },
-    [availableModels, models, nodeData, onFormChange]
-  );
-
-  // 获取已选择的模型ID列表
-  const selectedModelIds = new Set(models?.map((m) => m.id) || []);
-
-  return (
-    <div className="mb-4 space-y-2">
-      <Label className="text-sm font-medium text-gray-900 dark:text-white">
-        <span className="font-bold">可用模型列表</span>
-      </Label>
-
-      {/* 添加模型选择器 */}
-      <Select onValueChange={handleAddModel}>
-        <SelectTrigger className="border-gray-300 dark:border-sidebar-border dark:bg-sidebar dark:text-white">
-          <SelectValue placeholder="选择要添加的模型" />
-        </SelectTrigger>
-        <SelectContent className="dark:border-sidebar-border dark:bg-sidebar">
-          {availableModels
-            ?.filter((model) => !selectedModelIds.has(model.id))
-            .map((model) => (
-              <SelectItem
-                key={model.id}
-                value={model.id}
-                className="dark:text-white"
-              >
-                {model.name} {model.version ? `(${model.version})` : ''}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-
-      {/* 显示已选模型列表 */}
-      {models && models.length > 0 ? (
-        <Card className="border border-gray-200 dark:border-sidebar-border">
-          <CardContent className="space-y-2 p-4 dark:bg-sidebar-accent">
-            {models.map((model, index) => (
-              <div
-                key={index}
-                className="flex items-center rounded-md bg-blue-50 p-2 dark:bg-sidebar"
-              >
-                <BoxIcon className="mr-2 h-4 w-4 text-blue-500 dark:text-blue-300" />
-                <span className="text-sm text-gray-900 dark:text-white">
-                  {model.name} {model.version ? `(${model.version})` : ''}
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="text-sm italic text-gray-500 dark:text-gray-200">
-          没有可用的模型。请从下拉框中选择要添加的模型。
-        </div>
-      )}
-    </div>
-  );
-};
 
 interface NodeDetailProps {
   isOpen: boolean;
@@ -219,11 +116,39 @@ const CustomFieldTemplate = (props: FieldTemplateProps) => {
   );
 };
 
+// 受控版本，可通过 initialOpen 控制初始展开状态，并将状态变化回传给上层
 const CustomObjectFieldTemplate = (
-  props: ObjectFieldTemplateProps & { nodeData?: NodeData }
+  props: ObjectFieldTemplateProps & {
+    nodeData?: NodeData;
+    /** 来自父组件的初始展开状态 */
+    initialOpen?: boolean;
+    /** 当展开状态变化时回调给父组件 */
+    onOpenChangeExternal?: (open: boolean) => void;
+  }
 ) => {
-  const { properties, schema, nodeData } = props;
-  const [isOpen, setIsOpen] = useState(false);
+  const {
+    properties,
+    schema,
+    nodeData,
+    initialOpen = false,
+    onOpenChangeExternal
+  } = props;
+
+  const [isOpen, setIsOpen] = useState<boolean>(initialOpen);
+
+  // 当外部状态发生变化时，同步内部状态
+  useEffect(() => {
+    setIsOpen(initialOpen);
+  }, [initialOpen]);
+
+  // 统一处理展开状态的更改
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      setIsOpen(open);
+      onOpenChangeExternal?.(open);
+    },
+    [onOpenChangeExternal]
+  );
 
   const requiredFieldsList = schema.required || [];
 
@@ -248,7 +173,11 @@ const CustomObjectFieldTemplate = (
       {requiredFields.map((prop) => prop.content)}
 
       {optionalFields.length > 0 && (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+        <Collapsible
+          open={isOpen}
+          onOpenChange={handleOpenChange}
+          className="mt-4"
+        >
           <CollapsibleTrigger asChild>
             <button
               type="button"
@@ -320,6 +249,40 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
       return <ParamTypeField {...props} />;
     }, [])
   };
+
+  // ----------------- 记录各 ObjectField 折叠状态 -----------------
+  const [collapsibleState, setCollapsibleState] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleCollapsibleChange = useCallback((id: string, open: boolean) => {
+    setCollapsibleState((prev) => ({ ...prev, [id]: open }));
+  }, []);
+
+  // 包装 ObjectFieldTemplate，注入受控展开状态
+  const ObjectFieldTemplateWrapper = useCallback(
+    (props: ObjectFieldTemplateProps) => {
+      const collapsibleId =
+        (props.idSchema as any)?.$id ||
+        (props.idSchema as any)?.id ||
+        (props.idSchema as any)?.__id ||
+        '';
+
+      const isOpen = collapsibleState[collapsibleId] ?? false;
+
+      return (
+        <CustomObjectFieldTemplate
+          {...props}
+          nodeData={nodeData}
+          initialOpen={isOpen}
+          onOpenChangeExternal={(open) =>
+            handleCollapsibleChange(collapsibleId, open)
+          }
+        />
+      );
+    },
+    [collapsibleState, nodeData, handleCollapsibleChange]
+  );
 
   const newSchema = {
     ...nodeData.block_schema,
@@ -500,9 +463,7 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
               fields={customFields}
               templates={{
                 FieldTemplate: CustomFieldTemplate,
-                ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
-                  <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
-                )
+                ObjectFieldTemplate: ObjectFieldTemplateWrapper
               }}
               className="form-dark-mode"
             />
