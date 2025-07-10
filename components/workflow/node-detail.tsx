@@ -9,8 +9,6 @@ import { withTheme } from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
 import { Theme as shadcnTheme } from '@rjsf/shadcn';
 import { JSONSchema7 } from 'json-schema';
-import { useAuthSWR } from '@/components/hooks/useAuthReq';
-import { useSession } from 'next-auth/react';
 
 import {
   NodeData,
@@ -26,15 +24,6 @@ import ModelSelectorField, {
 import ParamTypeField from './custom-fields/param-type-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
-import { BoxIcon } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
@@ -43,7 +32,12 @@ import {
 } from '@/components/ui/tooltip';
 import { InfoIcon } from 'lucide-react';
 import { FieldTemplateProps, ObjectFieldTemplateProps } from '@rjsf/utils';
-import { FormLabel, FormControl, FormItem } from '@/components/ui/form';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
+import { ChevronRight } from 'lucide-react';
 
 interface ExtendedJSONSchema7 extends JSONSchema7 {
   'x-internal-type'?: string;
@@ -51,99 +45,6 @@ interface ExtendedJSONSchema7 extends JSONSchema7 {
 }
 
 const Form = withTheme(shadcnTheme);
-
-// 自定义模型列表显示组件
-const ModelsArrayField = ({
-  models,
-  nodeData,
-  onFormChange
-}: {
-  models: any[];
-  nodeData: NodeData;
-  onFormChange: (formData: any) => void;
-}) => {
-  const session = useSession();
-  const workspaceId = session.data?.user.select_workspace_id;
-  const { data: availableModels } = useAuthSWR<any[]>(
-    `/api/reef/workspaces/${workspaceId}/models`
-  );
-
-  const handleAddModel = useCallback(
-    (modelId: string) => {
-      if (!availableModels) return;
-
-      const selectedModel = availableModels.find((m) => m.id === modelId);
-      if (!selectedModel) return;
-
-      const newModel = {
-        id: selectedModel.id,
-        name: selectedModel.name,
-        version: selectedModel.version
-      };
-
-      const newModels = [...(models || []), newModel];
-      onFormChange({
-        ...nodeData.formData,
-        models: newModels
-      });
-    },
-    [availableModels, models, nodeData, onFormChange]
-  );
-
-  // 获取已选择的模型ID列表
-  const selectedModelIds = new Set(models?.map((m) => m.id) || []);
-
-  return (
-    <div className="mb-4 space-y-2">
-      <Label className="text-sm font-medium text-gray-900 dark:text-white">
-        <span className="font-bold">可用模型列表</span>
-      </Label>
-
-      {/* 添加模型选择器 */}
-      <Select onValueChange={handleAddModel}>
-        <SelectTrigger className="border-gray-300 dark:border-sidebar-border dark:bg-sidebar dark:text-white">
-          <SelectValue placeholder="选择要添加的模型" />
-        </SelectTrigger>
-        <SelectContent className="dark:border-sidebar-border dark:bg-sidebar">
-          {availableModels
-            ?.filter((model) => !selectedModelIds.has(model.id))
-            .map((model) => (
-              <SelectItem
-                key={model.id}
-                value={model.id}
-                className="dark:text-white"
-              >
-                {model.name} {model.version ? `(${model.version})` : ''}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-
-      {/* 显示已选模型列表 */}
-      {models && models.length > 0 ? (
-        <Card className="border border-gray-200 dark:border-sidebar-border">
-          <CardContent className="space-y-2 p-4 dark:bg-sidebar-accent">
-            {models.map((model, index) => (
-              <div
-                key={index}
-                className="flex items-center rounded-md bg-blue-50 p-2 dark:bg-sidebar"
-              >
-                <BoxIcon className="mr-2 h-4 w-4 text-blue-500 dark:text-blue-300" />
-                <span className="text-sm text-gray-900 dark:text-white">
-                  {model.name} {model.version ? `(${model.version})` : ''}
-                </span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="text-sm italic text-gray-500 dark:text-gray-200">
-          没有可用的模型。请从下拉框中选择要添加的模型。
-        </div>
-      )}
-    </div>
-  );
-};
 
 interface NodeDetailProps {
   isOpen: boolean;
@@ -213,6 +114,58 @@ const CustomFieldTemplate = (props: FieldTemplateProps) => {
   );
 };
 
+const CustomObjectFieldTemplate = (
+  props: ObjectFieldTemplateProps & { nodeData?: NodeData }
+) => {
+  const { properties, schema, nodeData } = props;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const requiredFieldsList = schema.required || [];
+
+  const requiredFields = properties.filter((prop) =>
+    requiredFieldsList.includes(prop.name)
+  );
+  const optionalFields = properties.filter(
+    (prop) => !requiredFieldsList.includes(prop.name)
+  );
+
+  // 如果是 input 或 output 节点，直接显示所有字段，不使用高级选项
+  const isInputOrOutput =
+    nodeData?.manifest_type_identifier === 'input' ||
+    nodeData?.manifest_type_identifier === 'output';
+
+  if (isInputOrOutput) {
+    return <div>{properties.map((prop) => prop.content)}</div>;
+  }
+
+  return (
+    <div>
+      {requiredFields.map((prop) => prop.content)}
+
+      {optionalFields.length > 0 && (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center text-sm font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+            >
+              <ChevronRight
+                className={`mr-1 h-4 w-4 transition-transform duration-200 ${
+                  isOpen ? 'rotate-90' : ''
+                }`}
+              />
+              高级选项
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 space-y-4 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
+            {optionalFields.map((prop) => prop.content)}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+};
+
 const NodeDetail: React.FC<NodeDetailProps> = ({
   isOpen,
   onClose,
@@ -224,7 +177,6 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
   const customFields = {
     AnyOfField: React.useCallback(
       (props: any) => {
-        console.log('anyof-kind-field props', props);
         // 检查是否为Roboflow模型字段
         if (props.schema['x-field-type'] === 'roboflow-model') {
           return (
@@ -262,6 +214,40 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
       return <ParamTypeField {...props} />;
     }, [])
   };
+
+  // ----------------- 记录各 ObjectField 折叠状态 -----------------
+  const [collapsibleState, setCollapsibleState] = useState<
+    Record<string, boolean>
+  >({});
+
+  const handleCollapsibleChange = useCallback((id: string, open: boolean) => {
+    setCollapsibleState((prev) => ({ ...prev, [id]: open }));
+  }, []);
+
+  // 包装 ObjectFieldTemplate，注入受控展开状态
+  const ObjectFieldTemplateWrapper = useCallback(
+    (props: ObjectFieldTemplateProps) => {
+      const collapsibleId =
+        (props.idSchema as any)?.$id ||
+        (props.idSchema as any)?.id ||
+        (props.idSchema as any)?.__id ||
+        '';
+
+      const isOpen = collapsibleState[collapsibleId] ?? false;
+
+      return (
+        <CustomObjectFieldTemplate
+          {...props}
+          nodeData={nodeData}
+          initialOpen={isOpen}
+          onOpenChangeExternal={(open) =>
+            handleCollapsibleChange(collapsibleId, open)
+          }
+        />
+      );
+    },
+    [collapsibleState, nodeData, handleCollapsibleChange]
+  );
 
   const newSchema = {
     ...nodeData.block_schema,
@@ -381,7 +367,6 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
 
   const handleFormChange = useCallback(
     (e: any) => {
-      console.log('handleFormChange', e.formData);
       onFormChange(e.formData);
     },
     [onFormChange]
@@ -441,7 +426,10 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
               onChange={handleFormChange}
               fields={customFields}
               templates={{
-                FieldTemplate: CustomFieldTemplate
+                FieldTemplate: CustomFieldTemplate,
+                ObjectFieldTemplate: (props: ObjectFieldTemplateProps) => (
+                  <CustomObjectFieldTemplate {...props} nodeData={nodeData} />
+                )
               }}
               className="form-dark-mode"
             />
