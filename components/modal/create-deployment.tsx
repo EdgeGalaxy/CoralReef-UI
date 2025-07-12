@@ -18,7 +18,7 @@ import {
   PopoverContent,
   PopoverTrigger
 } from '@/components/ui/popover';
-import { GatewayStatus } from '@/constants/deploy';
+import { GatewayStatus, CameraType } from '@/constants/deploy';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Select,
@@ -198,6 +198,37 @@ export function CreateDeploymentModal({
           });
           return;
         }
+
+        // 检查文件视频流与其他类型的混合使用
+        const existingCameras = deploymentConfig.cameras || [];
+        const newCameraType = item.type;
+
+        if (existingCameras.length > 0) {
+          const existingTypes = existingCameras.map((camera) => camera.type);
+          const hasFileType = existingTypes.includes(CameraType.FILE);
+          const hasOtherTypes = existingTypes.some(
+            (type) => type !== CameraType.FILE
+          );
+
+          // 如果已有文件类型，不允许添加其他类型
+          if (hasFileType && newCameraType !== CameraType.FILE) {
+            toast({
+              variant: 'destructive',
+              title: '文件视频流不能与其他类型视频流混合使用'
+            });
+            return;
+          }
+
+          // 如果已有其他类型，不允许添加文件类型
+          if (hasOtherTypes && newCameraType === CameraType.FILE) {
+            toast({
+              variant: 'destructive',
+              title: '文件视频流不能与其他类型视频流混合使用'
+            });
+            return;
+          }
+        }
+
         setDeploymentConfig((prev) => ({
           ...prev,
           cameras: prev.cameras ? [...prev.cameras, item] : [item]
