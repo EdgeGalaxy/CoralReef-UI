@@ -51,7 +51,7 @@ export function useCameras(workspaceId: string) {
         return null;
       }
     },
-    [workspaceId]
+    [workspaceId, api, toast]
   );
 
   // 将 base64 图片转换为 File 对象
