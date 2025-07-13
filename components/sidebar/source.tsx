@@ -9,8 +9,9 @@ import { EditableField } from './components/editable-field';
 import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
 import React from 'react';
-// import { Preview } from './components/preview';
+import { Preview } from './components/preview';
 import CameraPreview from './components/camera-preview';
+import { CameraType } from '@/constants/deploy';
 
 interface Props {
   source: SourceDataModel;
@@ -147,8 +148,12 @@ export function SourceSidebar({ source, onRefresh, onClose }: Props) {
     {
       value: 'preview',
       label: '预览',
-      // content: <Preview source={source} />
-      content: <CameraPreview camera={source} />
+      content:
+        source.type === CameraType.FILE ? (
+          <Preview source={source} />
+        ) : (
+          <CameraPreview camera={source} />
+        )
     },
     {
       value: 'deployments',

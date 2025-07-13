@@ -67,18 +67,6 @@ export function Preview({ source }: PreviewProps) {
       typeof source.path === 'string' ? source.path : `${source.path}`;
 
     switch (source.type?.toLowerCase()) {
-      case 'rtsp':
-        return `${
-          process.env.NEXT_PUBLIC_API_BASE_URL || ''
-        }/api/reef/stream?url=${encodeURIComponent(sourcePath)}?type=rtsp`;
-      case 'rtmp':
-        return `${
-          process.env.NEXT_PUBLIC_API_BASE_URL || ''
-        }/api/reef/stream?url=${encodeURIComponent(sourcePath)}?type=rtmp`;
-      case 'usb':
-        return `${
-          process.env.NEXT_PUBLIC_API_BASE_URL || ''
-        }/api/reef/stream?url=${encodeURIComponent(sourcePath)}?type=usb`;
       case 'file':
         try {
           // 通过 API 接口获取签名URL，使用统一的401错误处理
