@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import AnnotationDialogField from './annotation-dialog-field';
 
 interface ParamTypeFieldProps extends FieldProps {
   onChange: (value: any) => void;
@@ -23,7 +24,8 @@ const TYPE_OPTIONS = [
   { value: 'string', label: '字符串' },
   { value: 'number', label: '数值' },
   { value: 'boolean', label: '布尔值' },
-  { value: 'dict', label: 'JSON对象' }
+  { value: 'dict', label: 'JSON对象' },
+  { value: 'list_of_values', label: '画布' }
 ];
 
 const getDefaultValueForType = (type: string) => {
@@ -36,6 +38,8 @@ const getDefaultValueForType = (type: string) => {
       return false;
     case 'dict':
       return {};
+    case 'list_of_values':
+      return [];
     default:
       return '';
   }
@@ -149,6 +153,13 @@ const ParamTypeField: React.FC<ParamTypeFieldProps> = (props) => {
             }
             onChange={(e) => handleValueChange(e.target.value)}
             className="min-h-[100px] font-mono dark:border-gray-400 dark:bg-white dark:text-gray-900"
+          />
+        );
+      case 'list_of_values':
+        return (
+          <AnnotationDialogField
+            formData={value}
+            onChange={handleValueChange}
           />
         );
       default:

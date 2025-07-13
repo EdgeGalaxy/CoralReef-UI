@@ -15,7 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { handleApiRequest } from '@/lib/error-handle';
 import { cn } from '@/lib/utils';
 
-import WebRTCPreview from './components/webrtc-preview';
+import DeploymentPreview from './components/deployment-preview';
 import { DeploymentSettings } from '@/components/sidebar/components/deployment-settings';
 import { EventLog } from './components/event-log';
 import { PipelineMetricsChart } from './components/pipeline-metrics-chart';
@@ -270,7 +270,7 @@ export function DeploymentSidebar({ deployment, onClose, onRefresh }: Props) {
     {
       value: 'stream',
       label: '数据流',
-      content: <WebRTCPreview deployment={deployment} />
+      content: <DeploymentPreview deployment={deployment} />
     },
     // {
     //   value: 'logs',

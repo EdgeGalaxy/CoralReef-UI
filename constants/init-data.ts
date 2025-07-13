@@ -37,7 +37,7 @@ export const inputNode: Node = {
               },
               type: {
                 type: 'string',
-                enum: ['string', 'number', 'boolean', 'dict'],
+                enum: ['string', 'number', 'boolean', 'dict', 'list_of_values'],
                 title: '参数类型',
                 default: 'number'
               },
@@ -74,6 +74,25 @@ export const inputNode: Node = {
                       field: 'type',
                       value: 'dict'
                     }
+                  },
+                  {
+                    type: 'array',
+                    title: '画布',
+                    items: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          x: { type: 'number' },
+                          y: { type: 'number' }
+                        }
+                      }
+                    },
+                    'x-display-if': {
+                      field: 'type',
+                      value: 'list_of_values'
+                    },
+                    'x-field-type': 'annotation-dialog'
                   }
                 ]
               }

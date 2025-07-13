@@ -22,6 +22,7 @@ import ModelSelectorField, {
   isRoboflowModelField
 } from './custom-fields/model-selector-field';
 import ParamTypeField from './custom-fields/param-type-field';
+import AnnotationDialogField from './custom-fields/annotation-dialog-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -243,6 +244,9 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
     ),
     ParamTypeField: React.useCallback((props: any) => {
       return <ParamTypeField {...props} />;
+    }, []),
+    AnnotationDialogField: React.useCallback((props: any) => {
+      return <AnnotationDialogField {...props} />;
     }, [])
   };
 
@@ -337,6 +341,16 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
         } else if (property !== null && 'kind' in property) {
           acc[key] = {
             'ui:field': 'KindField',
+            'ui:options': {
+              originalSchema: property
+            }
+          };
+        } else if (
+          property !== null &&
+          property['x-field-type'] === 'annotation-dialog'
+        ) {
+          acc[key] = {
+            'ui:field': 'AnnotationDialogField',
             'ui:options': {
               originalSchema: property
             }
