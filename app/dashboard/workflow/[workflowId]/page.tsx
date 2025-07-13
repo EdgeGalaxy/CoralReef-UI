@@ -262,6 +262,8 @@ const DesignPage = () => {
       const connectableManifests = new Set<string>();
       const outputKindNames = new Set<string>();
 
+      outputKindNames.add('*');
+
       if (node.data.outputs_manifest) {
         node.data.outputs_manifest.forEach((output: OutputDefinition) => {
           output.kind.forEach((k: Kind) => {
@@ -363,9 +365,10 @@ const DesignPage = () => {
   }, [blocksData]);
 
   const onConnect = useCallback(
-    (params: Connection) => {
-      const sourceNode = nodes.find((node) => node.id === params.source);
-      const targetNode = nodes.find((node) => node.id === params.target);
+    (params: Connection, additionalNodes?: Node[]) => {
+      const searchNodes = additionalNodes || nodes;
+      const sourceNode = searchNodes.find((node) => node.id === params.source);
+      const targetNode = searchNodes.find((node) => node.id === params.target);
 
       if (!sourceNode || !targetNode) return;
 
@@ -383,54 +386,8 @@ const DesignPage = () => {
 
       // Connection is allowed.
       setEdges((eds) => addEdge(params, eds));
-
-      // Do not update formData for the output node
-      if (targetManifest === outputNode.data.manifest_type_identifier) {
-        return;
-      }
-
-      // Update formData of targetNode
-      const sourceManifest = sourceNode.data.manifest_type_identifier;
-      const sourceNodeName = sourceNode.data.formData.name;
-      const sourceHandleId = params.sourceHandle;
-
-      const imageConnections = kindsConnections['*'] || [];
-      const connectNodeDef: PropertyDefinition | undefined =
-        imageConnections.find(
-          (conn) =>
-            conn.manifest_type_identifier === targetManifest &&
-            conn.compatible_element === 'any_data'
-        );
-
-      let propertyValue: string | undefined = undefined;
-      if (sourceHandleId) {
-        if (sourceManifest === inputNode.data.manifest_type_identifier) {
-          propertyValue = `$inputs.${sourceHandleId}`;
-        } else {
-          propertyValue = `$steps.${sourceNodeName}.${sourceHandleId}`;
-        }
-      }
-
-      if (connectNodeDef && propertyValue) {
-        setNodes((nds) =>
-          nds.map((node) =>
-            node.id === targetNode.id
-              ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    formData: {
-                      ...node.data.formData,
-                      [connectNodeDef.property_name]: propertyValue
-                    }
-                  }
-                }
-              : node
-          )
-        );
-      }
     },
-    [nodes, setEdges, getConnectableNodeManifests, kindsConnections]
+    [nodes, setEdges, setNodes, getConnectableNodeManifests, kindsConnections]
   );
 
   const onDeleteNode = useCallback(() => {
@@ -518,19 +475,20 @@ const DesignPage = () => {
       (n) => n.data.formData?.type === data.manifest_type_identifier
     ).length;
 
-    return Object.entries(blockSchema.properties || {}).reduce(
+    const formData = Object.entries(blockSchema.properties || {}).reduce(
       (acc: any, [key, value]: [string, any]) => {
         if (key === 'name') {
           acc[key] = nodeCount > 0 ? `${nodeName}_${nodeCount}` : nodeName;
         } else if (key === 'type') {
           acc[key] = data.manifest_type_identifier;
         } else {
-          acc[key] = blockSchema.required?.includes(key) ? null : value.default;
+          // acc[key] = blockSchema.required?.includes(key) ? null : value.default;
         }
         return acc;
       },
       {}
     );
+    return formData;
   };
 
   const onNodeSelect = useCallback(
@@ -597,7 +555,6 @@ const DesignPage = () => {
         selectedNode.type !== 'builtInNode'
       ) {
         // Handle copy operation here if needed
-        console.log('Copy operation prevented for non-built-in node');
       }
     },
     [selectedNode, selectedEdgeId, onDeleteNode]
@@ -931,7 +888,6 @@ const DesignPage = () => {
             : node
         )
       );
-      console.log('已通过全局事件更新input节点的models字段', models);
     };
 
     window.addEventListener(
@@ -1123,71 +1079,25 @@ const DesignPage = () => {
         style: { width: newNodeWidth, fontSize: '12px' }
       };
 
-      // 2. Connect logic (adapted from onConnect)
-      const params = {
+      // 2. Create connection parameters
+      const connectionParams = {
         source: sourceNodeId,
         sourceHandle: sourceHandleId,
         target: newNodeId,
         targetHandle: null // Assume one main input handle for now
       };
 
-      const sourceManifest = sourceNode.data.manifest_type_identifier;
-      const targetManifest = newNode.data.manifest_type_identifier;
-      const sourceNodeName = sourceNode.data.formData.name;
-
-      const imageConnections = kindsConnections['*'] || [];
-      let connectNodeDef: PropertyDefinition | undefined = undefined;
-      let propertyValue: string | undefined = undefined;
-
-      if (sourceManifest === inputNode.data.manifest_type_identifier) {
-        connectNodeDef = imageConnections.find(
-          (conn) =>
-            conn.manifest_type_identifier === targetManifest &&
-            conn.compatible_element === 'any_data'
-        );
-        if (sourceHandleId) {
-          propertyValue = `$inputs.${sourceHandleId}`;
-        }
-      } else {
-        connectNodeDef = imageConnections.find(
-          (conn) =>
-            conn.manifest_type_identifier === targetManifest &&
-            conn.compatible_element === 'any_data'
-        );
-        if (sourceHandleId) {
-          propertyValue = `$steps.${sourceNodeName}.${sourceHandleId}`;
-        }
-      }
-
-      let finalNewNode = newNode;
-      if (connectNodeDef && propertyValue) {
-        finalNewNode = {
-          ...newNode,
-          data: {
-            ...newNode.data,
-            formData: {
-              ...newNode.data.formData,
-              [connectNodeDef.property_name]: propertyValue
-            }
-          }
-        };
-      }
-
-      setNodes((nds) => nds.concat(finalNewNode));
-      setEdges((eds) => addEdge(params, eds));
+      // 3. Add the new node and create connection
+      setNodes((nds) => {
+        const updatedNodes = nds.concat(newNode);
+        // Call onConnect with the updated nodes array
+        onConnect(connectionParams, updatedNodes);
+        return updatedNodes;
+      });
 
       setConnectMenu(null);
     },
-    [
-      connectMenu,
-      nodes,
-      setNodes,
-      setEdges,
-      generateFormData,
-      kindsConnections,
-      availableKindValues,
-      rfInstance
-    ]
+    [connectMenu, nodes, setNodes, generateFormData, onConnect, rfInstance]
   );
 
   const handleReplaceMockNode = useCallback(

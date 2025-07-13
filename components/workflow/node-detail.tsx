@@ -282,7 +282,7 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
 
   const newSchema = {
     ...nodeData.block_schema,
-    properties: Object.entries(nodeData.block_schema.properties || {}).reduce(
+    properties: Object.entries(nodeData.block_schema?.properties || {}).reduce(
       (acc, [key, value]) => {
         if (skipFormFields.includes(key)) {
           return acc;
@@ -319,9 +319,9 @@ const NodeDetail: React.FC<NodeDetailProps> = ({
   };
 
   const uiSchema = {
-    ...Object.keys(nodeData.block_schema.properties || {}).reduce(
+    ...Object.keys(nodeData.block_schema?.properties || {}).reduce(
       (acc, key) => {
-        const property = nodeData.block_schema.properties?.[
+        const property = nodeData.block_schema?.properties?.[
           key
         ] as ExtendedJSONSchema7;
         if (

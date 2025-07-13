@@ -209,7 +209,6 @@ const AnyOfKindField: React.FC<KindFieldProps> = (props) => {
   }, [schema, nodeData, availableKindValues, originalSchema]);
 
   const hasAvailableKindOptions = useMemo(() => {
-    console.log('has', kindOptions);
     return kindOptions && kindOptions.length > 0;
   }, [kindOptions]);
 
